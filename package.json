@@ -16,5 +16,11 @@
   "bugs": {
     "url": "https://github.com/TUS-OSK/bushitsuchan-PC/issues"
   },
-  "homepage": "https://github.com/TUS-OSK/bushitsuchan-PC#readme"
+  "homepage": "https://github.com/TUS-OSK/bushitsuchan-PC#readme",
+  "dependencies": {
+    "googleapis": "^35.0.0",
+    "path": "^0.12.7",
+    "readline-sync": "^1.4.9",
+    "request": "^2.88.0"
+  }
 }
