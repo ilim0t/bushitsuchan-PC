@@ -20,7 +20,7 @@
   "dependencies": {
     "googleapis": "^35.0.0",
     "path": "^0.12.7",
-    "readline-sync": "^1.4.9",
+    "readline-promise": "^1.0.3",
     "request": "^2.88.0"
   }
 }
