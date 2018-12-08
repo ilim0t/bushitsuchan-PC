@@ -15,3 +15,13 @@ OSKの部室の様子を様子をオンラインで確認できるプロジェ�
   }
 }
 ```
+
+## カメラを使えるようにする
+Macなら
+```shell
+brew install imagesnap
+```
+Ubuntuは
+```shell
+sudo apt-get install fswebcam
+```

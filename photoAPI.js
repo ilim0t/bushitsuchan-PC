@@ -29,7 +29,7 @@ const rpap = rp.defaults({
 /**
  * @returns {Promise<OAuth2Client>}
  */
-async function getOAuthToken() {
+module.exports.getOAuthToken = async () => {
     const keyPath = path.join(__dirname, "oauth2.keys.json");
     let keys = {};
     if (fs.existsSync(keyPath)) {
@@ -60,25 +60,23 @@ async function getOAuthToken() {
         input: process.stdin,
         output: process.stdout,
     });
-    return new Promise((resolve) => rl.question("入力: ", resolve))
-        .then((authorizationCode) => {
+    return new Promise(resolve => {
+        rl.question("入力: ", async authorizationCode => {
             rl.close();
-            return oAuth2Client.getToken(authorizationCode);
-        })
-        .then(value => {
+            const value = await oAuth2Client.getToken(authorizationCode);
             const token = value.tokens;
             oAuth2Client.setCredentials(token);
             fs.writeFileSync(tokenPath, JSON.stringify(token));
-        }).then(() => {
-            return oAuth2Client;
-        });
-}
+            resolve(oAuth2Client);
+        })
+    });
+};
 
 /**
  * @param {OAuth2Client} oAuth2Client
  * @returns {Promise<Array.<Object>>}
  */
-async function getAlbumList(oAuth2Client) {
+module.exports.getAlbumList = async (oAuth2Client) => {
     const accessToken = await oAuth2Client.getAccessToken();
     const url = "https://photoslibrary.googleapis.com/v1/albums";
     const headers = {
@@ -90,7 +88,7 @@ async function getAlbumList(oAuth2Client) {
         headers: headers
     });
     return response["albums"]
-}
+};
 
 /**
  * @param {OAuth2Client} oAuth2Client
@@ -98,7 +96,7 @@ async function getAlbumList(oAuth2Client) {
  * @param {string} filename
  * @returns {Promise<string>}
  */
-async function uploadPhoto(oAuth2Client, photo, filename) {
+module.exports.uploadPhoto = async (oAuth2Client, photo, filename) => {
     const accessToken = await oAuth2Client.getAccessToken();
     const url = "https://photoslibrary.googleapis.com/v1/uploads";
     const headers = {
@@ -112,7 +110,7 @@ async function uploadPhoto(oAuth2Client, photo, filename) {
         headers: headers,
         body: photo
     });
-}
+};
 
 /**
  * @param {OAuth2Client} oAuth2Client
@@ -120,7 +118,7 @@ async function uploadPhoto(oAuth2Client, photo, filename) {
  * @param {string} description
  * @returns {Promise<Array.<Object>>}
  */
-async function createMediaItem(oAuth2Client, uploadToken, description) {
+module.exports.createMediaItem = async (oAuth2Client, uploadToken, description) => {
     const accessToken = await oAuth2Client.getAccessToken();
     const url = "https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate";
     const headers = {
@@ -143,7 +141,7 @@ async function createMediaItem(oAuth2Client, uploadToken, description) {
         body: JSON.stringify(body)
     });
     return response["newMediaItemResults"];
-}
+};
 
 /**
  * @param {OAuth2Client} oAuth2Client
@@ -152,7 +150,7 @@ async function createMediaItem(oAuth2Client, uploadToken, description) {
  * @param {string} description
  * @returns {Promise<Object>}
  */
-async function createAlbumMediaItem(oAuth2Client, albumID, uploadToken, description) {
+module.exports.createAlbumMediaItem = async (oAuth2Client, albumID, uploadToken, description) => {
     const accessToken = await oAuth2Client.getAccessToken();
     const url = "https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate";
     const headers = {
@@ -176,14 +174,14 @@ async function createAlbumMediaItem(oAuth2Client, albumID, uploadToken, descript
         body: JSON.stringify(body)
     });
     return response["newMediaItemResults"][0];
-}
+};
 
 /**
  * @param {OAuth2Client} oAuth2Client
  * @param {string} title
  * @returns {Promise<Object>}
  */
-async function createAlbum(oAuth2Client, title) {
+module.exports.createAlbum = async (oAuth2Client, title) => {
     const accessToken = await oAuth2Client.getAccessToken();
     const url = "https://photoslibrary.googleapis.com/v1/albums";
     const headers = {
@@ -200,14 +198,14 @@ async function createAlbum(oAuth2Client, title) {
         headers: headers,
         body: JSON.stringify(body)
     });
-}
+};
 
 /**
  * @param {OAuth2Client} oAuth2Client
  * @param {string} albumID
  * @returns {Promise<Object>}
  */
-async function shareAlbum(oAuth2Client, albumID) {
+module.exports.shareAlbum = async (oAuth2Client, albumID) => {
     const accessToken = await oAuth2Client.getAccessToken();
     const url = `https://photoslibrary.googleapis.com/v1/albums/${albumID}:share`;
     const headers = {
@@ -225,14 +223,14 @@ async function shareAlbum(oAuth2Client, albumID) {
         headers: headers,
         body: JSON.stringify(body)
     });
-}
+};
 
 /**
  * @param {OAuth2Client} oAuth2Client
  * @param {string} mediaItemID
  * @returns {Promise<Object>}
  */
-async function getMediaItem(oAuth2Client, mediaItemID) {
+module.exports.getMediaItem = async (oAuth2Client, mediaItemID) => {
     const accessToken = await oAuth2Client.getAccessToken();
     const url = `https://photoslibrary.googleapis.com/v1/mediaItems/${mediaItemID}`;
     const headers = {
@@ -243,25 +241,26 @@ async function getMediaItem(oAuth2Client, mediaItemID) {
         method: "GET",
         headers: headers,
     });
-}
+};
 
 async function main() {
-    const oAuth2Client = await getOAuthToken();
+    const oAuth2Client = await module.exports.getOAuthToken();
 
     const albumTitle = "bushitsuchan_test_album";
-    const albums = await getAlbumList(oAuth2Client);
+    const albums = await module.exports.getAlbumList(oAuth2Client);
     let album = albums.filter((album) => album.title === albumTitle);
     if (!album.length) {
-        album = await createAlbum(oAuth2Client, albumTitle);
-        await shareAlbum(oAuth2Client, album.id);
+        album = await module.exports.createAlbum(oAuth2Client, albumTitle);
+        await module.exports.shareAlbum(oAuth2Client, album.id);
     }
 
-    const filename = "sample.png";
-    const uploadToken = await uploadPhoto(oAuth2Client, fs.createReadStream(filename), filename);
-    const {mediaItem} = await createAlbumMediaItem(oAuth2Client, album.id, uploadToken, "");
-    const {baseUrl} = await getMediaItem(oAuth2Client, mediaItem.id);
+    const filename = "figure_personal_space.png";
+    const uploadToken = await module.exports.uploadPhoto(oAuth2Client, fs.createReadStream(filename), filename);
+    const {mediaItem} = await module.exports.createAlbumMediaItem(oAuth2Client, album.id, uploadToken, "");
+    const {baseUrl} = await module.exports.getMediaItem(oAuth2Client, mediaItem.id);
     console.log(`共有リンク: ${baseUrl}`);
 }
+
 
 if (require.main === module) {
     main().catch(console.error);
