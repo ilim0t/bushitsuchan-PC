@@ -23,10 +23,9 @@ const Webcam = NodeWebcam.create({
  */
 
 /**
- * @param {OAuth2Client} oAuth2Client
- * @returns {Promise<void>}
+ * @param {OAuth2Client}oAuth2Client
+ * @param {Object} album
  */
-
 module.exports.capture = (oAuth2Client, album) => {
     return new Promise((resolve, reject) => {
         Webcam.capture("", async (err, photo) => {
@@ -36,7 +35,7 @@ module.exports.capture = (oAuth2Client, album) => {
             const uploadToken = await photoapi.uploadPhoto(oAuth2Client, photo, Date().toLocaleString());
             const {mediaItem} = await photoapi.createAlbumMediaItem(oAuth2Client, album.id, uploadToken, "");
             const {baseUrl} = await photoapi.getMediaItem(oAuth2Client, mediaItem.id);
-            resolve(baseUrl);
+            resolve(photoapi.getShortURL(baseUrl));
         })
     })
 };
@@ -51,7 +50,7 @@ async function main() {
         album = await photoapi.createAlbum(oAuth2Client, albumTitle);
         await photoapi.shareAlbum(oAuth2Client, album.id);
     }
-    setInterval(() => module.exports.capture(oAuth2Client, album).then(slack.send), 3000);
+    setInterval(() => module.exports.capture(oAuth2Client, album).then(slack.send), 5000);
 }
 
 if (require.main === module) {

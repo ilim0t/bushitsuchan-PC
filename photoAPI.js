@@ -243,6 +243,11 @@ module.exports.getMediaItem = async (oAuth2Client, mediaItemID) => {
     });
 };
 
+module.exports.getShortURL = async url => {
+    const ret = await rpap.get(`http://is.gd/create.php?format=simple&format=json&url=${url}`);
+    return JSON.parse(ret)["shorturl"];
+};
+
 async function main() {
     const oAuth2Client = await module.exports.getOAuthToken();
 
