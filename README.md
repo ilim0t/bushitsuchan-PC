@@ -25,3 +25,8 @@ Ubuntuは
 ```shell
 sudo apt-get install fswebcam
 ```
+
+## Usage
+1. `npm install`
+1. `npm start`  
+を実行
