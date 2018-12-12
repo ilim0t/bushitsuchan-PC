@@ -29,15 +29,10 @@ const rpap = rp.defaults({
 /**
  * @returns {Promise<OAuth2Client>}
  */
-module.exports.getOAuthToken = async () => {
-    const keyPath = path.join(__dirname, "oauth2.keys.json");
-    let keys = {};
-    if (fs.existsSync(keyPath)) {
-        keys = require(keyPath).web;
-    }
+module.exports.getOAuthToken = (client_id, client_secret) => {
     const oAuth2Client = new google.auth.OAuth2(
-        keys["client_id"],
-        keys["client_secret"],
+        client_id,
+        client_secret,
         "urn:ietf:wg:oauth:2.0:oob"
     );
     const scopes = [
@@ -63,10 +58,13 @@ module.exports.getOAuthToken = async () => {
     return new Promise(resolve => {
         rl.question("入力: ", async authorizationCode => {
             rl.close();
-            const value = await oAuth2Client.getToken(authorizationCode);
-            const token = value.tokens;
-            oAuth2Client.setCredentials(token);
-            fs.writeFileSync(tokenPath, JSON.stringify(token));
+            if (authorizationCode === "") {
+                console.error("入力が無効です 再実行してください");
+                process.exit(1);
+            }
+            const {tokens} = await oAuth2Client.getToken(authorizationCode);
+            oAuth2Client.setCredentials(tokens);
+            fs.writeFileSync(tokenPath, JSON.stringify(tokens));
             resolve(oAuth2Client);
         })
     });
@@ -76,18 +74,18 @@ module.exports.getOAuthToken = async () => {
  * @param {OAuth2Client} oAuth2Client
  * @returns {Promise<Array.<Object>>}
  */
-module.exports.getAlbumList = async (oAuth2Client) => {
+module.exports.getAlbumList = async oAuth2Client => {
     const accessToken = await oAuth2Client.getAccessToken();
     const url = "https://photoslibrary.googleapis.com/v1/albums";
     const headers = {
         "Content-type": "application/json",
         Authorization: `Bearer ${accessToken.token}`
     };
-    const response = await rpap(url, {
+    return rpap(url, {
         method: "GET",
         headers: headers
-    });
-    return response["albums"]
+    })
+        .then(response => response["albums"]);
 };
 
 /**
@@ -105,7 +103,7 @@ module.exports.uploadPhoto = async (oAuth2Client, photo, filename) => {
         "X-Goog-Upload-File-Name": filename,
         "X-Goog-Upload-Protocol": "raw"
     };
-    return await rpap(url, {
+    return rpap(url, {
         method: "POST",
         headers: headers,
         body: photo
@@ -135,12 +133,12 @@ module.exports.createMediaItem = async (oAuth2Client, uploadToken, description) 
             }
         ]
     };
-    const response = await rpap(url, {
+    return rpap(url, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(body)
-    });
-    return response["newMediaItemResults"];
+    })
+        .then(response => response["newMediaItemResults"]);
 };
 
 /**
@@ -168,12 +166,12 @@ module.exports.createAlbumMediaItem = async (oAuth2Client, albumID, uploadToken,
             }
         ]
     };
-    const response = await rpap(url, {
+    return rpap(url, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(body)
-    });
-    return response["newMediaItemResults"][0];
+    })
+        .then(response => response["newMediaItemResults"][0])
 };
 
 /**
@@ -193,7 +191,7 @@ module.exports.createAlbum = async (oAuth2Client, title) => {
             title: title
         }
     };
-    return await rpap(url, {
+    return rpap(url, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(body)
@@ -218,7 +216,7 @@ module.exports.shareAlbum = async (oAuth2Client, albumID) => {
             "isCommentable": "true"
         }
     };
-    return await rpap(url, {
+    return rpap(url, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(body)
@@ -237,15 +235,15 @@ module.exports.getMediaItem = async (oAuth2Client, mediaItemID) => {
         "Constent-type": "application/json",
         Authorization: `Bearer ${accessToken.token}`
     };
-    return await rpap(url, {
+    return rpap(url, {
         method: "GET",
         headers: headers,
     });
 };
 
-module.exports.getShortURL = async url => {
-    const ret = await rpap.get(`http://is.gd/create.php?format=simple&format=json&url=${url}`);
-    return JSON.parse(ret)["shorturl"];
+module.exports.getShortURL = url => {
+    return rpap.get(`http://is.gd/create.php?format=simple&format=json&url=${url}`)
+        .then(result => JSON.parse(result)["shorturl"]);
 };
 
 async function main() {
@@ -253,8 +251,8 @@ async function main() {
 
     const albumTitle = "bushitsuchan_test_album";
     const albums = await module.exports.getAlbumList(oAuth2Client);
-    let album = albums.filter((album) => album.title === albumTitle);
-    if (!album.length) {
+    let album = albums.filter((album) => album.title === albumTitle)[0];
+    if (album === undefined) {
         album = await module.exports.createAlbum(oAuth2Client, albumTitle);
         await module.exports.shareAlbum(oAuth2Client, album.id);
     }
