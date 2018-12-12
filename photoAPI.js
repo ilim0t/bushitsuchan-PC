@@ -9,25 +9,28 @@ const rp = require("request-promise");
 
 
 const rpap = rp.defaults({
-    transform: (body, response, resolveWithFullResponse) => {
-        const constentType = response.headers["content-type"].split(";")[0];
+    "transform": (body, response) => {
+        const constentType = response.headers["content-type"].split("")[0];
         if (constentType === "application/json") {
-            return JSON.parse(body);
+            return JSON.parse(body)
         } else if (constentType === "text/plain") {
-            return body;
+            return body
         } else {
-            return body;
+            return body
         }
     }
 });
 
 /**
- @typedef {Object} OAuth2Client
- @property {Function} getAccessToken
+ * @typedef {Object} oAuth2Client
+ * @property {function: string} getAccessToken
  */
 
 /**
- * @returns {Promise<OAuth2Client>}
+ * 認証鍵を取得します
+ * @param {string} client_id - GCPで取得したクライアントID
+ * @param {string} client_secret - GCPで取得したクライアントシークレット
+ * @returns {Promise<oAuth2Client>}
  */
 module.exports.getOAuthToken = (client_id, client_secret) => {
     const oAuth2Client = new google.auth.OAuth2(
@@ -43,7 +46,7 @@ module.exports.getOAuthToken = (client_id, client_secret) => {
     const tokenPath = path.join(__dirname, "token.json");
     if (fs.existsSync(tokenPath)) {
         oAuth2Client.setCredentials(require(tokenPath));
-        return oAuth2Client;
+        return oAuth2Client
     }
     const authURL = oAuth2Client.generateAuthUrl({
         access_type: "offline",
@@ -60,19 +63,21 @@ module.exports.getOAuthToken = (client_id, client_secret) => {
             rl.close();
             if (authorizationCode === "") {
                 console.error("入力が無効です 再実行してください");
-                process.exit(1);
+                process.exit(1)
             }
             const {tokens} = await oAuth2Client.getToken(authorizationCode);
             oAuth2Client.setCredentials(tokens);
             fs.writeFileSync(tokenPath, JSON.stringify(tokens));
-            resolve(oAuth2Client);
+            resolve(oAuth2Client)
         })
-    });
+    })
 };
 
+
 /**
- * @param {OAuth2Client} oAuth2Client
- * @returns {Promise<Array.<Object>>}
+ * アルバム一覧の取得
+ * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
+ * @returns {Promise<Array<Object>>}
  */
 module.exports.getAlbumList = async oAuth2Client => {
     const accessToken = await oAuth2Client.getAccessToken();
@@ -85,14 +90,16 @@ module.exports.getAlbumList = async oAuth2Client => {
         method: "GET",
         headers: headers
     })
-        .then(response => response["albums"]);
+        .then(response => response["albums"])
 };
 
+
 /**
- * @param {OAuth2Client} oAuth2Client
- * @param {ReadStream} photo
+ *  画像のバイナリデータを送信します
+ * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
+ * @param photo
  * @param {string} filename
- * @returns {Promise<string>}
+ * @returns {Promise<string>} uploadToken
  */
 module.exports.uploadPhoto = async (oAuth2Client, photo, filename) => {
     const accessToken = await oAuth2Client.getAccessToken();
@@ -107,14 +114,16 @@ module.exports.uploadPhoto = async (oAuth2Client, photo, filename) => {
         method: "POST",
         headers: headers,
         body: photo
-    });
+    })
 };
 
+
 /**
- * @param {OAuth2Client} oAuth2Client
- * @param {string} uploadToken
+ * アップロードした画像を単なる写真として保存します
+ * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
+ * @param {string} uploadToken - uploadPhoto関数で取得します
  * @param {string} description
- * @returns {Promise<Array.<Object>>}
+ * @returns {Promise<Array<Object>>}
  */
 module.exports.createMediaItem = async (oAuth2Client, uploadToken, description) => {
     const accessToken = await oAuth2Client.getAccessToken();
@@ -138,13 +147,15 @@ module.exports.createMediaItem = async (oAuth2Client, uploadToken, description) 
         headers: headers,
         body: JSON.stringify(body)
     })
-        .then(response => response["newMediaItemResults"]);
+        .then(response => response["newMediaItemResults"])
 };
 
+
 /**
- * @param {OAuth2Client} oAuth2Client
+ * アップロードした画像をアルバムに追加します
+ * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
  * @param {string} albumID
- * @param {string} uploadToken
+ * @param {string} uploadToken - uploadPhoto関数で取得します
  * @param {string} description
  * @returns {Promise<Object>}
  */
@@ -174,8 +185,10 @@ module.exports.createAlbumMediaItem = async (oAuth2Client, albumID, uploadToken,
         .then(response => response["newMediaItemResults"][0])
 };
 
+
 /**
- * @param {OAuth2Client} oAuth2Client
+ * アルバムを作成します
+ * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
  * @param {string} title
  * @returns {Promise<Object>}
  */
@@ -195,11 +208,12 @@ module.exports.createAlbum = async (oAuth2Client, title) => {
         method: "POST",
         headers: headers,
         body: JSON.stringify(body)
-    });
+    })
 };
 
 /**
- * @param {OAuth2Client} oAuth2Client
+ * アルバムを共有します
+ * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
  * @param {string} albumID
  * @returns {Promise<Object>}
  */
@@ -220,11 +234,13 @@ module.exports.shareAlbum = async (oAuth2Client, albumID) => {
         method: "POST",
         headers: headers,
         body: JSON.stringify(body)
-    });
+    })
 };
 
+
 /**
- * @param {OAuth2Client} oAuth2Client
+ * アップロード済みの写真に関する情報を取得します
+ * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
  * @param {string} mediaItemID
  * @returns {Promise<Object>}
  */
@@ -238,33 +254,47 @@ module.exports.getMediaItem = async (oAuth2Client, mediaItemID) => {
     return rpap(url, {
         method: "GET",
         headers: headers,
-    });
+    })
 };
 
+/**
+ * 与えられたURLの短縮URLを取得します
+ * @param {string} url
+ * @returns {Promise<string>} 短縮URL
+ */
 module.exports.getShortURL = url => {
     return rpap.get(`http://is.gd/create.php?format=simple&format=json&url=${url}`)
-        .then(result => JSON.parse(result)["shorturl"]);
+        .then(result => JSON.parse(result)["shorturl"])
 };
 
 async function main() {
-    const oAuth2Client = await module.exports.getOAuthToken();
+    const {client_id, client_secret} = process.env;
+    if (!client_id || !client_secret) {
+        console.log("READMEに従ってGoogle Photos APIsの認証鍵を設定してください");
+        process.exit(1)
+    }
+    const oAuth2Client = await module.exports.getOAuthToken(client_id, client_secret);
 
     const albumTitle = "bushitsuchan_test_album";
     const albums = await module.exports.getAlbumList(oAuth2Client);
     let album = albums.filter((album) => album.title === albumTitle)[0];
     if (album === undefined) {
         album = await module.exports.createAlbum(oAuth2Client, albumTitle);
-        await module.exports.shareAlbum(oAuth2Client, album.id);
+        await module.exports.shareAlbum(oAuth2Client, album.id)
     }
 
-    const filename = "figure_personal_space.png";
+    const filename = "example.png";
+    if (!fs.existsSync(filename)) {
+        console.error(`${filename}が存在しないのでアップロードできません`);
+        process.exit(1)
+    }
     const uploadToken = await module.exports.uploadPhoto(oAuth2Client, fs.createReadStream(filename), filename);
     const {mediaItem} = await module.exports.createAlbumMediaItem(oAuth2Client, album.id, uploadToken, "");
     const {baseUrl} = await module.exports.getMediaItem(oAuth2Client, mediaItem.id);
-    console.log(`共有リンク: ${baseUrl}`);
+    console.log(`共有リンク: ${baseUrl}`)
 }
 
 
 if (require.main === module) {
-    main().catch(console.error);
+    main().catch(console.error)
 }
