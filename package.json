@@ -16,5 +16,13 @@
   "bugs": {
     "url": "https://github.com/TUS-OSK/bushitsuchan-PC/issues"
   },
-  "homepage": "https://github.com/TUS-OSK/bushitsuchan-PC#readme"
+  "homepage": "https://github.com/TUS-OSK/bushitsuchan-PC#readme",
+  "dependencies": {
+    "googleapis": "^35.0.0",
+    "node-webcam": "^0.4.6",
+    "path": "^0.12.7",
+    "readline": "^1.3.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2"
+  }
 }
