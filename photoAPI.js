@@ -90,7 +90,7 @@ module.exports.getAlbumList = async oAuth2Client => {
         method: "GET",
         headers: headers
     })
-        .then(response => response["albums"])
+        .then(response => JSON.parse(response)["albums"])
 };
 
 
@@ -182,7 +182,8 @@ module.exports.createAlbumMediaItem = async (oAuth2Client, albumID, uploadToken,
         headers: headers,
         body: JSON.stringify(body)
     })
-        .then(response => response["newMediaItemResults"][0])
+        .then(response => JSON.parse(response)["newMediaItemResults"][0])
+        .catch(e => console.error(e))
 };
 
 
@@ -255,6 +256,7 @@ module.exports.getMediaItem = async (oAuth2Client, mediaItemID) => {
         method: "GET",
         headers: headers,
     })
+        .then(response => JSON.parse(response))
 };
 
 /**
