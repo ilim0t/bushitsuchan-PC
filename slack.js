@@ -34,6 +34,19 @@ module.exports.Slack = class Slack {
     async reply(message) {
         // console.debug(`message: ${JSON.stringify(message)}\n`);
         const {user, text, channel, subtype, ts} = message;
+        if (subtype === "bot_message" || subtype === "channel_join" || subtype === "group_join") {
+            return
+        } else if (subtype === "message_changed") {
+            return
+        } else if (subtype === "message_deleted") {
+            return
+        } else if (subtype === "message_replied") {
+            return
+        } else if (subtype) {
+            return
+        }
+
+        console.log(user,  this.rtm.activeUserId);
         if (user === this.rtm.activeUserId) {
             return
         } else if (!text || text === "/") {
