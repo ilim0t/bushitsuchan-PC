@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/TUS-OSK/bushitsuchan-PC#readme",
   "dependencies": {
+    "@slack/client": "^4.10.0",
     "googleapis": "^35.0.0",
     "node-webcam": "^0.4.6",
     "path": "^0.12.7",

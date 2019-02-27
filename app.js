@@ -12,6 +12,7 @@ const main = async () => {
         process.exit(1)
     }
     const oAuth2Client = await photoapi.getOAuthToken(client_id, client_secret);
+    const bot = new slack.Slack();
 
     //共有するためアルバムを指定
     const albumTitle = "bushitsuchan_album";
@@ -22,6 +23,8 @@ const main = async () => {
         album = await photoapi.createAlbum(oAuth2Client, albumTitle);
         await photoapi.shareAlbum(oAuth2Client, album.id)
     }
+
+    bot.start();
 
     //定期的に撮影した写真の共有リンクをslackbotで送信
     //https://developers.google.com/photos/library/guides/api-limits-quotas に抵触しないように!!
@@ -49,7 +52,8 @@ const main = async () => {
         const shortURL = await photoapi.getShortURL(url);
 
         // ここをカスタマイズしてください
-        slack.send(shortURL)
+        bot.url = shortURL;
+        // slack.send(shortURL);
     }, interval)
 };
 
