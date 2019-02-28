@@ -81,7 +81,7 @@ module.exports.getAlbumList = async oAuth2Client => {
         method: "GET",
         headers: headers
     })
-        .then(response => response["albums"])
+        .then(response => response["albums"] || Array())
 };
 
 
