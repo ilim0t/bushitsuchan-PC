@@ -4,25 +4,11 @@ const fs = require("fs");
 const {google} = require("googleapis");
 const readline = require("readline");
 const path = require("path");
-const rp = require("request-promise");
+const {rpap} = require("./utils");
 // const assert = require("assert");
 
-
-const rpap = rp.defaults({
-    "transform": (body, response) => {
-        const constentType = response.headers["content-type"].split("")[0];
-        if (constentType === "application/json") {
-            return JSON.parse(body)
-        } else if (constentType === "text/plain") {
-            return body
-        } else {
-            return body
-        }
-    }
-});
-
 /**
- * @typedef {Object} oAuth2Client
+ * @typedef {Object} OAuth2Client
  * @property {function: string} getAccessToken
  */
 
@@ -30,9 +16,14 @@ const rpap = rp.defaults({
  * 認証鍵を取得します
  * @param {string} client_id - GCPで取得したクライアントID
  * @param {string} client_secret - GCPで取得したクライアントシークレット
- * @returns {Promise<oAuth2Client>}
+ * @returns {Promise<OAuth2Client>}
  */
-module.exports.getOAuthToken = (client_id, client_secret) => {
+module.exports.getOAuthToken = async (client_id, client_secret) => {
+    if (!client_id || !client_secret) {
+        throw new TypeError("Google Photos APIsの認証キーがロードできていません。" +
+            "READMEに従ってdirenvの設定をしてください。");
+    }
+
     const oAuth2Client = new google.auth.OAuth2(
         client_id,
         client_secret,
@@ -46,13 +37,13 @@ module.exports.getOAuthToken = (client_id, client_secret) => {
     const tokenPath = path.join(__dirname, "token.json");
     if (fs.existsSync(tokenPath)) {
         oAuth2Client.setCredentials(require(tokenPath));
-        return oAuth2Client
+        return oAuth2Client;
     }
+
     const authURL = oAuth2Client.generateAuthUrl({
         access_type: "offline",
         scope: scopes
     });
-
     console.log(`以下のサイトを開き，認証したあと表示される文字列をここに貼り付けてください\n${authURL}`);
     const rl = readline.createInterface({
         input: process.stdin,
@@ -76,7 +67,7 @@ module.exports.getOAuthToken = (client_id, client_secret) => {
 
 /**
  * アルバム一覧の取得
- * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
+ * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
  * @returns {Promise<Array<Object>>}
  */
 module.exports.getAlbumList = async oAuth2Client => {
@@ -96,7 +87,7 @@ module.exports.getAlbumList = async oAuth2Client => {
 
 /**
  *  画像のバイナリデータを送信します
- * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
+ * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
  * @param photo
  * @param {string} filename
  * @returns {Promise<string>} uploadToken
@@ -120,7 +111,7 @@ module.exports.uploadPhoto = async (oAuth2Client, photo, filename) => {
 
 /**
  * アップロードした画像を単なる写真として保存します
- * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
+ * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
  * @param {string} uploadToken - uploadPhoto関数で取得します
  * @param {string} description
  * @returns {Promise<Array<Object>>}
@@ -153,7 +144,7 @@ module.exports.createMediaItem = async (oAuth2Client, uploadToken, description) 
 
 /**
  * アップロードした画像をアルバムに追加します
- * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
+ * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
  * @param {string} albumID
  * @param {string} uploadToken - uploadPhoto関数で取得します
  * @param {string} description
@@ -183,12 +174,13 @@ module.exports.createAlbumMediaItem = async (oAuth2Client, albumID, uploadToken,
         body: JSON.stringify(body)
     })
         .then(response => response["newMediaItemResults"][0])
+    // .catch(e => console.error(e))
 };
 
 
 /**
  * アルバムを作成します
- * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
+ * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
  * @param {string} title
  * @returns {Promise<Object>}
  */
@@ -213,7 +205,7 @@ module.exports.createAlbum = async (oAuth2Client, title) => {
 
 /**
  * アルバムを共有します
- * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
+ * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
  * @param {string} albumID
  * @returns {Promise<Object>}
  */
@@ -240,7 +232,7 @@ module.exports.shareAlbum = async (oAuth2Client, albumID) => {
 
 /**
  * アップロード済みの写真に関する情報を取得します
- * @param {oAuth2Client} oAuth2Client - getOAuthToken関数で取得します
+ * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
  * @param {string} mediaItemID
  * @returns {Promise<Object>}
  */
@@ -255,16 +247,6 @@ module.exports.getMediaItem = async (oAuth2Client, mediaItemID) => {
         method: "GET",
         headers: headers,
     })
-};
-
-/**
- * 与えられたURLの短縮URLを取得します
- * @param {string} url
- * @returns {Promise<string>} 短縮URL
- */
-module.exports.getShortURL = url => {
-    return rpap.get(`http://is.gd/create.php?format=simple&format=json&url=${url}`)
-        .then(result => JSON.parse(result)["shorturl"])
 };
 
 async function main() {
