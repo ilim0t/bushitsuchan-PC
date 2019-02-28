@@ -1,26 +1,17 @@
 "use strict";
+
 const {RTMClient, WebClient} = require('@slack/client');
-const rp = require("request-promise");
-
-
-const rpap = rp.defaults({
-    transform: (body, response) => {
-        const constentType = response.headers["content-type"].split(";")[0];
-        if (constentType === "application/json") {
-            return JSON.parse(body);
-        } else if (constentType === "text/plain") {
-            return body;
-        } else {
-            return body;
-        }
-    }
-});
-
-const wait = time => new Promise(resolve => setTimeout(resolve, time));
+const utils = require("./utils");
 
 module.exports.Slack = class Slack {
-    constructor() {
-        const {slack_token} = process.env;
+    /**
+     * @param {string} slack_token
+     */
+    constructor(slack_token) {
+        if (!slack_token) {
+            throw new TypeError("Slcak botの認証キーがロードできていません。" +
+                "READMEに従ってdirenvの設定をしてください。");
+        }
         this.rtm = new RTMClient(slack_token);
         this.web = new WebClient(slack_token);
         this.url = "not yet";
@@ -28,44 +19,49 @@ module.exports.Slack = class Slack {
 
     start() {
         this.rtm.start();
+        this.rtm.on("ready", () => console.log("ready"));
         this.rtm.on("message", message => this.reply(message));
     }
 
-    async reply(message) {
-        // console.debug(`message: ${JSON.stringify(message)}\n`);
-        const {user, text, channel, subtype, ts} = message;
-        if (subtype === "bot_message" || subtype === "channel_join" || subtype === "group_join") {
-            return
-        } else if (subtype === "message_changed") {
-            return
-        } else if (subtype === "message_deleted") {
-            return
-        } else if (subtype === "message_replied") {
-            return
-        } else if (subtype) {
-            return
-        }
-
-        console.log(user,  this.rtm.activeUserId);
-        if (user === this.rtm.activeUserId) {
-            return
-        } else if (!text || text === "/") {
-            return
-        }
-
-        const replyText = this.url;
-
-        const response = await this.web.chat.postMessage({
-            channel: channel,
-            text: replyText,
-            as_user: true,
-            thread_ts: message.thread_ts || message.event_ts
-        });
-        console.info(`Message sent: ${response.message.text}`);
+    async getReplyText() {
+        throw Error("NotImplementedError");
     }
-};
 
+    /**
+     * @param{Object} receiveMessage
+     */
+    reply(receiveMessage) {
+        const {user, text, channel, subtype, ts} = receiveMessage;
+        if (subtype) {
+            // console.log(subtype);
+            return;
+        } else if (user === this.rtm.activeUserId) {
+            return;
+        } else if (!text) {
+            return;
+        } else if (!text.match(new RegExp(`<@${this.rtm.activeUserId}>`))) {
+            return;
+        }
+        if (text.match(/ip$/)) {
+            const ips = utils.getLocalIps();
+            this.web.chat.postMessage({
+                channel: channel,
+                text: ips.map(ip => `address: ${ip}`).join("\n"),
+                as_user: true,
+                thread_ts: ts
+            });
+            return;
+        }
 
-module.exports.send = value => {
-    console.log(`未実装ですが以下を投稿したことになりました ${value}`)
+        this.getReplyText()
+            .then(replyText =>
+                this.web.chat.postMessage({
+                    channel: channel,
+                    text: replyText,
+                    as_user: true,
+                    thread_ts: ts
+                })
+            )
+        // console.info(`Message sent: ${response.message.text}`
+    }
 };
