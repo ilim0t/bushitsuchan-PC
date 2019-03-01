@@ -5,7 +5,6 @@ const {google} = require("googleapis");
 const readline = require("readline");
 const path = require("path");
 const {rpap} = require("./utils");
-// const assert = require("assert");
 
 /**
  * @typedef {Object} OAuth2Client
@@ -16,7 +15,6 @@ const {rpap} = require("./utils");
  * 認証鍵を取得します
  * @param {string} client_id - GCPで取得したクライアントID
  * @param {string} client_secret - GCPで取得したクライアントシークレット
- * @returns {Promise<OAuth2Client>}
  */
 module.exports.getOAuthToken = async (client_id, client_secret) => {
     if (!client_id || !client_secret) {
@@ -67,8 +65,8 @@ module.exports.getOAuthToken = async (client_id, client_secret) => {
 
 /**
  * アルバム一覧の取得
- * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
  * @returns {Promise<Array<Object>>}
+ * @param oAuth2Client
  */
 module.exports.getAlbumList = async oAuth2Client => {
     const accessToken = await oAuth2Client.getAccessToken();
@@ -81,13 +79,13 @@ module.exports.getAlbumList = async oAuth2Client => {
         method: "GET",
         headers: headers
     })
-        .then(response => response["albums"])
+        .then(response => response["albums"] || Array())
 };
 
 
 /**
  *  画像のバイナリデータを送信します
- * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
+ * @param oAuth2Client
  * @param photo
  * @param {string} filename
  * @returns {Promise<string>} uploadToken
@@ -111,7 +109,7 @@ module.exports.uploadPhoto = async (oAuth2Client, photo, filename) => {
 
 /**
  * アップロードした画像を単なる写真として保存します
- * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
+ * @param oAuth2Client
  * @param {string} uploadToken - uploadPhoto関数で取得します
  * @param {string} description
  * @returns {Promise<Array<Object>>}
@@ -144,7 +142,7 @@ module.exports.createMediaItem = async (oAuth2Client, uploadToken, description) 
 
 /**
  * アップロードした画像をアルバムに追加します
- * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
+ * @param oAuth2Client
  * @param {string} albumID
  * @param {string} uploadToken - uploadPhoto関数で取得します
  * @param {string} description
@@ -180,7 +178,7 @@ module.exports.createAlbumMediaItem = async (oAuth2Client, albumID, uploadToken,
 
 /**
  * アルバムを作成します
- * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
+ * @param oAuth2Client
  * @param {string} title
  * @returns {Promise<Object>}
  */
@@ -205,7 +203,7 @@ module.exports.createAlbum = async (oAuth2Client, title) => {
 
 /**
  * アルバムを共有します
- * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
+ * @param oAuth2Client
  * @param {string} albumID
  * @returns {Promise<Object>}
  */
@@ -232,7 +230,7 @@ module.exports.shareAlbum = async (oAuth2Client, albumID) => {
 
 /**
  * アップロード済みの写真に関する情報を取得します
- * @param {OAuth2Client} OAuth2Client - getOAuthToken関数で取得します
+ * @param oAuth2Client
  * @param {string} mediaItemID
  * @returns {Promise<Object>}
  */
