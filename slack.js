@@ -1,7 +1,7 @@
 "use strict";
 
 const {RTMClient, WebClient} = require('@slack/client');
-const utils = require("./utils");
+const utils = require("./libs/utils");
 
 module.exports.Slack = class Slack {
     /**
@@ -18,18 +18,17 @@ module.exports.Slack = class Slack {
     }
 
     start() {
-        this.rtm.start();
+        this.rtm.start().catch(console.error);
         this.rtm.on("ready", () => console.log("ready"));
         this.rtm.on("message", message => this.reply(message));
     }
 
+    /**
+     * @return {Promise<string>}
+     */
     async getReplyText() {
-        throw Error("NotImplementedError");
     }
 
-    /**
-     * @param{Object} receiveMessage
-     */
     reply(receiveMessage) {
         const {user, text, channel, subtype, ts} = receiveMessage;
         if (subtype) {
@@ -44,13 +43,12 @@ module.exports.Slack = class Slack {
         }
         if (text.match(/ip$/)) {
             const ips = utils.getLocalIps();
-            this.web.chat.postMessage({
+            return this.web.chat.postMessage({
                 channel: channel,
                 text: ips.map(ip => `address: ${ip}`).join("\n"),
                 as_user: true,
                 thread_ts: ts
             });
-            return;
         }
 
         this.getReplyText()

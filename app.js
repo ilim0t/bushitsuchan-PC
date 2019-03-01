@@ -1,9 +1,9 @@
 "use strict";
 
-const photoapi = require("./photoAPI");
-const {capture} = require("./caputure");
+const photoapi = require("./libs/photoAPI");
+const {capture} = require("./libs/caputure");
 const slack = require("./slack");
-const utils = require("./utils");
+const utils = require("./libs/utils");
 
 const main = async () => {
     //環境設定
@@ -25,8 +25,7 @@ const main = async () => {
         const uploadToken = await photoapi.uploadPhoto(oAuth2Client, photo, Date().toLocaleString());
         const {mediaItem} = await photoapi.createAlbumMediaItem(oAuth2Client, album.id, uploadToken, "");
         const {baseUrl} = await photoapi.getMediaItem(oAuth2Client, mediaItem.id);
-        const shortUrl = await utils.getShortURL(baseUrl);
-        return shortUrl;
+        return await utils.getShortURL(baseUrl);
     };
 
     //slackbotの開始
