@@ -8,7 +8,7 @@ const utils = require("./libs/utils");
 const main = async () => {
     //写真撮影
     const cap = new capture.Capture(0);
-    cap.setIntervalCapture();
+    cap.setIntervalCapture(5 * 1000, 12);
 
     //環境設定
     const {client_id, client_secret, slack_token} = process.env;
