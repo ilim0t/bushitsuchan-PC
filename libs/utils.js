@@ -43,7 +43,7 @@ module.exports.getLocalIps = () => {
         }
     }
     if (ipList.length === 0) {
-        throw Error("IP Adressが見つかりません");
+        throw new Error("IP Adressが見つかりません");
     }
     return ipList;
 };
