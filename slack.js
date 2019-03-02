@@ -30,7 +30,7 @@ module.exports.Slack = class Slack {
     }
 
     reply(receiveMessage) {
-        const {user, text, channel, subtype, ts} = receiveMessage;
+        const {user, text, channel, subtype, ts, thread_ts} = receiveMessage;
         if (subtype) {
             // console.log(subtype);
             return;
@@ -57,7 +57,7 @@ module.exports.Slack = class Slack {
                     channel: channel,
                     text: replyText,
                     as_user: true,
-                    thread_ts: ts
+                    thread_ts: thread_ts || ts
                 })
             )
         // console.info(`Message sent: ${response.message.text}`
