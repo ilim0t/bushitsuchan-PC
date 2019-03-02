@@ -20,7 +20,44 @@ module.exports.Slack = class Slack {
     start() {
         this.rtm.start().catch(console.error);
         this.rtm.on("ready", () => console.log("ready"));
-        this.rtm.on("message", message => this.reply(message));
+        this.rtm.on("message", event => this.reply(event));
+        this.rtm.on("reaction_added", async event => {
+            const {reaction, item, item_user, user} = event;
+            if (!item_user || item_user !== this.rtm.activeUserId) {
+                return;
+            }
+            const {type, channel, ts} = item;
+
+            if (!["sumi", "new"].some(element => reaction === element)) {
+                return;
+            }
+            if (type !== "message") {
+                return;
+            }
+            const response = await this.web.conversations.history({
+                channel: channel,
+                latest: ts,
+                limit: 1,
+                inclusive: true
+            });
+            await this.web.chat.delete({
+                    channel: channel,
+                    ts: ts,
+                    as_user: true
+                }
+            );
+            const {text, attachments} = response.messages[0];
+            if (!attachments || attachments[0].id !== 1) {
+                return;
+            }
+            const replyText = await this.getReplyText();
+            await this.web.chat.postMessage({
+                channel: channel,
+                text: replyText,
+                as_user: true,
+                // username: "部室ちゃん"
+            })
+        })
     }
 
     /**
@@ -29,8 +66,8 @@ module.exports.Slack = class Slack {
     async getReplyText() {
     }
 
-    reply(receiveMessage) {
-        const {user, text, channel, subtype, ts, thread_ts} = receiveMessage;
+    reply(event) {
+        const {user, text, channel, subtype, ts, thread_ts} = event;
         if (subtype) {
             // console.log(subtype);
             return;
@@ -46,8 +83,10 @@ module.exports.Slack = class Slack {
             return this.web.chat.postMessage({
                 channel: channel,
                 text: ips.map(ip => `address: ${ip}`).join("\n"),
+                // thread_ts: thread_ts || ts,
+                // reply_broadcast: true,
                 as_user: true,
-                thread_ts: ts
+                // username: "部室ちゃん"
             });
         }
 
@@ -56,8 +95,10 @@ module.exports.Slack = class Slack {
                 this.web.chat.postMessage({
                     channel: channel,
                     text: replyText,
+                    // thread_ts: thread_ts || ts,
+                    // reply_broadcast: true,
                     as_user: true,
-                    thread_ts: thread_ts || ts
+                    // username: "部室ちゃん"
                 })
             )
         // console.info(`Message sent: ${response.message.text}`
