@@ -86,11 +86,11 @@ module.exports.getAlbumList = async oAuth2Client => {
 /**
  *  画像のバイナリデータを送信します
  * @param oAuth2Client
- * @param photo
+ * @param buf
  * @param {string} filename
  * @returns {Promise<string>} uploadToken
  */
-module.exports.uploadPhoto = async (oAuth2Client, photo, filename) => {
+module.exports.uploadPhoto = async (oAuth2Client, buf, filename) => {
     const accessToken = await oAuth2Client.getAccessToken();
     const url = "https://photoslibrary.googleapis.com/v1/uploads";
     const headers = {
@@ -102,7 +102,7 @@ module.exports.uploadPhoto = async (oAuth2Client, photo, filename) => {
     return rpap(url, {
         method: "POST",
         headers: headers,
-        body: photo
+        body: buf
     })
 };
 
