@@ -21,36 +21,74 @@ module.exports.Slack = class Slack {
         this.rtm.start().catch(console.error);
         this.rtm.on("ready", () => console.log("ready"));
         this.rtm.on("message", event => this.reply(event));
-        this.rtm.on("reaction_added", async event => {
-            const {reaction, item, item_user, user} = event;
-            if (!item_user || item_user !== this.rtm.activeUserId) {
-                return;
-            }
-            const {type, channel, ts} = item;
+        this.rtm.on("reaction_added", async event => this.reactionReply(event))
+    }
 
-            if (!["yarinaoshi", "wasureyou"].some(element => reaction === element)) {
-                return;
-            }
-            if (type !== "message") {
-                return;
-            }
-            await this.web.chat.delete({
-                    channel: channel,
-                    ts: ts,
-                    as_user: true
+    static getBolck(text, url) {
+        return [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": text
                 }
-            );
-            if (reaction === "wasureyou") {
-                return;
+            },
+            {
+                "type": "image",
+                "title": {
+                    "type": "plain_text",
+                    "text": "部室の様子",
+                    "emoji": true
+                },
+                "image_url": `${url}`,
+                "alt_text": "部室の様子"
+            },
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "plain_text",
+                        "text": "リアクションを付けることでアクションを起こせられます. \n:yarinaoshi:で再送, :wasureyou:で削除されます.",
+                        "emoji": true
+                    }
+                ]
             }
+        ];
+    }
 
-            const replyText = await this.getReplyText();
-            await this.web.chat.postMessage({
+    async reactionReply(event) {
+        const {reaction, item, item_user, user} = event;
+        if (item_user && item_user !== this.rtm.activeUserId) {
+            return;
+        }
+        const {type, channel, ts} = item;
+
+        if (!["yarinaoshi", "wasureyou", "wastebasket", "recycle"].some(element => reaction === element)) {
+            return;
+        }
+        if (type !== "message") {
+            return;
+        }
+        await this.web.chat.delete({
                 channel: channel,
-                text: replyText,
-                as_user: true,
-                // username: "部室ちゃん"
-            })
+                ts: ts,
+                as_user: true
+            }
+        );
+        if (!["wasureyou", "recycle"].some(element => reaction === element)) {
+            return;
+        }
+
+        const replyText = await this.getReplyText();
+        await this.web.chat.postMessage({
+            channel: channel,
+            text: "再送|部室の様子",
+            blocks: Slack.getBolck(`:recycle:が付けられたため再送します\n${new Date().toLocaleString()}から直近一定時間の様子をgifアニメーションにしました.`, replyText),
+            icon_emoji: ":slack:",
+            // thread_ts: thread_ts || ts,
+            // reply_broadcast: true,
+            // as_user: true,
+            username: "部室ちゃん"
         })
     }
 
@@ -59,6 +97,7 @@ module.exports.Slack = class Slack {
      */
     async getReplyText() {
     }
+
 
     async reply(event) {
         const {user, text, channel, subtype, ts, thread_ts} = event;
@@ -95,12 +134,13 @@ module.exports.Slack = class Slack {
         const replyText = await this.getReplyText();
         await this.web.chat.postMessage({
             channel: channel,
-            text: replyText,
+            text: "部室の様子",
+            blocks: Slack.getBolck(`${new Date().toLocaleString()}から直近一定時間の様子をgifアニメーションにしました.`, replyText),
+            icon_emoji: ":slack:",
             // thread_ts: thread_ts || ts,
             // reply_broadcast: true,
-            as_user: true,
-            // username: "部室ちゃん"
+            // as_user: true,
+            username: "部室ちゃん"
         })
-        // console.info(`Message sent: ${response.message.text}`
     }
 };

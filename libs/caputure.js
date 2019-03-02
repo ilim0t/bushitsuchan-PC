@@ -33,7 +33,7 @@ module.exports.Capture = class Capture {
 
     generateGif() {
         if (this.photoArray.length === 0) {
-            throw new Error("");
+            throw new Error("まだまだ画像が撮れていません");
         }
         const [height, width] = this.photoArray[0].sizes;
 
