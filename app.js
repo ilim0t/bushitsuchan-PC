@@ -6,7 +6,6 @@ const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const {WebClient} = require('@slack/web-api');
 const {RTMClient, LogLevel} = require('@slack/rtm-api');
-const localtunnel = require('localtunnel');
 const {createMessageAdapter} = require('@slack/interactive-messages');
 const utils = require("./utils");
 const cv = require('opencv4nodejs');
@@ -49,21 +48,7 @@ const port = PORT || 3000;
 http.createServer(app).listen(port, () => {
     console.log(`server listening on port ${port}`);
 });
-const tunnel = localtunnel(port, {subdomain: subdomain}, (err, tunnel) => {
-    if (err) {
-        throw new Error(err);
-    }
-    console.log(`public url ${tunnel.url} is assigned for your tunnel`);
-});
-// tunnel.on("request", info => {
-//     console.info("tunnnel request", info)
-// });
-// tunnel.on("error", err => {
-//     console.info("tunnel error", err)
-// });
-// tunnel.on("close", () => {
-//     console.info("tunnel close")
-// });
+const serverUrl = `https://${subdomain}.serveo.net`;
 
 const getBlock = (text, url) => [
     {
@@ -144,7 +129,7 @@ rtm.on("message", async event => {
     web.chat.postMessage({
         channel: channel,
         text: "部室の様子",
-        blocks: getBlock(`${new Date().toLocaleString("ja")}の写真です.`, `${tunnel.url}/photo/${raondom_num}`),
+        blocks: getBlock(`${new Date().toLocaleString("ja")}の写真です.`, `${serverUrl}/photo/${raondom_num}`),
         icon_emoji: ":slack:",
     }).catch(e => console.error(e));
 });
@@ -171,7 +156,7 @@ slackInteractions.action({type: 'button'}, (payload, respond) => {
         .then(() => {
             const reply = payload.message;
             reply.text = "再送|部室の様子";
-            reply.blocks = getBlock(`<@${user.id}>によりボタンが押されたため再送します\n${new Date().toLocaleString("ja")}の写真です.`, `${tunnel.url}/photo/${raondom_num}`);
+            reply.blocks = getBlock(`<@${user.id}>によりボタンが押されたため再送します\n${new Date().toLocaleString("ja")}の写真です.`, `${serverUrl}/photo/${raondom_num}`);
             respond(reply);
         })
         .then(() => web.chat.postEphemeral({

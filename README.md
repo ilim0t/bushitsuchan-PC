@@ -18,12 +18,17 @@ OSKの部室の様子を様子をオンラインで確認できるプロジェ�
 export SLACK_BOT_TOKEN="xoxb-..."
 ```
 
-9. 同じページで左メニューにある`Basic Information`を押し移動.
-10. `App Credentials`>`Signing Secret`を`show`を押し表示, その文字列をコピー.
-11. コピーした文字列を`.envrc`ファイルに以下のように保存する.
+1. 同じページで左メニューにある`Basic Information`を押し移動.
+2. `App Credentials`>`Signing Secret`を`show`を押し表示, その文字列をコピー.
+3. コピーした文字列を`.envrc`ファイルに以下のように保存する.
 ```bash
 export SLACK_SIGNING_SECRET="4218..."
 ```
+
+## Slackのwebhook設定
+1. 同ページで左メニューにある`Interactive Components`を押し移動.
+2. `Interactivity` > `Request URL`に`https://bushitsuchan.serveo.net/slack/actions`を貼り付け保存.
+
 ## direnvの設定
 1. `.envrc`ファイルが以下のようになっていることを確認.
 ```bash
@@ -34,6 +39,12 @@ export SLACK_SIGNING_SECRET="4218..."
 ```bash
 direnv allow
 ```
+
+## tunnelingの設定
+```bash
+ssh -R bushitsuchan:80:localhost:3000 serveo.net
+```
+を実行し続ける.
 
 ## カメラを使えるようにする
 Usageで書いたが，`npm install`で自動で設定されるが，注意が必要なので[opencv4nodejs](https://www.npmjs.com/package/opencv4nodejs#how-to-install)が使えれるよう事前に準備しておく.
