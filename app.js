@@ -91,9 +91,9 @@ const getBlock = (text, url) => [
                 "text": {
                     "type": "plain_text",
                     "emoji": true,
-                    "text": "最新の様子を取得"
+                    "text": "更新"
                 },
-                "value": "recycle"
+                "value": "reload"
             },
             {
                 "type": "button",
@@ -112,7 +112,7 @@ const getBlock = (text, url) => [
 rtm.start()
     .catch(console.error);
 rtm.on("ready", () => console.log("slack RTM Client is ready"));
-rtm.on("message", event => async event => {
+rtm.on("message", async event => {
     const {user, text, channel, subtype, ts, thread_ts} = event;
 
     if (subtype) {
@@ -146,42 +146,44 @@ rtm.on("message", event => async event => {
         text: "部室の様子",
         blocks: getBlock(`${new Date().toLocaleString("ja")}の写真です.`, `${tunnel.url}/photo/${raondom_num}`),
         icon_emoji: ":slack:",
-    });
+    }).catch(e => console.error(e));
 });
 
 slackInteractions.action({type: 'button'}, (payload, respond) => {
     const {actions, message, user, channel, trigger_id, response_url} = payload;
     const {ts} = message;
-    this.web.chat.delete({
-            channel: channel.id,
-            ts: ts,
-        }
-    ).catch(console.error);
-
-    if (actions[0].value !== "recycle") {
+    if (actions[0].value !== "reload") {
+        web.chat.delete({
+            "channel": channel.id,
+            "ts": ts,
+        }).catch(e => console.error(e));
         return;
     }
-
-    this.web.chat.postEphemeral({
-        channel: channel.id,
-        user: user.id,
-        text: "再送準備中…",
-        as_user: true,
-    }).catch(console.error);
-
     const raondom_num = String(Date.now()) + String(Math.random()).slice(1);
-    const image = cv.imencode(`.${ext}`, cap.read());
-    app.get(`/photo/${raondom_num}`, (req, res) => {
-        res.contentType(`image/${ext}`);
-        res.end(image);
-    });
-    utils.wait(2 * 60 * 1000).then(() => app.get(`/photo/${raondom_num}`));  // imageはgcしてくれるはずだよね
+    new Promise(resolve => resolve(cap.read()))
+        .then(img => cv.imencode(`.${ext}`, img))
+        .then(img => {
+            app.get(`/photo/${raondom_num}`, (req, res) => {
+                res.contentType(`image/${ext}`);
+                res.end(img);
+            })
+        })
+        .then(() => {
+            const reply = payload.message;
+            reply.text = "再送|部室の様子";
+            reply.blocks = getBlock(`<@${user.id}>によりボタンが押されたため再送します\n${new Date().toLocaleString("ja")}の写真です.`, `${tunnel.url}/photo/${raondom_num}`);
+            respond(reply);
+        })
+        .then(() => web.chat.postEphemeral({
+            channel: channel.id,
+            user: user.id,
+            text: "写真が更新されました",
+            as_user: true,
+        }))
+        .catch(e => console.error(e));
 
-    respond({
-        channel: channel.id,
-        text: "再送|部室の様子",
-        blocks: Slack.getBlock(`ボタンが押されたため再送します\nnew Date().toLocaleString("ja")}の写真です.`, `${tunnel.url}/photo/${raondom_num}`),
-        icon_emoji: ":slack:",
-    })
+    const reply = payload.message;
+    reply.blocks.pop();
+    return reply;
 });
 
