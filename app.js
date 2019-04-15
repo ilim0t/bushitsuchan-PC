@@ -107,7 +107,7 @@ const getBlock = (text, url) => [
 rtm.start()
     .catch(console.error);
 rtm.on("ready", () => console.log("slack RTM Client is ready"));
-rtm.on("message", async event => {
+rtm.on("message", event => {
     const {user, text, channel, subtype, ts, thread_ts} = event;
 
     if (subtype) {
@@ -122,11 +122,11 @@ rtm.on("message", async event => {
 
     if (text.match(/ip$/)) {
         const ips = utils.getLocalIps();
-        await this.web.chat.postMessage({
+        web.chat.postMessage({
             channel: channel,
             text: ips.map(ip => `address: ${ip}`).join("\n"),
             icon_emoji: ":slack:",
-        });
+        }).catch(console.error);
         return;
     }
     const raondom_num = String(Date.now()) + String(Math.random()).slice(1);
@@ -139,7 +139,7 @@ rtm.on("message", async event => {
         text: "部室の様子",
         blocks: getBlock(`${new Date().toLocaleString("ja")}の写真です.`, `${serverUrl}/photo/${raondom_num}`),
         icon_emoji: ":slack:",
-    }).catch(e => console.error(e));
+    }).catch(console.error);
 });
 
 slackInteractions.action({type: 'button'}, (payload, respond) => {
@@ -150,7 +150,7 @@ slackInteractions.action({type: 'button'}, (payload, respond) => {
         web.chat.delete({
             "channel": channel.id,
             "ts": ts,
-        }).catch(e => console.error(e));
+        }).catch(console.error);
         return;
     }
     const raondom_num = String(Date.now()) + String(Math.random()).slice(1);
@@ -173,7 +173,7 @@ slackInteractions.action({type: 'button'}, (payload, respond) => {
             text: "写真が更新されました",
             as_user: true,
         }))
-        .catch(e => console.error(e));
+        .catch(console.error);
 
     const reply = message;
     reply.blocks.pop();

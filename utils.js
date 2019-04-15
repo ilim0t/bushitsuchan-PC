@@ -1,5 +1,5 @@
 "use strict";
-
+const os = require("os");
 /**
  * @return {Array}
  */
