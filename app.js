@@ -57,6 +57,7 @@ const port = PORT || 3000;
 
 http.createServer(app).listen(port, () => {
     console.log(`server listening on port ${port}`);
+    console.log(`while :; do ssh -R ${subdomain}:80:localhost:3000 serveo.net; done と実行してtunnelingしましょう.`)
 });
 const serverUrl = `https://${subdomain}.serveo.net`;
 

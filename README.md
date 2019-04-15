@@ -40,12 +40,6 @@ export SLACK_SIGNING_SECRET="4218..."
 direnv allow
 ```
 
-## tunnelingの設定
-```bash
-ssh -R bushitsuchan:80:localhost:3000 serveo.net
-```
-を実行し続ける.
-
 ## カメラを使えるようにする
 Usageで書いたが，`npm install`で自動で設定されるが，注意が必要なので[opencv4nodejs](https://www.npmjs.com/package/opencv4nodejs#how-to-install)が使えれるよう事前に準備しておく.
 
@@ -53,4 +47,11 @@ Usageで書いたが，`npm install`で自動で設定されるが，注意が�
 1. `npm install`
 2. `npm start`  
 を実行.
-途中でErrorが出たらまあ頑張れ. 多分`package-lock.json`, `token.json`を消してみるか, opencv4nodejsに必要なcmake, gcc, python等のlibraryを`apt`や`brew`で入れれば治る.
+途中でErrorが出たらまあ頑張れ. 多分`package-lock.json`, `token.json`を消してみるか, opencv4nodejsに必要なcmake, gcc, python等のlibraryを`apt`や`brew`で入れれば治る.  
+3. 
+```bash
+ssh -R bushitsuchan:80:localhost:3000 serveo.net
+```
+を別プロセスで実行する.
+
+> いつもtmuxで動かしてるので, 部室PCのssh接続した後, `tmux attach`を実行すれば実行中の様子が見れます.
