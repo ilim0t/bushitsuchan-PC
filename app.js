@@ -31,6 +31,7 @@ const app = express();
 app.use(morgan("short"));
 app.use("/slack/actions", slackInteractions.expressMiddleware());
 const cap = new cv.VideoCapture(devicePort);
+const images = new Map();
 
 // const slackSlashCommand = () => {
 // };
@@ -39,6 +40,15 @@ const cap = new cv.VideoCapture(devicePort);
 app.get("/", (req, res) => {
     res.writeHead(200, {"Content-Type": "text/plain"});
     res.end("Hello, world!");
+});
+
+app.get(`/photo/:imageKey`, (req, res) => {
+    if (!images.has(req.params.imageKey)) {
+        res.sendStatus(404);
+        return;
+    }
+    res.contentType(`image/${ext}`);
+    res.send(images.get(req.params.imageKey));
 });
 
 
@@ -120,12 +130,10 @@ rtm.on("message", async event => {
         return;
     }
     const raondom_num = String(Date.now()) + String(Math.random()).slice(1);
-    const image = cv.imencode(`.${ext}`, cap.read());
-    app.get(`/photo/${raondom_num}`, (req, res) => {
-        res.contentType(`image/${ext}`);
-        res.end(image);
-    });
-    utils.wait(2 * 60 * 1000).then(() => app.get(`/photo/${raondom_num}`));  // imageはgcしてくれるはずだよね
+    const img = cv.imencode(`.${ext}`, cap.read());
+    images.set(raondom_num, img);
+    utils.wait(24 * 60 * 60 * 1000)
+        .then(() => images.delete(raondom_num));
     web.chat.postMessage({
         channel: channel,
         text: "部室の様子",
@@ -137,6 +145,7 @@ rtm.on("message", async event => {
 slackInteractions.action({type: 'button'}, (payload, respond) => {
     const {actions, message, user, channel, trigger_id, response_url} = payload;
     const {ts} = message;
+    images.delete(message.blocks[1].image_url.match(new RegExp(`${serverUrl}/photo/(\\d+.\\d+)`))[1]);
     if (actions[0].value !== "reload") {
         web.chat.delete({
             "channel": channel.id,
@@ -148,10 +157,9 @@ slackInteractions.action({type: 'button'}, (payload, respond) => {
     new Promise(resolve => resolve(cap.read()))
         .then(img => cv.imencode(`.${ext}`, img))
         .then(img => {
-            app.get(`/photo/${raondom_num}`, (req, res) => {
-                res.contentType(`image/${ext}`);
-                res.end(img);
-            })
+            images.set(raondom_num, img);
+            utils.wait(24 * 60 * 60 * 1000)
+                .then(() => images.delete(raondom_num));
         })
         .then(() => {
             const reply = payload.message;
@@ -167,7 +175,7 @@ slackInteractions.action({type: 'button'}, (payload, respond) => {
         }))
         .catch(e => console.error(e));
 
-    const reply = payload.message;
+    const reply = message;
     reply.blocks.pop();
     return reply;
 });
