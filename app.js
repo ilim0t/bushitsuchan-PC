@@ -108,7 +108,7 @@ const getBlock = (text, url) => [
 rtm.start()
     .catch(console.error);
 rtm.on("ready", () => console.log("slack RTM Client is ready"));
-rtm.on("message", event => {
+rtm.on("message", async event => {
     const {user, text, channel, subtype, ts, thread_ts} = event;
 
     if (subtype) {
@@ -120,7 +120,19 @@ rtm.on("message", event => {
     } else if (!text.match(new RegExp(`<@${rtm.activeUserId}>`))) {
         return;
     }
-
+    const channelInfo = await web.conversations.info({
+        channel: channel
+    }).catch(console.error);
+    const {is_channel, is_private} = channelInfo.channel;
+    if (!is_channel || is_private) {
+        web.chat.postEphemeral({
+            channel: channel,
+            user: user,
+            text: "publicなチャンネルでのみ機能するよう仕様を変更しました。",
+            as_user: true,
+        }).catch(console.error);
+        return;
+    }
     if (text.match(/ip$/)) {
         const ips = utils.getLocalIps();
         web.chat.postMessage({
