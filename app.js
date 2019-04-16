@@ -143,14 +143,18 @@ rtm.on("message", async event => {
         return;
     }
     const raondom_num = String(Date.now()) + String(Math.random()).slice(1);
-    const img = cv.imencode(`.${ext}`, cap.read());
-    images.set(raondom_num, img);
+    const time = new Date().toLocaleString("ja");
+    const img = cap.read();
+    img.putText(time, new cv.Point2(
+        40, img.sizes[0] - 20), cv.FONT_HERSHEY_PLAIN, 2.5, new cv.Vec3(255, 255, 255));
+    const encodedImg = cv.imencode(`.${ext}`, img);
+    images.set(raondom_num, encodedImg);
     utils.wait(24 * 60 * 60 * 1000)
         .then(() => images.delete(raondom_num));
     web.chat.postMessage({
         channel: channel,
         text: "部室の様子",
-        blocks: getBlock(`${new Date().toLocaleString("ja")}の写真です.`, `${serverUrl}/photo/${raondom_num}`),
+        blocks: getBlock(`${time}の写真です.`, `${serverUrl}/photo/${raondom_num}`),
         icon_emoji: ":slack:",
     }).catch(console.error);
 });
@@ -168,16 +172,21 @@ slackInteractions.action({type: 'button'}, (payload, respond) => {
     }
     const raondom_num = String(Date.now()) + String(Math.random()).slice(1);
     new Promise(resolve => resolve(cap.read()))
-        .then(img => cv.imencode(`.${ext}`, img))
         .then(img => {
-            images.set(raondom_num, img);
+            const time = new Date().toLocaleString("ja");
+            img.putText(time, new cv.Point2(
+                40, img.sizes[0] - 20), cv.FONT_HERSHEY_PLAIN, 2.5, new cv.Vec3(255, 255, 255));
+            const encodedImg = cv.imencode(`.${ext}`, img);
+            images.set(raondom_num, encodedImg);
             utils.wait(24 * 60 * 60 * 1000)
                 .then(() => images.delete(raondom_num));
+            return time;
         })
-        .then(() => {
+        .then(time => {
             const reply = payload.message;
             reply.text = "再送|部室の様子";
-            reply.blocks = getBlock(`<@${user.id}>によりボタンが押されたため再送します\n${new Date().toLocaleString("ja")}の写真です.`, `${serverUrl}/photo/${raondom_num}`);
+            reply.blocks = getBlock(
+                `<@${user.id}>によりボタンが押されたため再送します\n${time}の写真です.`, `${serverUrl}/photo/${raondom_num}`);
             respond(reply);
         })
         .then(() => web.chat.postEphemeral({
