@@ -4,15 +4,15 @@ const express = require('express');
 const http = require('http');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
-const {WebClient} = require('@slack/web-api');
-const {RTMClient, LogLevel} = require('@slack/rtm-api');
-const {createMessageAdapter} = require('@slack/interactive-messages');
+const { WebClient } = require('@slack/web-api');
+const { RTMClient, LogLevel } = require('@slack/rtm-api');
+const { createMessageAdapter } = require('@slack/interactive-messages');
 const utils = require("./utils");
 const cv = require('opencv4nodejs');
 
 
 // 環境設定
-const {PORT, SUBDOMAIN, SLACK_BOT_TOKEN, SLACK_SIGNING_SECRET} = process.env;
+const { PORT, SUBDOMAIN, SLACK_BOT_TOKEN, SLACK_SIGNING_SECRET } = process.env;
 const subdomain = SUBDOMAIN || "bushitsuchan";
 const slackBotToken = SLACK_BOT_TOKEN;
 const slackSigningSecret = SLACK_SIGNING_SECRET;
@@ -38,7 +38,7 @@ const images = new Map();
 // app.post('/slack/commands', bodyParser.urlencoded({extended: false}), slackSlashCommand);
 
 app.get("/", (req, res) => {
-    res.writeHead(200, {"Content-Type": "text/plain"});
+    res.writeHead(200, { "Content-Type": "text/plain" });
     res.end("Hello, world!");
 });
 
@@ -109,7 +109,7 @@ rtm.start()
     .catch(console.error);
 rtm.on("ready", () => console.log("slack RTM Client is ready"));
 rtm.on("message", async event => {
-    const {user, text, channel, subtype, ts, thread_ts} = event;
+    const { user, text, channel, subtype, ts, thread_ts } = event;
 
     if (subtype) {
         return;
@@ -123,7 +123,7 @@ rtm.on("message", async event => {
     const channelInfo = await web.conversations.info({
         channel: channel
     }).catch(console.error);
-    const {is_channel, is_private} = channelInfo.channel;
+    const { is_channel, is_private } = channelInfo.channel;
     if (!is_channel || is_private) {
         web.chat.postEphemeral({
             channel: channel,
@@ -159,9 +159,9 @@ rtm.on("message", async event => {
     }).catch(console.error);
 });
 
-slackInteractions.action({type: 'button'}, (payload, respond) => {
-    const {actions, message, user, channel, trigger_id, response_url} = payload;
-    const {ts} = message;
+slackInteractions.action({ type: 'button' }, (payload, respond) => {
+    const { actions, message, user, channel, trigger_id, response_url } = payload;
+    const { ts } = message;
     images.delete(message.blocks[1].image_url.match(new RegExp(`${serverUrl}/photo/(\\d+.\\d+)`))[1]);
     if (actions[0].value !== "reload") {
         web.chat.delete({
