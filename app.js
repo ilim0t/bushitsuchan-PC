@@ -2,7 +2,7 @@
 
 const express = require('express');
 const http = require('http');
-const bodyParser = require('body-parser');
+// const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const { WebClient } = require('@slack/web-api');
 const { RTMClient, LogLevel } = require('@slack/rtm-api');
