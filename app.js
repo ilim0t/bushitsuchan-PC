@@ -12,8 +12,11 @@ const cv = require('opencv4nodejs');
 
 
 // 環境設定
-const { PORT, SUBDOMAIN, SLACK_BOT_TOKEN, SLACK_SIGNING_SECRET } = process.env;
-const subdomain = SUBDOMAIN || "bushitsuchan";
+const { PORT, DOMAIN, SUBDOMAIN, SLACK_BOT_TOKEN, SLACK_SIGNING_SECRET } = process.env;
+if (!SUBDOMAIN) {
+    throw new Error('SUBDOMAINを設定してください')
+}
+const subdomain = SUBDOMAIN;
 const slackBotToken = SLACK_BOT_TOKEN;
 const slackSigningSecret = SLACK_SIGNING_SECRET;
 const ext = "jpg";
@@ -57,9 +60,11 @@ const port = PORT || 3000;
 
 http.createServer(app).listen(port, () => {
     console.log(`server listening on port ${port}`);
-    console.log(`while :; do ssh -R ${subdomain}:80:localhost:3000 serveo.net; done と実行してtunnelingしましょう.`)
+    // console.log(`while :; do ssh -R ${subdomain}:80:localhost:3000 serveo.net; done と実行してtunnelingしましょう.`)
 });
-const serverUrl = `https://${subdomain}.serveo.net`;
+
+const serverUrl = `https://${subdomain}.${DOMAIN}`;
+// const serverUrl = `https://${subdomain}.serveo.net`
 
 const getBlock = (text, url) => [
     {
@@ -151,10 +156,11 @@ rtm.on("message", async event => {
     images.set(raondom_num, encodedImg);
     utils.wait(24 * 60 * 60 * 1000)
         .then(() => images.delete(raondom_num));
+    const blocks = getBlock(`${time}の写真です.`, `${serverUrl}/photo/${raondom_num}`);
     web.chat.postMessage({
         channel: channel,
         text: "部室の様子",
-        blocks: getBlock(`${time}の写真です.`, `${serverUrl}/photo/${raondom_num}`),
+        blocks: blocks,
         icon_emoji: ":slack:",
     }).catch(console.error);
 });
@@ -162,7 +168,11 @@ rtm.on("message", async event => {
 slackInteractions.action({ type: 'button' }, (payload, respond) => {
     const { actions, message, user, channel, trigger_id, response_url } = payload;
     const { ts } = message;
-    images.delete(message.blocks[1].image_url.match(new RegExp(`${serverUrl}/photo/(\\d+.\\d+)`))[1]);
+    try {
+        images.delete(message.blocks[1].image_url.match(new RegExp(`${serverUrl}/photo/(\\d+.\\d+)`))[1]);
+    } catch (error) {
+        console.error(error);
+    }
     if (actions[0].value !== "reload") {
         web.chat.delete({
             "channel": channel.id,
