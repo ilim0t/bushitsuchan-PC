@@ -35,6 +35,9 @@ app.use(morgan("short"));
 app.use("/slack/actions", slackInteractions.expressMiddleware());
 const cap = new cv.VideoCapture(devicePort);
 const images = new Map();
+setInterval(() => {
+    cap.read();
+}, 5000);
 
 // const slackSlashCommand = () => {
 // };
