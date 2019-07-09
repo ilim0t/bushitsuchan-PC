@@ -19,10 +19,26 @@ aws configure
 
 https://qiita.com/miso_develop/items/bdcf15489b069ba1fa61 に従い設定
 
+```text=
+ / (VIEWER_RESOURCE_ID)
+ ├─ GET
+ └─oauth-redirect (OAUTH_RESOURCE_ID)
+    └─ GET  
+```
+
 ### 環境変数
 
-NGROK_TOKEN: ngrok の token
-AWS_REST_API_ID, RESOURCE_ID: 固定 URL 設定で得られた token
+NGROK_TOKEN: ngrok の token  
+
+AWS_REST_API_ID: 固定 URL 設定で得られた token  
+VIEWER_RESOURCE_ID:  
+OAUTH_RESOURCE_ID:  
+
+GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET: GitHub oAuth の token  
+
+LIVE_PRIVATE_KEY: live 接続のための key 暗に用いるので頑強であれば何でも良い  
+
+ORGANIZATION: str, この Organization に入っている人のみに許可する
 
 ## Run
 
