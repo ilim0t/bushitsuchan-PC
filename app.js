@@ -4,10 +4,16 @@ const express = require('express');
 const cors = require('cors');
 const logger = require('morgan');
 const { execSync } = require('child_process');
+const crypto = require('crypto');
+const url = require('url');
+const axios = require('axios');
+
+// basic auth
 
 const config = {
   restApiId: process.env.AWS_REST_API_ID,
-  resourceId: process.env.RESOURCE_ID,
+  viewerResourceId: process.env.VIEWER_RESOURCE_ID,
+  oauthResourceId: process.env.OAUTH_RESOURCE_ID,
   httpMethod: 'GET',
   region: 'us-east-2',
 };
@@ -26,9 +32,12 @@ const nms = new NodeMediaServer({
     allow_origin: '*',
   },
   auth: {
-    api: false,
+    // api: false,
     // api_user: process.env.API_USER,
-    // api_pass: process.env.API_PASS
+    // api_pass: process.env.API_PASS,
+    play: true,
+    publish: true,
+    secret: process.env.LIVE_PRIVATE_KEY,
   },
 });
 nms.run();
@@ -57,26 +66,107 @@ app.use(cors());
 
 const main = async () => {
   await ngrok.authtoken(process.env.NGROK_TOKEN);
-  const url = await ngrok.connect(3000);
+  const siteUrl = await ngrok.connect(3000);
   const liveUrl = await ngrok.connect(8000);
 
   console.log(`Forwarding ${liveUrl} -> localhost:8000`);
 
-  app.get('/', (req, res) => res.send('Hello World!'));
-  app.get('/live', (req, res) => res.json({
-    address: `${liveUrl}/live/bushitsuchan.flv`,
-  }));
-  app.get('/viewer', (req, res) => res.render('flv.ejs', { url }));
+  app.get('/', (req, res) => res.send('Hello World by bushitsuchan!'));
+  app.get('/live', async (req, res) => {
+    const { code } = req.query;
+    const tokenResponse = await axios({
+      method: 'post',
+      url: url.format({
+        pathname: 'https://github.com/login/oauth/access_token',
+        query: {
+          client_id: process.env.GITHUB_CLIENT_ID,
+          client_secret: process.env.GITHUB_CLIENT_SECRET,
+          code,
+        },
+      }),
+      headers: {
+        accept: 'application/json',
+      },
+    });
 
-  app.listen(3000, () => console.log(`Forwarding ${url} -> localhost:3000`));
-  console.log(`Please check ${url}/viewer`);
+    const accessToken = tokenResponse.data.access_token;
+
+    const orgResponse = await axios({
+      method: 'get',
+      url: url.format({
+        pathname: 'https://api.github.com/user/orgs',
+        query: {
+          access_token: accessToken,
+        },
+      }),
+      headers: {
+        accept: 'application/json',
+      },
+    }).catch((e) => {
+      console.error(e);
+    });
+
+    if (
+      !Array.isArray(orgResponse.data)
+      || !orgResponse.data.map(x => x.login).includes(process.env.ORGANIZATION)
+    ) {
+      res.status(403);
+      // res.render('error', { error: err });
+    }
+
+    const md5 = crypto.createHash('md5');
+    const exp = Math.floor(Date.now() / 1000) + 6000;
+    const streamId = '/live/stream';
+    const key = process.env.LIVE_PRIVATE_KEY;
+    res.json({
+      address: `${liveUrl}/live/stream.flv`,
+      hashValue: `${exp}-${md5.update(`${streamId}-${exp}-${key}`).digest('hex')}`,
+    });
+  });
+  app.get('/viewer', (req, res) => {
+    const { code } = req.query;
+    res.render('flv.ejs', {
+      url: url.format({
+        pathname: `${siteUrl}/live`,
+        query: { code },
+      }),
+    });
+  });
+  app.get('/oauth-redirect', (req, res) => {
+    const { code } = req.query;
+    res.redirect(
+      url.format({
+        pathname: `${siteUrl}/viewer`,
+        query: { code },
+      }),
+    );
+  });
+  app.get('/auth', (req, res) => {
+    const scopes = ['read:org'];
+    res.redirect(
+      encodeURI(
+        `https://github.com/login/oauth/authorize?client_id=${
+          process.env.GITHUB_CLIENT_ID
+        }&scope=${scopes.join(' ')}`,
+      ),
+    );
+  });
+
+  app.listen(3000, () => console.log(`Forwarding ${siteUrl} -> localhost:3000`));
 
   execSync(
     `aws apigateway put-integration --rest-api-id ${config.restApiId} --resource-id ${
-      config.resourceId
+      config.viewerResourceId
     } --http-method ${config.httpMethod} --type HTTP_PROXY --integration-http-method ${
       config.httpMethod
-    } --uri ${url}/viewer`,
+    } --uri ${siteUrl}/viewer`,
+  );
+  execSync(
+    `aws apigateway put-integration --rest-api-id ${config.restApiId} --resource-id ${
+      config.oauthResourceId
+    } --http-method ${config.httpMethod} --type HTTP_PROXY --integration-http-method ${
+      config.httpMethod
+    } --uri ${siteUrl}/oauth-redirect`,
   );
   execSync(`aws apigateway create-deployment --rest-api-id ${config.restApiId} --stage-name prod`);
   console.log(
@@ -84,4 +174,6 @@ const main = async () => {
   );
 };
 
-main().catch(e => console.error(e));
+main().catch((e) => {
+  console.error(e);
+});

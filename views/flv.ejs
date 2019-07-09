@@ -11,13 +11,13 @@
     <script>
       if (flvjs.isSupported()) {
         const videoElement = document.getElementById("videoElement");
-        fetch("<%= url %>/live")
+        fetch("<%= url %>")
           .then(response => response.json())
           .then(res => {
             const flvPlayer = flvjs.createPlayer({
               type: "flv",
               isLive: true,
-              url: res.address
+              url: `${res.address}?sign=${res.hashValue}`
             });
             flvPlayer.attachMediaElement(videoElement);
             flvPlayer.load();

@@ -34,7 +34,7 @@ rtmp に向けストリーミング
 OBS などでも行えますがここでは ffmpeg の例を書きます
 
 ```bash=
-ffmpeg -re -i example.mp4 -c copy -f flv rtmp://localhost/live/bushitsuchan
+ffmpeg -re -i example.mp4 -c copy -f flv rtmp://localhost/live/stream
 ```
 
 ### local での確認
