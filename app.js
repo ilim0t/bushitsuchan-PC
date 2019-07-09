@@ -2,7 +2,7 @@ const NodeMediaServer = require('node-media-server');
 const ngrok = require('ngrok');
 const express = require('express');
 const cors = require('cors');
-const logger = require('morgan');
+const morgan = require('morgan');
 const { execSync } = require('child_process');
 const crypto = require('crypto');
 const url = require('url');
@@ -61,7 +61,7 @@ nms.run();
 // });
 
 const app = express();
-app.use(logger('short'));
+app.use(morgan('short'));
 app.use(cors());
 
 const main = async () => {
@@ -74,6 +74,11 @@ const main = async () => {
   app.get('/', (req, res) => res.send('Hello World by bushitsuchan!'));
   app.get('/live', async (req, res) => {
     const { code } = req.query;
+    if (code === undefined) {
+      res.status(401).end();
+      console.error(req.query);
+      return;
+    }
     const tokenResponse = await axios({
       method: 'post',
       url: url.format({
@@ -89,8 +94,14 @@ const main = async () => {
       },
     });
 
+    if (tokenResponse.data.error !== undefined) {
+      res.status(401).end();
+      return;
+    }
     const accessToken = tokenResponse.data.access_token;
-
+    if (accessToken === undefined) {
+      console.error(tokenResponse.data);
+    }
     const orgResponse = await axios({
       method: 'get',
       url: url.format({
@@ -103,19 +114,23 @@ const main = async () => {
         accept: 'application/json',
       },
     }).catch((e) => {
+      res.status(400);
       console.error(e);
     });
 
     if (
-      !Array.isArray(orgResponse.data)
+      orgResponse.data === undefined
+      || !Array.isArray(orgResponse.data)
       || !orgResponse.data.map(x => x.login).includes(process.env.ORGANIZATION)
     ) {
-      res.status(403);
+      res.status(403).end();
+      console.error(orgResponse);
+      return;
       // res.render('error', { error: err });
     }
 
     const md5 = crypto.createHash('md5');
-    const exp = Math.floor(Date.now() / 1000) + 6000;
+    const exp = Math.floor(Date.now() / 1000) + 60;
     const streamId = '/live/stream';
     const key = process.env.LIVE_PRIVATE_KEY;
     res.json({
@@ -130,6 +145,7 @@ const main = async () => {
         pathname: `${siteUrl}/live`,
         query: { code },
       }),
+      reloadUrl: `https://${config.restApiId}.execute-api.${config.region}.amazonaws.com/prod`,
     });
   });
   app.get('/oauth-redirect', (req, res) => {
@@ -159,7 +175,7 @@ const main = async () => {
       config.viewerResourceId
     } --http-method ${config.httpMethod} --type HTTP_PROXY --integration-http-method ${
       config.httpMethod
-    } --uri ${siteUrl}/viewer`,
+    } --uri ${siteUrl}/auth`,
   );
   execSync(
     `aws apigateway put-integration --rest-api-id ${config.restApiId} --resource-id ${

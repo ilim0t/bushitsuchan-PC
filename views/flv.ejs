@@ -22,6 +22,9 @@
             flvPlayer.attachMediaElement(videoElement);
             flvPlayer.load();
             videoElement.addEventListener("loadeddata", () => flvPlayer.play());
+          })
+          .catch(e => {
+            location.href = "<%= reloadUrl %>";
           });
       }
     </script>
