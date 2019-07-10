@@ -118,13 +118,16 @@ const main = async () => {
       console.error(e);
     });
 
+    if (orgResponse.data === undefined) {
+      res.status(403).end();
+      console.error(orgResponse);
+      return;
+    }
     if (
-      orgResponse.data === undefined
-      || !Array.isArray(orgResponse.data)
+      !Array.isArray(orgResponse.data)
       || !orgResponse.data.map(x => x.login).includes(process.env.ORGANIZATION)
     ) {
       res.status(403).end();
-      console.error(orgResponse);
       return;
       // res.render('error', { error: err });
     }
