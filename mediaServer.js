@@ -1,7 +1,7 @@
 const NodeMediaServer = require('node-media-server');
 
 module.exports = class {
-  constructor() {
+  constructor(privateKey) {
     this.nms = new NodeMediaServer({
       logType: 2,
       rtmp: {
@@ -21,7 +21,7 @@ module.exports = class {
         // api_pass: process.env.API_PASS,
         play: true,
         publish: true,
-        secret: process.env.LIVE_PRIVATE_KEY,
+        secret: privateKey,
       },
     });
   }
