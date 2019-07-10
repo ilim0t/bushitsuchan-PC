@@ -5,6 +5,10 @@ OSK の部室の様子を様子をオンラインで確認できるプロジェ�
 
 ## Setup
 
+### ngrok
+
+[ngrok](https://ngrok.com/)に登録して，`Tunnel Authtoken` を取得する
+
 ### AWS CLI
 
 [AWS CLI](https://aws.amazon.com/jp/cli/)をインストール
@@ -15,34 +19,63 @@ brew install awscli
 aws configure
 ```
 
-### 固定 URL 設定
+### AWS API Gateway
+
+ngrok で得られる URL はは変動するので，[API Gateway](https://aws.amazon.com/jp/api-gateway/)を用いて固定 URL を ngrok の URL へリダイレクトするように設定する
 
 https://qiita.com/miso_develop/items/bdcf15489b069ba1fa61 に従い設定
 
 ```text=
  / (VIEWER_RESOURCE_ID)
  ├─ GET
- └─oauth-redirect (OAUTH_RESOURCE_ID)
-    └─ GET
+ └─ /oauth-redirect (OAUTH_RESOURCE_ID)
+     └─ GET
 ```
 
 上のような構造にします
 
 > `app.js`内の`config.region`にて region を指定しています。この値と API Gateway を設定した region，AWSCLI で設定する region を一致させてください
 
+### GitHub OAuth Apps
+
+GitHub と連携し，指定の指定の Organization に属する場合のみ，live streaming 視聴を視聴を許可するように設定します
+
+[Building OAuth Apps](https://developer.github.com/apps/building-oauth-apps/) に従い OAuth Apps を作成してください。  
+`Authorization callback URL` は AWS API Gateway で得られる URL を設定します
+
+`https://[VIEWER_RESOURCE_ID].execute-api.[REGION].amazonaws.com/prod/oauth-redirect`のようになります
+
 ### 環境変数
 
-NGROK_TOKEN: [ngrok](https://ngrok.com/) の token, 無料プランでプランでも動作します
+NGROK_TOKEN: Tunnel Authtoken, 無料プランでプランでも動作します
 
-AWS_REST_API_ID: 固定 URL 設定で得られた token  
-VIEWER_RESOURCE_ID: 固定 URL 設定で得られた ID
-OAUTH_RESOURCE_ID: 固定 URL 設定で得られた ID
+AWS_REST_API_ID: API Gateway で得た ID  
+VIEWER_RESOURCE_ID: API Gateway で得たルートの ID  
+OAUTH_RESOURCE_ID: API Gateway で得た/oauth-redirect リソース の ID
 
-GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET: GitHub OAuth Apps の token
+GITHUB_CLIENT_ID: GitHub OAuth Apps の Client ID  
+GITHUB_CLIENT_SECRET: GitHub OAuth Apps の Client Secret
 
-LIVE_PRIVATE_KEY: live に接続のための key, 暗に用いるので頑強であれば何でも良い
+LIVE_PRIVATE_KEY: live streaming に認証をかけるための key, 暗に用いるので頑強であれば何でも良い
 
-ORGANIZATION: str, この Organization に入っている人のみに許可する
+ORGANIZATION: Organization のサイトを開いたときに URL に表示されている文字列, この Organization に入っている人のみに許可します
+
+```bash=
+export NGROK_TOKEN="8HU..."
+
+export AWS_REST_API_ID="h7c..."
+export VIEWER_RESOURCE_ID="2kv..."
+export OAUTH_RESOURCE_ID="zoo..."
+
+export GITHUB_CLIENT_ID="1b08..."
+export GITHUB_CLIENT_SECRET="jvi..."
+
+export LIVE_PRIVATE_KEY="presetprivatekey"
+
+export ORGANIZATION="TUS-OSK"
+```
+
+[direnv](https://direnv.net/)なら以上のように設定されているはずです
 
 ## Run
 
@@ -50,29 +83,33 @@ ORGANIZATION: str, この Organization に入っている人のみに許可す�
 node app.js
 ```
 
-rtmp に向けストリーミング
+rtmp に向けストリーミングします  
 OBS などでも行えますがここでは ffmpeg の例を書きます
 
 ```bash=
 ffmpeg -re -i example.mp4 -c copy -f flv rtmp://localhost/live/stream
 ```
 
-### local での確認
+## Usage
 
-`http://localhost:3000/viewer`を開く
+**local**
 
-> 再生が開始されないことがあるので，静止画で止まったままのときはサイトをリロードしてください。
+`http://localhost:3000/auth`を開く
 
-### remote での確認
+**remote**
 
 `app.js`を実行したときの log に
 
 ```text=
-Remote URL: https://*****.execute-api.us-east-2.amazonaws.com/prod
+Remote URL: https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod
 ```
 
-とあるので，それを開く
-
-> 再生が開始されないことがあるので，静止画で止まったままのときはサイトをリロードしてください。
+とあるので，それを開きます
 
 > この AWS の URL は半永久的に変わりません
+
+すると，初回実行時(過去に GitHub 認証をしていなければ)GitHub の認証ページへリダイレクトされます  
+指定 Organization の許可が取れていることを確認して認証します  
+認証後は自動的に streaming 配信再生ページへ移動します
+
+> 再生が開始されないことがあるので，静止画で止まったままのときはサイトをリロードしてください。

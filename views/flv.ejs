@@ -29,7 +29,7 @@
             });
             flvPlayer.attachMediaElement(videoElement);
             flvPlayer.load();
-            videoElement.addEventListener("loadeddata", () => flvPlayer.play());
+            flvPlayer.play();
           })
           .catch(e => {
             console.error(e);
