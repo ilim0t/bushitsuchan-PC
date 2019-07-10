@@ -23,20 +23,24 @@ https://qiita.com/miso_develop/items/bdcf15489b069ba1fa61 に従い設定
  / (VIEWER_RESOURCE_ID)
  ├─ GET
  └─oauth-redirect (OAUTH_RESOURCE_ID)
-    └─ GET  
+    └─ GET
 ```
+
+上のような構造にします
+
+> `app.js`内の`config.region`にて region を指定しています。この値と API Gateway を設定した region，AWSCLI で設定する region を一致させてください
 
 ### 環境変数
 
-NGROK_TOKEN: ngrok の token  
+NGROK_TOKEN: [ngrok](https://ngrok.com/) の token, 無料プランでプランでも動作します
 
 AWS_REST_API_ID: 固定 URL 設定で得られた token  
-VIEWER_RESOURCE_ID:  
-OAUTH_RESOURCE_ID:  
+VIEWER_RESOURCE_ID: 固定 URL 設定で得られた ID
+OAUTH_RESOURCE_ID: 固定 URL 設定で得られた ID
 
-GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET: GitHub oAuth の token  
+GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET: GitHub OAuth Apps の token
 
-LIVE_PRIVATE_KEY: live 接続のための key 暗に用いるので頑強であれば何でも良い  
+LIVE_PRIVATE_KEY: live に接続のための key, 暗に用いるので頑強であれば何でも良い
 
 ORGANIZATION: str, この Organization に入っている人のみに許可する
 
