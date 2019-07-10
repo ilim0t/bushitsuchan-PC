@@ -1,28 +1,40 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8"/>
+  <head>
+    <meta charset="utf-8" />
     <title>HTML 5 complete</title>
-</head>
-<body>
-<script src="https://cdn.bootcss.com/flv.js/1.5.0/flv.min.js"></script>
-<video id="videoElement"></video>
-<script>
-    if (flvjs.isSupported()) {
-        const videoElement = document.getElementById('videoElement');
-        fetch("<%= url %>/live")
-            .then(response => response.json())
-            .then(res => {
-                const flvPlayer = flvjs.createPlayer({
-                    "type": "flv",
-                    "isLive": true,
-                    "url": res.address
-                });
-                flvPlayer.attachMediaElement(videoElement);
-                flvPlayer.load();
-                videoElement.addEventListener("loadeddata", () => flvPlayer.play());
+  </head>
+  <body>
+    <script src="https://cdn.bootcss.com/flv.js/1.5.0/flv.min.js"></script>
+    <marquee>このページのUIを担当してくれるデザイナー募集中</marquee>
+    <video id="videoElement"></video>
+    <script>
+      if (flvjs.isSupported()) {
+        const videoElement = document.getElementById("videoElement");
+        fetch("<%= url %>")
+          .then(response => {
+            if (response.status === 403) {
+              throw new Error("指定のOrganizationにに属していません");
+            }
+            if (!response.ok) {
+              location.href = "<%= reloadUrl %>";
+            }
+            return response.json();
+          })
+          .then(res => {
+            const flvPlayer = flvjs.createPlayer({
+              type: "flv",
+              isLive: true,
+              url: `${res.address}?sign=${res.hashValue}`
             });
-    }
-</script>
-</body>
+            flvPlayer.attachMediaElement(videoElement);
+            flvPlayer.load();
+            flvPlayer.play();
+          })
+          .catch(e => {
+            console.error(e);
+          });
+      }
+    </script>
+  </body>
 </html>

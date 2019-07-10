@@ -1,45 +1,27 @@
-"use strict";
+const ngrok = require('./ngrok');
+const Server = require('./server');
+const MediaServer = require('./mediaServer');
+const aws = require('./aws');
 
-const NodeMediaServer = require('node-media-server');
-const ngrok = require('ngrok');
-const express = require('express');
-const cors = require('cors');
-const logger = require('morgan');
+const config = {
+  restApiId: process.env.AWS_REST_API_ID,
+  viewerResourceId: process.env.VIEWER_RESOURCE_ID,
+  oauthResourceId: process.env.OAUTH_RESOURCE_ID,
+  httpMethod: 'GET',
+  region: 'us-east-2',
+};
 
-const nms = new NodeMediaServer({
-    rtmp: {
-        port: 1935,
-        chunk_size: 60000,
-        gop_cache: true,
-        ping: 30,
-        ping_timeout: 60
-    },
-    http: {
-        port: 8000,
-        allow_origin: '*'
-    }
+new MediaServer(process.env.LIVE_PRIVATE_KEY).run();
+ngrok.run(process.env.NGROK_TOKEN).then((urls) => {
+  const { siteUrl, liveUrl } = urls;
+  const s = new Server(
+    siteUrl,
+    liveUrl,
+    process.env.GITHUB_CLIENT_ID,
+    process.env.GITHUB_CLIENT_SECRET,
+    process.env.ORGANIZATION,
+    process.env.LIVE_PRIVATE_KEY,
+  );
+  aws.run(config, siteUrl).then(url => console.log(`Remote URL: ${url}`));
+  s.run().then(port => console.log(`Express app listening on port ${port}`));
 });
-nms.run();
-
-const app = express();
-app.use(logger("short"));
-app.use(cors());
-
-ngrok.authtoken(process.env.NGROK_TOKEN)
-    .then(async () => {
-        const url = await ngrok.connect(3000);
-        const liveUrl = await ngrok.connect(8000);
-
-        console.log(`Forwarding ${liveUrl} -> localhost:8000`);
-
-        app.get('/', (req, res) => res.send('Hello World!'));
-        app.get('/live', (req, res) => res.json({
-                address: `${liveUrl}/live/bushitsuchan.flv`
-            })
-        );
-        app.get('/viewer', (req, res) => res.render("flv.ejs", {url: url})
-        );
-
-        app.listen(3000, () => console.log(`Forwarding ${url} -> localhost:3000`));
-        console.log(`Please check ${url}/viewer`);
-    }).catch(e => console.error(e));
