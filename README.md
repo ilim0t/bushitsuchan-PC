@@ -1,18 +1,18 @@
 # bushitsuchan-PC
 
-OSK の部室の様子を様子をオンラインで確認できるプロジェクト 部室ちゃん.
-その部室に置いてある PC 側で動かすプログラム.
+OSK の部室の様子を様子をオンラインで確認できるプロジェクト 部室ちゃん
+その部室に置いてある PC 側で動かすプログラム
 
 ## Setup
 
 ### ngrok
 
-[ngrok](https://ngrok.com/)に登録して，`Tunnel Authtoken` を取得する
+[ngrok](https://ngrok.com/)に登録して，`Tunnel Authtoken` を取得します。
 
 ### AWS CLI
 
 [AWS CLI](https://aws.amazon.com/jp/cli/)をインストール
-かつ，その設定をする
+かつ，その設定をします。
 
 ```bash=
 brew install awscli
@@ -21,61 +21,63 @@ aws configure
 
 ### AWS API Gateway
 
-ngrok で得られる URL はは変動するので，[API Gateway](https://aws.amazon.com/jp/api-gateway/)を用いて固定 URL を ngrok の URL へリダイレクトするように設定する
+ngrok で得られる URL はは変動するので，[API Gateway](https://aws.amazon.com/jp/api-gateway/)を用いて固定 URL を ngrok の URL へリダイレクトするように設定します。
 
-https://qiita.com/miso_develop/items/bdcf15489b069ba1fa61 に従い設定
+[ngrok を無料プランで URL 固定してみる](https://qiita.com/miso_develop/items/bdcf15489b069ba1fa61) に従い設定します。
 
 ```text=
- / (VIEWER_RESOURCE_ID)
+ /
  ├─ GET
- └─ /oauth-redirect (OAUTH_RESOURCE_ID)
-     └─ GET
+ ├─ /auth
+ │   └─ GET
+ ├─ /login
+ │   └─ GET
+ ├─ /oauth-redirect
+ │   └─ GET
+ └─ /viewer
+      └─ GET
 ```
 
-上のような構造にします
+上のような構造になります。
 
 > `app.js`内の`config.region`にて region を指定しています。この値と API Gateway を設定した region，AWSCLI で設定する region を一致させてください
 
-### GitHub OAuth Apps
+### Sign in with Slack
 
-GitHub と連携し，指定の指定の Organization に属する場合のみ，live streaming 視聴を視聴を許可するように設定します
+Slack と連携し，指定の Workspace に属する場合のみ LIVE Streaming 視聴を許可するように設定します。
+[Sign in with Slack](https://api.slack.com/docs/sign-in-with-slack) に従い Slack Apps を作成してください。
 
-[Building OAuth Apps](https://developer.github.com/apps/building-oauth-apps/) に従い OAuth Apps を作成してください。  
-`Authorization callback URL` は AWS API Gateway で得られる URL を設定します
-
-`https://[VIEWER_RESOURCE_ID].execute-api.[REGION].amazonaws.com/prod/oauth-redirect`のようになります
+Bot User メニューにて Redirect URLs は
+`https://[RESOURCE_ID].execute-api.[REGION].amazonaws.com/prod/oauth-redirect`のみに設定し，
+Scopes に`identity.basic`を追加してください。
 
 ### 環境変数
 
-NGROK_TOKEN: Tunnel Authtoken, 無料プランでプランでも動作します
+`NGROK_TOKEN`: Tunnel Authtoken, 無料プランでプランでも動作します
 
-AWS_REST_API_ID: API Gateway で得た ID  
-VIEWER_RESOURCE_ID: API Gateway で得たルートの ID  
-OAUTH_RESOURCE_ID: API Gateway で得た/oauth-redirect リソース の ID
+`AWS_REST_API_ID`: API Gateway で得た ID
 
-GITHUB_CLIENT_ID: GitHub OAuth Apps の Client ID  
-GITHUB_CLIENT_SECRET: GitHub OAuth Apps の Client Secret
+`SLACK_CLIENT_ID`: Slack Apps の Client ID  
+`SLACK_CLIENT_SECRET`: Slack Apps の Client Secret
 
-LIVE_PRIVATE_KEY: live streaming に認証をかけるための key, 暗に用いるので頑強であれば何でも良い
+`LIVE_PRIVATE_KEY`: live streaming に認証をかけるための key, 暗に用いるので頑強であれば何でも良い
 
-ORGANIZATION: Organization のサイトを開いたときに URL に表示されている文字列, この Organization に入っている人のみに許可します
+`WORKSTATION_ID`: Slack の WorkSpace の ID
 
 ```bash=
 export NGROK_TOKEN="8HU..."
 
 export AWS_REST_API_ID="h7c..."
-export VIEWER_RESOURCE_ID="2kv..."
-export OAUTH_RESOURCE_ID="zoo..."
 
-export GITHUB_CLIENT_ID="1b08..."
-export GITHUB_CLIENT_SECRET="jvi..."
+export SLACK_CLIENT_ID="179..."
+export SLACK_CLIENT_SECRET="38b..."
 
 export LIVE_PRIVATE_KEY="presetprivatekey"
 
-export ORGANIZATION="TUS-OSK"
+export WORKSTATION_ID="VOW38CP2D"
 ```
 
-[direnv](https://direnv.net/)なら以上のように設定されているはずです
+[direnv](https://direnv.net/)なら以上のように設定されているはずです。
 
 ## Run
 
@@ -83,8 +85,8 @@ export ORGANIZATION="TUS-OSK"
 node app.js
 ```
 
-rtmp に向けストリーミングします  
-OBS などでも行えますがここでは ffmpeg の例を書きます
+rtmp に向けストリーミングします。  
+OBS などでも行えますがここでは ffmpeg の例を書きます。
 
 ```bash=
 ffmpeg -re -i example.mp4 -c copy -f flv rtmp://localhost/live/stream
@@ -94,7 +96,7 @@ ffmpeg -re -i example.mp4 -c copy -f flv rtmp://localhost/live/stream
 
 **local**
 
-`http://localhost:3000/auth`を開く
+`http://localhost:3000/viewer`を開く
 
 **remote**
 
@@ -104,12 +106,11 @@ ffmpeg -re -i example.mp4 -c copy -f flv rtmp://localhost/live/stream
 Remote URL: https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod
 ```
 
-とあるので，それを開きます
+とあります。それに`/viewer`を付け加えた`https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/viewer`を開いてください。
 
 > この AWS の URL は半永久的に変わりません
 
-すると，初回実行時(過去に GitHub 認証をしていなければ)GitHub の認証ページへリダイレクトされます  
-指定 Organization の許可が取れていることを確認して認証します  
-認証後は自動的に streaming 配信再生ページへ移動します
+すると，初回実行時(過去に Slack で認証をしていなければ) Slack の認証ページへリダイレクトされます。  
+Sign in すると自動的に配信再生ページへ移動します。
 
 > 再生が開始されないことがあるので，静止画で止まったままのときはサイトをリロードしてください。

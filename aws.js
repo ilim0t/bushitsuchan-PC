@@ -1,21 +1,26 @@
-const { execSync } = require('child_process');
+const childProcess = require('child_process');
+const util = require('util');
+
+const exec = util.promisify(childProcess.exec);
 
 module.exports.run = async (config, siteUrl) => {
-  execSync(
-    `aws apigateway put-integration --rest-api-id ${config.restApiId} --resource-id ${
-      config.viewerResourceId
-    } --http-method ${config.httpMethod} --type HTTP_PROXY --integration-http-method ${
-      config.httpMethod
-    } --uri ${siteUrl}/auth`,
-  );
-  execSync(
-    `aws apigateway put-integration --rest-api-id ${config.restApiId} --resource-id ${
-      config.oauthResourceId
-    } --http-method ${config.httpMethod} --type HTTP_PROXY --integration-http-method ${
-      config.httpMethod
-    } --uri ${siteUrl}/oauth-redirect`,
-  );
-  execSync(`aws apigateway create-deployment --rest-api-id ${config.restApiId} --stage-name prod`);
+  exec(`aws apigateway get-resources --rest-api-id ${config.restApiId}`)
+    .then((result) => {
+      const { stderr, stdout } = result;
+      return JSON.parse(stdout);
+    })
+    .then(resources => Promise.all(
+      resources.items.map(item => exec(
+        `aws apigateway put-integration --rest-api-id ${config.restApiId} --resource-id ${item.id} --http-method ${config.httpMethod} --type HTTP_PROXY --integration-http-method ${config.httpMethod} --uri ${siteUrl}${item.path}`,
+      )),
+    ))
+    .then(() => {
+      exec(`aws apigateway create-deployment --rest-api-id ${config.restApiId} --stage-name prod`);
+    })
+    .catch((e) => {
+      console.error(e);
+    });
 
-  return `https://${config.restApiId}.execute-api.${config.region}.amazonaws.com/prod`;
+  const region = await exec('aws configure get region');
+  return `https://${config.restApiId}.execute-api.${region}.amazonaws.com/prod`;
 };
