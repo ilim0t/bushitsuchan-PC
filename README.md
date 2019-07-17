@@ -143,6 +143,7 @@ ffmpeg \
     -f avfoundation \
     -framerate 30 \
     -re -i 0 \
+    -r 5 \
     -vcodec libx264 \
     -preset ultrafast \
     -acodec aac \

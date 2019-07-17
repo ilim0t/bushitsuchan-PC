@@ -130,6 +130,11 @@ module.exports = class {
         .catch(e => console.error(e));
     });
 
+    this.app.get('/logout', (req, res) => {
+      req.session = null;
+      res.send('You have successfully logged out');
+    });
+
     this.app.use((req, res, next) => {
       const { token } = req.session;
       if (token) {
