@@ -21,6 +21,9 @@ module.exports.run = async (config, siteUrl) => {
       console.error(e);
     });
 
-  const region = await exec('aws configure get region');
+  const region = await exec('aws configure get region').then((result) => {
+    const { stderr, stdout } = result;
+    return stdout.slice(0, -1);
+  });
   return `https://${config.restApiId}.execute-api.${region}.amazonaws.com/prod`;
 };

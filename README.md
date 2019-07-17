@@ -88,8 +88,16 @@ node app.js
 rtmp に向けストリーミングします。  
 OBS などでも行えますがここでは ffmpeg の例を書きます。
 
+**Use Video files**
+
 ```bash=
 ffmpeg -re -i example.mp4 -c copy -f flv rtmp://localhost/live/stream
+```
+
+**Use USB Camera**
+
+```bash=
+ffmpeg -i /dev/video0 -framerate 1 -video_size 1080x720 -vcodec libx264 -maxrate 768k -bufsize 8080k -vf "format=yuv420p" -g 60 -f flv rtmp://localhost/live/stream
 ```
 
 ## Usage

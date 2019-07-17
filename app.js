@@ -21,7 +21,9 @@ ngrok.run(process.env.NGROK_TOKEN).then((urls) => {
     process.env.WORKSTATION_ID,
     process.env.LIVE_PRIVATE_KEY,
   );
-  const url = aws.run(config, siteUrl);
+  const url = aws.run(config, siteUrl)
+    .then(url => {
   console.log(`Remote URL: ${url}`);
+    });
   s.run().then(port => console.log(`Express app listening on port ${port}`));
-});
+}).catch(console.error);
