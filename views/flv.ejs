@@ -7,17 +7,22 @@
   <body>
     <script src="https://cdn.bootcss.com/flv.js/1.5.0/flv.min.js"></script>
     <marquee>このページのUIを担当してくれるデザイナー募集中</marquee>
+    <div>
+      <button onclick="document.getElementById('videoElement').play()">
+        動画が固まったままのときはこのボタンを押してください
+      </button>
+    </div>
     <video id="videoElement"></video>
     <script>
       if (flvjs.isSupported()) {
         const videoElement = document.getElementById("videoElement");
-        fetch("<%= url %>")
+        fetch("auth")
           .then(response => {
             if (response.status === 403) {
               throw new Error("指定のOrganizationにに属していません");
             }
             if (!response.ok) {
-              location.href = "<%= reloadUrl %>";
+              location.href = "login";
             }
             return response.json();
           })
@@ -34,6 +39,8 @@
           .catch(e => {
             console.error(e);
           });
+      } else {
+        alert("iosはダメです");
       }
     </script>
   </body>
