@@ -15,14 +15,25 @@ const config = {
 };
 
 new MediaServer(process.env.LIVE_PRIVATE_KEY).run();
-exec(
-  'ffmpeg -i /dev/video0 -framerate 1 -video_size 1080x720 -vcodec libx264 -maxrate 768k -bufsize 8080k -vf "format=yuv420p" -g 60 -f flv rtmp://localhost/live/stream',
-);
+(async () => {
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    // eslint-disable-next-line no-await-in-loop
+    await exec(
+      'ffmpeg -i /dev/video0 -vcodec libx264 -preset veryfast -f flv rtmp://localhost/live/stream',
+    );
+  }
+})();
+
 ngrok
   .run(process.env.NGROK_TOKEN)
   .then((urls) => {
     const { siteUrl, liveUrl } = urls;
-    const s = new Server(
+    aws.run(config, siteUrl).then((url) => {
+      console.log(`Remote URL: ${url}`);
+    });
+
+    return new Server(
       siteUrl,
       liveUrl,
       process.env.SLACK_CLIENT_ID,
@@ -30,9 +41,8 @@ ngrok
       process.env.WORKSTATION_ID,
       process.env.LIVE_PRIVATE_KEY,
     );
-    aws.run(config, siteUrl).then((url) => {
-      console.log(`Remote URL: ${url}`);
-    });
-    s.run().then(port => console.log(`Express app listening on port ${port}`));
   })
-  .catch(console.error);
+  .then((server) => {
+    server.run().then(port => console.log(`Express app listening on port ${port}`));
+  })
+  .catch(e => console.error(e));

@@ -6,7 +6,7 @@ const exec = util.promisify(childProcess.exec);
 module.exports.run = async (config, siteUrl) => {
   exec(`aws apigateway get-resources --rest-api-id ${config.restApiId}`)
     .then((result) => {
-      const { stderr, stdout } = result;
+      const { stdout } = result;
       return JSON.parse(stdout);
     })
     .then(resources => Promise.all(
@@ -22,7 +22,7 @@ module.exports.run = async (config, siteUrl) => {
     });
 
   const region = await exec('aws configure get region').then((result) => {
-    const { stderr, stdout } = result;
+    const { stdout } = result;
     return stdout.slice(0, -1);
   });
   return `https://${config.restApiId}.execute-api.${region}.amazonaws.com/prod`;

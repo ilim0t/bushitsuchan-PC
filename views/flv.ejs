@@ -9,7 +9,7 @@
     <marquee>このページのUIを担当してくれるデザイナー募集中</marquee>
     <div>
       <button onclick="document.getElementById('videoElement').play()">
-        再生できないときはここおして
+        動画が固まったままのときはこのボタンを押してください
       </button>
     </div>
     <video id="videoElement"></video>
@@ -29,12 +29,12 @@
           .then(res => {
             const flvPlayer = flvjs.createPlayer({
               type: "flv",
-              isLive: false,
+              isLive: true,
               url: `${res.address}?sign=${res.hashValue}`
             });
             flvPlayer.attachMediaElement(videoElement);
             flvPlayer.load();
-            setTimeout(() => flvPlayer.play(), 5000);
+            flvPlayer.play();
           })
           .catch(e => {
             console.error(e);
