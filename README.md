@@ -14,8 +14,17 @@ OSK の部室の様子を様子をオンラインで確認できるプロジェ�
 [AWS CLI](https://aws.amazon.com/jp/cli/)をインストール
 かつ，その設定をします。
 
+** Mac**
+
 ```bash=
 brew install awscli
+aws configure
+```
+
+**Ubuntu**
+
+```bash=
+sudo apt-get install awscli
 aws configure
 ```
 
@@ -82,11 +91,23 @@ export WORKSTATION_ID="VOW38CP2D"
 ## Run
 
 ```bash=
-node app.js
+npm start
 ```
 
 rtmp に向けストリーミングします。  
 OBS などでも行えますがここでは ffmpeg の例を書きます。
+
+**Mac**
+
+```bash=
+brew install ffmpeg
+```
+
+**Ubuntu**
+
+```bash=
+sudo apt-get install ffmpeg
+```
 
 **Use Video files**
 
