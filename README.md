@@ -14,7 +14,7 @@ OSK の部室の様子を様子をオンラインで確認できるプロジェ�
 [AWS CLI](https://aws.amazon.com/jp/cli/)をインストール
 かつ，その設定をします。
 
-** Mac**
+**macOS**
 
 ```bash=
 brew install awscli
@@ -42,6 +42,8 @@ ngrok で得られる URL はは変動するので，[API Gateway](https://aws.a
  ├─ /login
  │   └─ GET
  ├─ /oauth-redirect
+ │   └─ GET
+ ├─ /photo
  │   └─ GET
  └─ /viewer
       └─ GET
@@ -88,14 +90,9 @@ export WORKSTATION_ID="VOW38CP2D"
 
 [direnv](https://direnv.net/)なら以上のように設定されているはずです。
 
-## Run
+## ffmpeg
 
-```bash=
-npm start
-```
-
-rtmp に向けストリーミングします。  
-OBS などでも行えますがここでは ffmpeg の例を書きます。
+画像,音声をを取得するときに必要です。
 
 **Mac**
 
@@ -109,16 +106,49 @@ brew install ffmpeg
 sudo apt-get install ffmpeg
 ```
 
+## Run
+
+```bash=
+npm start
+```
+
+### Streaming
+
+Linux の場合は自動で行われますが，それ以外のときエラーが発生します。  
+その時の手動実行方法を書き置きます。
+
+rtmp に向けストリーミングします。
+OBS などでも行えますがここでは ffmpeg の例を書きます。
+
 **Use Video files**
 
 ```bash=
 ffmpeg -re -i example.mp4 -c copy -f flv rtmp://localhost/live/stream
 ```
 
-**Use USB Camera**
+**Use USB Camera on Ubuntu**
 
 ```bash=
-ffmpeg -i /dev/video0 -framerate 1 -video_size 1080x720 -vcodec libx264 -maxrate 768k -bufsize 8080k -vf "format=yuv420p" -g 60 -f flv rtmp://localhost/live/stream
+ffmpeg \
+    -i /dev/video0 \
+    -vcodec libx264 \
+    -preset veryfast \
+    -f flv rtmp://localhost/live/stream
+```
+
+**Use USB Camera on macOS**
+
+```bash=
+ffmpeg \
+    -f avfoundation \
+    -framerate 30 \
+    -re -i 0 \
+    -vcodec libx264 \
+    -preset ultrafast \
+    -acodec aac \
+    -ac 0 \
+    -g 25 \
+    -f flv rtmp://localhost/live/stream
 ```
 
 ## Usage
@@ -136,6 +166,8 @@ Remote URL: https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod
 ```
 
 とあります。それに`/viewer`を付け加えた`https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/viewer`を開いてください。
+
+対応していないブラウザ，または`https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/viewer?photo=force`へのアクセスでは，動画ではなく画像が表示されます。
 
 > この AWS の URL は半永久的に変わりません
 

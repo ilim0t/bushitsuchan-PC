@@ -19,9 +19,15 @@ new MediaServer(process.env.LIVE_PRIVATE_KEY).run();
   // eslint-disable-next-line no-constant-condition
   while (true) {
     // eslint-disable-next-line no-await-in-loop
-    await exec(
-      'ffmpeg -i /dev/video0 -vcodec libx264 -preset veryfast -f flv rtmp://localhost/live/stream',
-    );
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      await exec(
+        'ffmpeg -i /dev/video0 -vcodec libx264 -preset veryfast -f flv rtmp://localhost/live/stream',
+      );
+    } catch (e) {
+      console.error(e);
+      break;
+    }
   }
 })();
 
@@ -29,9 +35,12 @@ ngrok
   .run(process.env.NGROK_TOKEN)
   .then((urls) => {
     const { siteUrl, liveUrl } = urls;
-    aws.run(config, siteUrl).then((url) => {
-      console.log(`Remote URL: ${url}`);
-    });
+    aws
+      .run(config, siteUrl)
+      .then((url) => {
+        console.log(`Remote URL: ${url}`);
+      })
+      .catch(e => console.error(e));
 
     return new Server(
       siteUrl,

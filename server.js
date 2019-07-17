@@ -6,6 +6,19 @@ const cors = require('cors');
 const morgan = require('morgan');
 const cookieSession = require('cookie-session');
 const helmet = require('helmet');
+const NodeWebcam = require('node-webcam');
+
+const Webcam = NodeWebcam.create({
+  width: 1280,
+  height: 720,
+  quality: 100,
+  delay: 0,
+  saveShots: false,
+  output: 'jpeg',
+  device: false,
+  callbackReturn: 'buffer',
+  verbose: false,
+});
 
 const hashValue = (expSec, streamId, key) => {
   const md5 = crypto.createHash('md5');
@@ -117,7 +130,7 @@ module.exports = class {
         .catch(e => console.error(e));
     });
 
-    this.app.use('/viewer', (req, res, next) => {
+    this.app.use((req, res, next) => {
       const { token } = req.session;
       if (token) {
         next();
@@ -126,19 +139,13 @@ module.exports = class {
       res.redirect('login');
     });
 
-    this.app.get('/viewer', (req, res) => {
-      res.render('flv.ejs', {
-        url: 'live',
-      });
-    });
-
     this.app.get('/auth', (req, res) => {
       const { token } = req.session;
       authorize(token, workstationId)
         .then(() => {
           res.json({
             address: `${liveUrl}/live/stream.flv`,
-            hashValue: hashValue(60, '/live/stream', pricateKey),
+            hashValue: hashValue(10, '/live/stream', pricateKey),
           });
         })
         .catch((e) => {
@@ -147,6 +154,27 @@ module.exports = class {
           } else {
             res.status(403).end(); // 権限をもっていない
           }
+        });
+    });
+
+    this.app.get('/viewer', (req, res) => {
+      res.sendFile('./views/flv.html', { root: __dirname });
+    });
+
+    this.app.get('/photo', (req, res) => {
+      const { token } = req.session;
+      authorize(token, workstationId)
+        .then(() => {
+          Webcam.capture('capture', (err, data) => {
+            res.writeHead(200, {
+              'Content-Type': 'image/jpeg',
+              'Content-Length': data.length,
+            });
+            res.end(data);
+          });
+        })
+        .catch(() => {
+          res.status(403).end();
         });
     });
   }
