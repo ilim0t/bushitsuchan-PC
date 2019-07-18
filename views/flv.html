@@ -8,14 +8,16 @@
     <script src="https://cdn.bootcss.com/flv.js/1.5.0/flv.min.js"></script>
     <marquee>このページのUIを担当してくれるデザイナー募集中</marquee>
     <div>
-      <button id="reload">
-        動画が固まったままのときはこのボタンを押してください
-      </button>
       <button onclick="location.href='./logout'">
         Logout
       </button>
     </div>
     <video id="videoElement"></video>
+    <div>
+      <button id="reload">
+        動画が固まったままのときはこのボタンを押してください
+      </button>
+    </div>
     <script>
       const button = document.getElementById("reload");
       const videoElement = document.getElementById("videoElement");

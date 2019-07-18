@@ -15,21 +15,24 @@ const config = {
 };
 
 new MediaServer(process.env.LIVE_PRIVATE_KEY).run();
-(async () => {
+
+const deamon = async (command) => {
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    // eslint-disable-next-line no-await-in-loop
     try {
       // eslint-disable-next-line no-await-in-loop
-      await exec(
-        'ffmpeg -i /dev/video0 -vcodec libx264 -preset veryfast -f flv rtmp://localhost/live/stream',
-      );
+      await exec(command);
     } catch (e) {
       console.error(e);
-      break;
     }
   }
-})();
+};
+
+deamon(
+  // eslint-disable-next-line no-useless-escape
+  'ffmpeg -framerate 5 -video_size 960x720 -i /dev/video0 -vcodec libx264 -preset veryfast -b 8M -vf "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf: text="%{localtime:%T}": fontcolor=white@0.8: x=7: y=700" -f flv rtmp://localhost/live/stream',
+);
+deamon('ffmpeg -y -i rtmp://localhost/live/stream -r 0.1 -f image2 -updatefirst 1 capture.jpg');
 
 ngrok
   .run(process.env.NGROK_TOKEN)

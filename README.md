@@ -130,10 +130,15 @@ ffmpeg -re -i example.mp4 -c copy -f flv rtmp://localhost/live/stream
 
 ```bash=
 ffmpeg \
+    -framerate 5 \
+    -video_size 960x720 \
     -i /dev/video0 \
     -vcodec libx264 \
     -preset veryfast \
-    -f flv rtmp://localhost/live/stream
+    -b 8M \
+    -vf "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf: \
+    text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
+    -f flv rtmp://localhost/live/stream;
 ```
 
 **Use USB Camera on macOS**
@@ -141,14 +146,12 @@ ffmpeg \
 ```bash=
 ffmpeg \
     -f avfoundation \
-    -framerate 30 \
-    -re -i 0 \
-    -r 5 \
+    -framerate 5 \
+    -i 0 \
     -vcodec libx264 \
-    -preset ultrafast \
-    -acodec aac \
-    -ac 0 \
-    -g 25 \
+    -preset veryfast \
+    -vf "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf: \
+    text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
     -f flv rtmp://localhost/live/stream
 ```
 
