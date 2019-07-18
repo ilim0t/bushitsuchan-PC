@@ -135,6 +135,7 @@ ffmpeg \
     -i /dev/video0 \
     -vcodec libx264 \
     -preset veryfast \
+    -tune zerolatency \
     -b 8M \
     -vf "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf: \
     text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
@@ -146,10 +147,12 @@ ffmpeg \
 ```bash=
 ffmpeg \
     -f avfoundation \
-    -framerate 5 \
-    -i 0 \
+    -framerate 30 \
+    -re -i 0 \
+    -r 5 \
     -vcodec libx264 \
     -preset veryfast \
+    -tune zerolatency \
     -vf "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf: \
     text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
     -f flv rtmp://localhost/live/stream
