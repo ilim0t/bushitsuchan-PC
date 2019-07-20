@@ -143,7 +143,7 @@ ffmpeg \
     text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
     -hls_flags delete_segments \
     -g 20 \
-    -f hls ./output.m3u8
+    -f hls [Directory of ramdisk]/output.m3u8
 ```
 
 **Use USB Camera on macOS**
@@ -161,7 +161,7 @@ ffmpeg \
     text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
     -hls_flags delete_segments \
     -g 20 \
-    -f hls ./output.m3u8
+    -f hls [Directory of ramdisk]/output.m3u8
 ```
 
 ## Usage

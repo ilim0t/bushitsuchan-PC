@@ -93,6 +93,7 @@ module.exports = class {
           query: {
             client_id: this.config.slackClientId,
             scope: scopes.join(' '),
+            team: this.config.wsId, // うまく機能しない
           },
         }),
       );
@@ -113,7 +114,7 @@ module.exports = class {
       res.send('You have successfully logged out');
     });
 
-    this.app.use(['/auth', '/viewer', '/stream'], (req, res, next) => {
+    this.app.use(['/auth', '/viewer'], (req, res, next) => {
       const { token } = req.session;
       if (token) {
         next();
@@ -148,8 +149,10 @@ module.exports = class {
 
     this.app.use('/stream', (req, res, next) => {
       const { lastAutedTime, token } = req.session;
-
-      if (lastAutedTime === undefined || lastAutedTime + expireTime < Date.now()) {
+      if (!token) {
+        res.status(401).end();
+      }
+      if (!lastAutedTime || lastAutedTime + expireTime < Date.now()) {
         authorize(token, this.config.wsId)
           .then(() => {
             req.session.lastAutedTime = Date.now();
