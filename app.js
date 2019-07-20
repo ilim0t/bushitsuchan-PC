@@ -1,3 +1,4 @@
+const RtmpServer = require('./rtmp-server');
 const ngrok = require('./ngrok');
 const Server = require('./server');
 const aws = require('./aws');
@@ -13,6 +14,10 @@ const config = {
   wsId: process.env.WORKSTATION_ID,
   privateKey: process.env.LIVE_PRIVATE_KEY,
 };
+
+const liveServer = new RtmpServer();
+liveServer.on();
+liveServer.run();
 
 const disk = new Stream('bushitsuchan');
 disk

@@ -116,25 +116,14 @@ npm start
 
 ### Streaming
 
-Linux の場合は自動で行われますが，それ以外のときエラーが発生します。  
-その時の手動実行方法を書き置きます。
+まず`rtmp://localhost:1935/live` に向けストリームキー`rtmp`をつけ OBS 等でストリーミングします。
 
-rtmp に向けストリーミングします。
-OBS などでも行えますがここでは ffmpeg の例を書きます。
-
-**Use Video files**
-
-```bash=
-ffmpeg -re -i example.mp4 -c copy -f flv rtmp://localhost/live/stream
-```
-
+その後以下のコマンドを実行します
 **Use USB Camera on Ubuntu**
 
 ```bash=
 ffmpeg \
-    -framerate 5 \
-    -video_size 960x720 \
-    -i /dev/video0 \
+    -i rtmp://localhost:1935/live/rtmp \
     -vcodec libx264 \
     -preset veryfast \
     -tune zerolatency \
@@ -150,9 +139,7 @@ ffmpeg \
 
 ```bash=
 ffmpeg \
-    -f avfoundation \
-    -framerate 30 \
-    -re -i 0 \
+    -re -i rtmp://localhost:1935/live/rtmp \
     -r 5 \
     -vcodec libx264 \
     -preset veryfast \

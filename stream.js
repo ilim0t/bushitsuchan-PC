@@ -32,9 +32,6 @@ module.exports = class {
       }
     }));
     console.log(`create ramdisk on ${this.mountPath}.`);
-    deamon(
-      `ffmpeg -framerate 5 -video_size 960x720 -i /dev/video0 -vcodec libx264 -preset veryfast -tune zerolatency -b 8M -vf "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf: text="%{localtime:%T}": fontcolor=white@0.8: x=7: y=700" -hls_flags delete_segments -g 20 -f hls ${this.mountPath}/output.m3u8`,
-    );
     return this.mountPath;
   }
 
