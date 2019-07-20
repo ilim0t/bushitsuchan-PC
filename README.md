@@ -43,8 +43,10 @@ ngrok で得られる URL はは変動するので，[API Gateway](https://aws.a
  │   └─ GET
  ├─ /oauth-redirect
  │   └─ GET
- ├─ /photo
- │   └─ GET
+ ├─ /stream
+ │   ├─ GET
+ │   └ /{file+}
+ │      └─ GET
  └─ /viewer
       └─ GET
 ```
@@ -139,7 +141,9 @@ ffmpeg \
     -b 8M \
     -vf "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf: \
     text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
-    -f flv rtmp://localhost/live/stream;
+    -hls_flags delete_segments \
+    -g 20 \
+    -f hls ./output.m3u8
 ```
 
 **Use USB Camera on macOS**
@@ -155,7 +159,9 @@ ffmpeg \
     -tune zerolatency \
     -vf "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf: \
     text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
-    -f flv rtmp://localhost/live/stream
+    -hls_flags delete_segments \
+    -g 20 \
+    -f hls ./output.m3u8
 ```
 
 ## Usage
@@ -173,8 +179,6 @@ Remote URL: https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod
 ```
 
 とあります。それに`/viewer`を付け加えた`https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/viewer`を開いてください。
-
-対応していないブラウザ，または`https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/viewer?photo=force`へのアクセスでは，動画ではなく画像が表示されます。
 
 > この AWS の URL は半永久的に変わりません
 

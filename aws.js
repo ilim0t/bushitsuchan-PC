@@ -3,16 +3,24 @@ const util = require('util');
 
 const exec = util.promisify(childProcess.exec);
 
-module.exports.run = async (config, siteUrl) => {
+module.exports.run = async (config, url) => {
   exec(`aws apigateway get-resources --rest-api-id ${config.restApiId}`)
     .then((result) => {
       const { stdout } = result;
       return JSON.parse(stdout);
     })
     .then(resources => Promise.all(
-      resources.items.map(item => exec(
-        `aws apigateway put-integration --rest-api-id ${config.restApiId} --resource-id ${item.id} --http-method ${config.httpMethod} --type HTTP_PROXY --integration-http-method ${config.httpMethod} --uri ${siteUrl}${item.path}`,
-      )),
+      resources.items.map((item) => {
+        let command = `aws apigateway put-integration --rest-api-id ${config.restApiId} --resource-id ${item.id} --http-method GET --type HTTP_PROXY --integration-http-method GET`;
+        command += ` --uri ${url}${item.path.replace(/{([^}+]+)\+}/, '{$1}')}`;
+        const isMatch = item.path.match(/{([^}+]+)\+}/);
+        if (isMatch) {
+          command += ` --request-parameters integration.request.path.${
+            isMatch[1]
+          }=method.request.path.${isMatch[1]}`;
+        }
+        return exec(command);
+      }),
     ))
     .then(() => {
       exec(`aws apigateway create-deployment --rest-api-id ${config.restApiId} --stage-name prod`);
