@@ -108,6 +108,19 @@ brew install ffmpeg
 sudo apt-get install ffmpeg
 ```
 
+### RAM Disk
+
+自動で行われますが，Macの場合
+Mac の場合は手動でやる場合以下のように実行してください。
+Ubuntu は自動かつ失敗しません。
+
+```bash=
+hdiutil attach -nomount ram://204800
+newfs_hfs /dev/disk2
+mkdir -p /path/to/bushitsuchan-PC/hls
+mount -t hfs /dev/disk2 /path/to/bushitsuchan-PC/hls
+```
+
 ## Run
 
 ```bash=

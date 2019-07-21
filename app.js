@@ -13,15 +13,15 @@ const config = {
   slackClientSecret: process.env.SLACK_CLIENT_SECRET,
   wsId: process.env.WORKSTATION_ID,
   privateKey: process.env.LIVE_PRIVATE_KEY,
-  debug: false,
-  isMac: false,
+  debug: Boolean(process.env.DEBUG),
+  isMac: Boolean(process.env.IS_MAC),
 };
 
 const liveServer = new RtmpServer();
 liveServer.on();
 liveServer.run();
 
-const disk = new Stream('bushitsuchan');
+const disk = new Stream('hls-ramdisk');
 disk
   .run(config.isMac)
   .then(async (mountPath) => {
@@ -47,6 +47,7 @@ disk
     server.run();
   })
   .catch((e) => {
+    disk.mountPath = disk.mountPath || '/tmp/hls-ramdisk';
     disk.close();
     console.error(e);
   });
