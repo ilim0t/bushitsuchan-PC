@@ -3,7 +3,7 @@
 OSK の部室の様子を様子をオンラインで確認できるプロジェクト 部室ちゃん
 その部室に置いてある PC 側で動かすプログラム
 
-# Support
+## Support
 
 以下の OS をサポートします
 
@@ -139,52 +139,6 @@ mount -t hfs /dev/disk2 /path/to/bushitsuchan-PC/hls
 npm start
 ```
 
-## Streaming
-
-以下のコマンドを実行してください。
-
-### Step.1 Streaming to RTMP server
-
-**Use USB Camera on Ubuntu**
-
-```bash=
-ffmpeg \
-    -i /dev/video0 \
-    -vcodec libx264 \
-    -pix_fmt yuv420p \
-    -preset veryfast \
-    -tune fastdecode \
-    -vb 2500k \
-    -vf "drawtext=text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
-    -f flv rtmp://localhost:1935/live/bushitsuchan
-```
-
-**Use USB Camera on macOS**
-
-```bash=
-ffmpeg \
-    -f avfoundation \
-    -framerate 30 \
-    -i 0 \
-    -r 10 \
-    -vcodec libx264 \
-    -pix_fmt yuv420p \
-    -vb 2500k \
-    -vf "drawtext=text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
-    -f hls rtmp://localhost:1935/live/bushitsuchan
-```
-
-### Step.2 Conversioning into HLS
-
-```bash=
-ffmpeg \
-    -i rtmp://localhost:1935/live/bushitsuchan \
-    -hls_flags delete_segments \
-    -codec:v copy \
-    -g 40 \
-    -f hls [Directory of RAM disk]/bushitsuchan/output.m3u8
-```
-
 ## Usage
 
 **local**
@@ -205,5 +159,3 @@ Remote URL: https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod
 
 すると，初回実行時(過去に Slack で認証をしていなければ) Slack の認証ページへリダイレクトされます。  
 Sign in すると自動的に配信再生ページへ移動します。
-
-> 再生が開始されないことがあるので，静止画で止まったままのときはサイトをリロードしてください。
