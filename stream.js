@@ -29,7 +29,6 @@ module.exports = class {
   async run(size = 50) {
     if (!this.isMac) {
       this.mountPath = '/dev/shm';
-      fs.rmdirSync(`${this.mountPath}/${this.folder}`);
       fs.mkdirSync(`${this.mountPath}/${this.folder}`, { recursive: true });
       // deamon('');
       return `${this.mountPath}/${this.folder}`;
@@ -48,6 +47,7 @@ module.exports = class {
 
   async close() {
     if (!this.isMac) {
+      fs.rmdirSync(`${this.mountPath}/${this.folder}`);
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
