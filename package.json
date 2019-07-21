@@ -24,19 +24,19 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "fs": "0.0.1-security",
-    "helmet": "^3.18.0",
+    "helmet": "^3.19.0",
     "morgan": "^1.9.1",
-    "ngrok": "^3.2.1",
+    "ngrok": "^3.2.3",
     "node-media-server": "^2.1.2",
     "rtmp-server": "^0.2.0",
     "util": "^0.12.1"
   },
   "devDependencies": {
-    "prettier": "^1.18.2",
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^13.2.0",
-    "eslint-plugin-import": "^2.18.0",
     "eslint-config-prettier": "^6.0.0",
-    "eslint-plugin-prettier": "^3.1.0"
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-prettier": "^3.1.0",
+    "prettier": "^1.18.2"
   }
 }
