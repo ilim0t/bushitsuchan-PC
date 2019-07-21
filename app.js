@@ -3,6 +3,7 @@ const ngrok = require('./ngrok');
 const Server = require('./server');
 const aws = require('./aws');
 const Stream = require('./stream');
+const { daemon } = require('./utils');
 
 const config = {
   restApiId: process.env.AWS_REST_API_ID,
@@ -20,6 +21,7 @@ const config = {
 
 const liveServer = new RtmpServer(1935);
 liveServer.run();
+console.log(`RTMP server listening on port ${1935}`);
 
 const disk = new Stream(
   config.isMac ? `${__dirname}/hls` : '/dev/shm',
@@ -32,6 +34,20 @@ disk
   .run(config.isMac)
   .then(async (mountPath) => {
     console.log(`Please put HLS files in ${mountPath}`);
+    let input;
+    if (config.isMac) {
+      input = 'ffmpeg -f avfoundation -framerate 30 -re -i 0 -r 10';
+    } else {
+      input = 'ffmpeg -i /dev/video0';
+    }
+    daemon(
+      `${input} -vcodec libx264 -pix_fmt yuv420p -preset veryfast -tune zerolatency,stillimage,film -vb 2500k -vf "drawtext=text='%{localtime}':fontcolor=white@0.8:x=0:y=h-lh*1.2:fontsize=24" -f flv rtmp://localhost:${1935}/live/bushitsuchan`,
+    );
+
+    daemon(
+      `ffmpeg -i rtmp://localhost:1935/live/bushitsuchan -hls_flags delete_segments -codec:v copy -g 40 -f hls ${mountPath}/output.m3u8`,
+    );
+
     let ngrokUrl;
     let awsUrl;
 

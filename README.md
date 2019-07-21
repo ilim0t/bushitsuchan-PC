@@ -171,7 +171,7 @@ ffmpeg \
     -pix_fmt yuv420p \
     -vb 2500k \
     -vf "drawtext=text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
-    -f hls [Directory of ramdisk]/bushitsuchan/output.m3u8
+    -f hls rtmp://localhost:1935/live/bushitsuchan
 ```
 
 ### Step.2 Conversioning into HLS
