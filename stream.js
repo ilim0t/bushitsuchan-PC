@@ -38,6 +38,6 @@ module.exports = class {
   }
 
   async close() {
-    return fs.rmdir(`${this.mountPath}/${this.folder}`);
+    return fs.rmdirSync(`${this.mountPath}/${this.folder}`);
   }
 };

@@ -58,20 +58,23 @@ const authorize = async (token, workstationId) => {
 };
 
 module.exports = class {
-  constructor(ngrokUrl, awsUrl, mountPath, config) {
+  constructor(ngrokUrl, awsUrl, mountPath, config, rtmpAddress) {
     this.ngrokUrl = ngrokUrl;
     this.awsUrl = awsUrl;
     this.mountPath = mountPath;
     this.config = config;
+    this.rtmpAddress = rtmpAddress;
 
     this.app = express();
     this.app.set('trust proxy', 1);
     this.app.use(helmet());
-    this.app.use(morgan('short'));
+    this.app.use(
+      morgan('common', {
+        skip: (req, res) => ['.ts', '.m3u8', '.jpg'].some(element => req.path.endsWith(element)),
+      }),
+    );
     this.app.use(cors());
     this.routing();
-
-    this.wCap = null;
   }
 
   routing() {
@@ -118,21 +121,24 @@ module.exports = class {
     });
 
     if (!this.config.debug) {
-      this.app.use(['/auth', '/viewer', '/photo-viewer', '/stream', '/photo'], (req, res, next) => {
-        const { token } = req.session;
-        if (token) {
-          next();
-          return;
-        }
-        res.redirect('login');
-      });
+      this.app.use(
+        ['/auth', '/viewer', '/photo-viewer', '/stream', '/photo.jpg'],
+        (req, res, next) => {
+          const { token } = req.session;
+          if (token) {
+            next();
+            return;
+          }
+          res.redirect('login');
+        },
+      );
     }
     this.app.get('/auth', (req, res) => {
       const { token } = req.session;
       if (!this.config.debug) {
         res.json({
           hlsAddress: 'stream/output.m3u8',
-          photoAddress: 'photo',
+          photoAddress: 'photo.jpg',
         });
         return;
       }
@@ -141,7 +147,7 @@ module.exports = class {
           req.session.lastAutedTime = Date.now();
           res.json({
             hlsAddress: 'stream/output.m3u8',
-            photoAddress: 'photo',
+            photoAddress: 'photo.jpg',
           });
         })
         .catch((e) => {
@@ -160,7 +166,7 @@ module.exports = class {
     const expireTime = 60 * 1000;
 
     if (!this.config.debug) {
-      this.app.use(['/stream', '/photo'], (req, res, next) => {
+      this.app.use(['/stream', '/photo.jpg'], (req, res, next) => {
         const { lastAutedTime, token } = req.session;
         if (!token) {
           res.sendStatus(401).end();
@@ -177,7 +183,7 @@ module.exports = class {
         }
       });
 
-      this.app.use(['/stream', '/photo'], (req, res, next) => {
+      this.app.use(['/stream', '/photo.jpg'], (req, res, next) => {
         const { lastAutedTime } = req.session;
         if (lastAutedTime > Date.now()) {
           req.session = null;
@@ -189,28 +195,27 @@ module.exports = class {
 
     this.app.use('/stream', express.static(this.mountPath));
 
-    this.app.get('/photo', (req, res) => {
-      let ffmpeg;
-      if (this.config.isMac) {
-        // Mac
-        ffmpeg = childProcess.spawn(
-          'ffmpeg -f avfoundation -framerate 30 -i 0 -vframes 1 -f image2 pipe:1',
-        );
-      } else {
-        // Ubuntu
-        ffmpeg = childProcess.spawn('ffmpeg -i /dev/video0 -vframes 1 -f image2 pipe:1');
-      }
-
+    this.app.get('/photo.jpg', async (req, res) => {
       const ext = 'jpeg';
+
+      const ffmpeg = childProcess.spawn('ffmpeg', [
+        '-i',
+        `${this.rtmpAddress}`,
+        '-ss',
+        '0.7',
+        '-vframes',
+        '1',
+        '-f',
+        'image2',
+        'pipe:1',
+      ]);
 
       res.contentType(`image/${ext}`);
       ffmpeg.stdout.pipe(res);
     });
-
-    // this.app.use('/photo', express.static(`${__dirname}/photos`));
   }
 
-  run(port = 3000) {
-    return new Promise(resolve => this.app.listen(port, () => resolve(port)));
+  async run(port = 3000) {
+    await new Promise(resolve => this.app.listen(port, () => resolve()));
   }
 };

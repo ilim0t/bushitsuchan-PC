@@ -13,13 +13,12 @@ const config = {
   slackClientId: process.env.SLACK_CLIENT_ID,
   slackClientSecret: process.env.SLACK_CLIENT_SECRET,
   wsId: process.env.WORKSTATION_ID,
-  privateKey: process.env.LIVE_PRIVATE_KEY,
+  privateKey: process.env.PRIVATE_KEY,
   debug: Boolean(process.env.DEBUG),
   isMac: Boolean(process.env.IS_MAC),
 };
 
-const liveServer = new RtmpServer();
-liveServer.on();
+const liveServer = new RtmpServer(1935);
 liveServer.run();
 
 const disk = new Stream(
@@ -52,9 +51,9 @@ disk
       awsUrl,
       mountPath,
       config,
-      'rtmp://localhost:1935/live/bushitsuchan',
+      `rtmp://localhost:1935/live/${'bushitsuchan'}`,
     );
-    server.run();
+    server.run(3000).then(() => console.log(`Express app listening on port ${3000}`));
   })
   .catch((e) => {
     console.error(e);

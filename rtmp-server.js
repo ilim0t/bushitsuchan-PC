@@ -1,39 +1,21 @@
-const RtmpServer = require('rtmp-server');
+const NodeMediaServer = require('node-media-server');
 
 module.exports = class {
-  constructor() {
-    this.rtmpServer = new RtmpServer();
-  }
+  constructor(port = 1935) {
+    this.nms = new NodeMediaServer({
+      logType: 1,
 
-  on() {
-    this.rtmpServer.on('error', (err) => {
-      throw err;
-    });
-
-    this.rtmpServer.on('client', (client) => {
-      // client.on('command', command => {
-      //  console.log(command.cmd, command);
-      // });
-
-      client.on('connect', () => {
-        console.log('connect', client.app);
-      });
-
-      client.on('play', ({ streamName }) => {
-        console.log('PLAY', streamName);
-      });
-
-      client.on('publish', ({ streamName }) => {
-        console.log('PUBLISH', streamName);
-      });
-
-      client.on('stop', () => {
-        console.log('client disconnected');
-      });
+      rtmp: {
+        port,
+        chunk_size: 60000,
+        gop_cache: true,
+        ping: 30,
+        ping_timeout: 60,
+      },
     });
   }
 
-  async run(port = 1935) {
-    await new Promise(resolve => this.rtmpServer.listen(port, () => resolve()));
+  run() {
+    this.nms.run();
   }
 };

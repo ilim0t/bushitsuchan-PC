@@ -48,9 +48,11 @@ ngrok で得られる URL はは変動するので，[API Gateway](https://aws.a
  │   └─ GET
  ├─ /login
  │   └─ GET
+ ├─ /logout
+ │   └─ GET
  ├─ /oauth-redirect
  │   └─ GET
- ├─ /photo
+ ├─ /photo.jpeg
  │   └─ GET
  ├─ /photo-viewer
  │   └─ GET
@@ -96,7 +98,7 @@ export AWS_REST_API_ID="h7c..."
 export SLACK_CLIENT_ID="179..."
 export SLACK_CLIENT_SECRET="38b..."
 
-export LIVE_PRIVATE_KEY="presetprivatekey"
+export PRIVATE_KEY="presetprivatekey"
 
 export WORKSTATION_ID="VOW38CP2D"
 ```
@@ -137,38 +139,37 @@ mount -t hfs /dev/disk2 /path/to/bushitsuchan-PC/hls
 npm start
 ```
 
-### Streaming
+## Streaming
 
-まず`rtmp://localhost:1935/live` に向けストリームキー`bushitsuchan`をつけ OBS 等でストリーミングします。
+以下のコマンドを実行してください。
 
-その後以下のコマンドを実行します
+### Step.1 Streaming to RTMP server
+
 **Use USB Camera on Ubuntu**
 
 ```bash=
 ffmpeg \
-    -i rtmp://localhost:1935/live/bushitsuchan \
-    -vcodec libx264 \
-    -preset veryfast \
-    -tune zerolatency \
-    -b 8M \
-    -vf "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf: \
-    text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
-    -hls_flags delete_segments \
-    -g 20 \
-    -f hls [Directory of ramdisk]/output.m3u8
+    -i /dev/video0 \
+    -vf "drawtext=text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
+    -f flv rtmp://localhost:1935/live/bushitsuchan
 ```
 
 **Use USB Camera on macOS**
 
 ```bash=
 ffmpeg \
-    -re -i rtmp://localhost:1935/live/bushitsuchan \
-    -r 5 \
-    -vcodec libx264 \
-    -preset veryfast \
-    -tune zerolatency \
-    -vf "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf: \
-    text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
+    -f avfoundation \
+    -framerate 30 \
+    -i 0 \
+    -vf "drawtext=text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
+    -f flv rtmp://localhost:1935/live/bushitsuchan
+```
+
+### Step.2 Conversioning into HLS
+
+```bash=
+ffmpeg \
+    -i rtmp://localhost:1935/live/bushitsuchan \
     -hls_flags delete_segments \
     -g 20 \
     -f hls [Directory of ramdisk]/output.m3u8

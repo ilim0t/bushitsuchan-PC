@@ -27,6 +27,7 @@
     "helmet": "^3.18.0",
     "morgan": "^1.9.1",
     "ngrok": "^3.2.1",
+    "node-media-server": "^2.1.2",
     "rtmp-server": "^0.2.0",
     "util": "^0.12.1"
   },
