@@ -23,7 +23,7 @@ module.exports = class {
     this.mountPath = null;
   }
 
-  async run(size = 50) {
+  async run(size = 50, isMac = false) {
     this.mountPath = await new Promise((resolve, reject) => this.disk.create(size, (err, mount) => {
       if (err) {
         reject(err);
@@ -32,6 +32,13 @@ module.exports = class {
       }
     }));
     console.log(`create ramdisk on ${this.mountPath}.`);
+    if (isMac) {
+      // Mac
+      // deamon('');
+    } else {
+      // Ubuntu
+      // deamon('');
+    }
     return this.mountPath;
   }
 

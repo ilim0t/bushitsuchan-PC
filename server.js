@@ -5,6 +5,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const cookieSession = require('cookie-session');
 const helmet = require('helmet');
+const childProcess = require('child_process');
 
 const getToken = async (code, clientId, clientSecret) => {
   if (code === undefined) {
@@ -69,6 +70,8 @@ module.exports = class {
     this.app.use(morgan('short'));
     this.app.use(cors());
     this.routing();
+
+    this.wCap = null;
   }
 
   routing() {
@@ -114,66 +117,97 @@ module.exports = class {
       res.send('You have successfully logged out');
     });
 
-    this.app.use(['/auth', '/viewer'], (req, res, next) => {
-      const { token } = req.session;
-      if (token) {
-        next();
-        return;
-      }
-      res.redirect('login');
-    });
-
+    if (!this.config.debug) {
+      this.app.use(['/auth', '/viewer', '/photo-viewer', '/stream', '/photo'], (req, res, next) => {
+        const { token } = req.session;
+        if (token) {
+          next();
+          return;
+        }
+        res.redirect('login');
+      });
+    }
     this.app.get('/auth', (req, res) => {
       const { token } = req.session;
+      if (!this.config.debug) {
+        res.json({
+          hlsAddress: 'stream/output.m3u8',
+          photoAddress: 'photo',
+        });
+        return;
+      }
       authorize(token, this.config.wsId)
         .then(() => {
           req.session.lastAutedTime = Date.now();
           res.json({
-            address: 'stream/output.m3u8',
+            hlsAddress: 'stream/output.m3u8',
+            photoAddress: 'photo',
           });
         })
         .catch((e) => {
           if (e instanceof TypeError) {
-            res.status(401).end(); // 再login
+            res.sendStatus(401).end(); // 再login
           } else {
-            res.status(403).end(); // 権限をもっていない
+            res.sendStatus(403).end(); // 権限をもっていない
           }
         });
     });
 
-    this.app.get('/viewer', (req, res) => {
-      res.sendFile('./views/viewer.html', { root: __dirname });
+    this.app.get(['/viewer', '/photo-viewer'], (req, res) => {
+      res.sendFile(`./views/${req.url}.html`, { root: __dirname });
     });
 
     const expireTime = 60 * 1000;
 
-    this.app.use('/stream', (req, res, next) => {
-      const { lastAutedTime, token } = req.session;
-      if (!token) {
-        res.status(401).end();
-      }
-      if (!lastAutedTime || lastAutedTime + expireTime < Date.now()) {
-        authorize(token, this.config.wsId)
-          .then(() => {
-            req.session.lastAutedTime = Date.now();
-            next();
-          })
-          .catch(() => res.send(403).end());
-      } else {
-        next();
-      }
-    });
+    if (!this.config.debug) {
+      this.app.use(['/stream', '/photo'], (req, res, next) => {
+        const { lastAutedTime, token } = req.session;
+        if (!token) {
+          res.sendStatus(401).end();
+        }
+        if (!lastAutedTime || lastAutedTime + expireTime < Date.now()) {
+          authorize(token, this.config.wsId)
+            .then(() => {
+              req.session.lastAutedTime = Date.now();
+              next();
+            })
+            .catch(() => res.send(403).end());
+        } else {
+          next();
+        }
+      });
 
-    this.app.use('/stream', (req, res, next) => {
-      const { lastAutedTime } = req.session;
-      if (lastAutedTime > Date.now()) {
-        req.session = null;
-        res.status(403).end();
-      }
-      next();
-    });
+      this.app.use(['/stream', '/photo'], (req, res, next) => {
+        const { lastAutedTime } = req.session;
+        if (lastAutedTime > Date.now()) {
+          req.session = null;
+          res.sendStatus(403).end();
+        }
+        next();
+      });
+    }
 
     this.app.use('/stream', express.static(this.mountPath));
+
+    this.app.get('/photo', (req, res) => {
+      let ffmpeg;
+      if (this.config.isMac) {
+        // Mac
+        ffmpeg = childProcess.spawn(
+          'ffmpeg -f avfoundation -framerate 30 -i 0 -vframes 1 -f image2 pipe:1',
+        );
+      } else {
+        // Ubuntu
+        ffmpeg = childProcess.spawn('ffmpeg -i /dev/video0 -vframes 1 -f image2 pipe:1');
+      }
+
+      const ext = 'jpeg';
+
+      res.contentType(`image/${ext}`);
+      ffmpeg.stdout.pipe(res);
+    });
+
+    // this.app.use('/photo', express.static(`${__dirname}/photos`));
   }
 
   run(port = 3000) {

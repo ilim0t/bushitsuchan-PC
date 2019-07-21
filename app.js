@@ -13,6 +13,8 @@ const config = {
   slackClientSecret: process.env.SLACK_CLIENT_SECRET,
   wsId: process.env.WORKSTATION_ID,
   privateKey: process.env.LIVE_PRIVATE_KEY,
+  debug: false,
+  isMac: false,
 };
 
 const liveServer = new RtmpServer();
@@ -21,13 +23,27 @@ liveServer.run();
 
 const disk = new Stream('bushitsuchan');
 disk
-  .run()
+  .run(config.isMac)
   .then(async (mountPath) => {
-    const ngrokUrl = await ngrok.run(process.env.NGROK_TOKEN);
-    const awsUrl = await aws.run(config, ngrokUrl);
-    // console.log(`Remote URL: ${awsUrl}`);
+    let ngrokUrl;
+    let awsUrl;
 
-    const server = new Server(ngrokUrl, awsUrl, mountPath, config);
+    if (config.debug) {
+      ngrokUrl = null;
+      awsUrl = null;
+    } else {
+      ngrokUrl = await ngrok.run(process.env.NGROK_TOKEN);
+      awsUrl = await aws.run(config, ngrokUrl);
+      console.log(`Remote URL: ${awsUrl}`);
+    }
+
+    const server = new Server(
+      ngrokUrl,
+      awsUrl,
+      mountPath,
+      config,
+      'rtmp://localhost:1935/live/bushitsuchan',
+    );
     server.run();
   })
   .catch((e) => {

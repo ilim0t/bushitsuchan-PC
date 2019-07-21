@@ -116,14 +116,14 @@ npm start
 
 ### Streaming
 
-まず`rtmp://localhost:1935/live` に向けストリームキー`rtmp`をつけ OBS 等でストリーミングします。
+まず`rtmp://localhost:1935/live` に向けストリームキー`bushitsuchan`をつけ OBS 等でストリーミングします。
 
 その後以下のコマンドを実行します
 **Use USB Camera on Ubuntu**
 
 ```bash=
 ffmpeg \
-    -i rtmp://localhost:1935/live/rtmp \
+    -i rtmp://localhost:1935/live/bushitsuchan \
     -vcodec libx264 \
     -preset veryfast \
     -tune zerolatency \
@@ -139,7 +139,7 @@ ffmpeg \
 
 ```bash=
 ffmpeg \
-    -re -i rtmp://localhost:1935/live/rtmp \
+    -re -i rtmp://localhost:1935/live/bushitsuchan \
     -r 5 \
     -vcodec libx264 \
     -preset veryfast \

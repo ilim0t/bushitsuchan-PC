@@ -30,13 +30,13 @@
         .then(res => {
           if (Hls.isSupported()) {
             var hls = new Hls();
-            hls.loadSource(res.address);
+            hls.loadSource(res.hlsAddress);
             hls.attachMedia(video);
             hls.on(Hls.Events.MANIFEST_PARSED, function() {
               video.play();
             });
           } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-            video.src = res.address;
+            video.src = res.hlsAddress;
             video.addEventListener("loadedmetadata", function() {
               video.play();
             });

@@ -33,7 +33,7 @@ module.exports = class {
     });
   }
 
-  run() {
-    this.rtmpServer.listen(1935);
+  run(port = 1935) {
+    this.rtmpServer.listen(port);
   }
 };
