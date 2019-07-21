@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const cookieSession = require('cookie-session');
 const helmet = require('helmet');
 const childProcess = require('child_process');
+const fs = require('fs');
 
 const getToken = async (code, clientId, clientSecret) => {
   if (code === undefined) {
@@ -55,6 +56,7 @@ const authorize = async (token, workstationId) => {
   if (result.data.team.id !== workstationId) {
     throw new Error();
   }
+  return result.data.user.name;
 };
 
 module.exports = class {
@@ -77,10 +79,23 @@ module.exports = class {
         httpOnly: true,
       }),
     );
+
+    morgan.token('user', (req, res) => req.session.name || 'anonymous');
     this.app.use(
-      morgan('common', {
-        skip: (req, res) => ['.ts', '.m3u8', '.jpg'].some(element => req.path.endsWith(element)),
-      }),
+      morgan(
+        '<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms',
+        {
+          skip: (req, res) => ['.ts', '.m3u8', '.jpg'].some(element => req.path.endsWith(element)),
+        },
+      ),
+    );
+    this.app.use(
+      morgan(
+        ':remote-addr - :remote-user <@:user> [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"',
+        {
+          stream: fs.createWriteStream(`${__dirname}/access.log`, { flags: 'a' }),
+        },
+      ),
     );
     this.routing();
   }
@@ -142,7 +157,8 @@ module.exports = class {
         return;
       }
       authorize(token, this.config.wsId)
-        .then(() => {
+        .then((name) => {
+          req.session.name = name;
           req.session.lastAutedTime = Date.now();
           res.json({
             hlsAddress: 'stream/output.m3u8',
@@ -172,7 +188,8 @@ module.exports = class {
         }
         if (!lastAutedTime || lastAutedTime + expireTime < Date.now()) {
           authorize(token, this.config.wsId)
-            .then(() => {
+            .then((name) => {
+              req.session.name = name;
               req.session.lastAutedTime = Date.now();
               next();
             })
