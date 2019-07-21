@@ -150,6 +150,11 @@ npm start
 ```bash=
 ffmpeg \
     -i /dev/video0 \
+    -vcodec libx264 \
+    -pix_fmt yuv420p \
+    -preset veryfast \
+    -tune fastdecode \
+    -vb 2500k \
     -vf "drawtext=text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
     -f flv rtmp://localhost:1935/live/bushitsuchan
 ```
@@ -161,8 +166,12 @@ ffmpeg \
     -f avfoundation \
     -framerate 30 \
     -i 0 \
+    -r 10 \
+    -vcodec libx264 \
+    -pix_fmt yuv420p \
+    -vb 2500k \
     -vf "drawtext=text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
-    -f flv rtmp://localhost:1935/live/bushitsuchan
+    -f hls [Directory of ramdisk]/bushitsuchan/output.m3u8
 ```
 
 ### Step.2 Conversioning into HLS
@@ -171,8 +180,9 @@ ffmpeg \
 ffmpeg \
     -i rtmp://localhost:1935/live/bushitsuchan \
     -hls_flags delete_segments \
-    -g 20 \
-    -f hls [Directory of ramdisk]/output.m3u8
+    -codec:v copy \
+    -g 40 \
+    -f hls [Directory of RAM disk]/bushitsuchan/output.m3u8
 ```
 
 ## Usage

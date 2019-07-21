@@ -68,16 +68,7 @@ module.exports = class {
     this.app = express();
     this.app.set('trust proxy', 1);
     this.app.use(helmet());
-    this.app.use(
-      morgan('common', {
-        skip: (req, res) => ['.ts', '.m3u8', '.jpg'].some(element => req.path.endsWith(element)),
-      }),
-    );
     this.app.use(cors());
-    this.routing();
-  }
-
-  routing() {
     this.app.use(
       cookieSession({
         secret: this.config.privateKey,
@@ -86,7 +77,15 @@ module.exports = class {
         httpOnly: true,
       }),
     );
+    this.app.use(
+      morgan('common', {
+        skip: (req, res) => ['.ts', '.m3u8', '.jpg'].some(element => req.path.endsWith(element)),
+      }),
+    );
+    this.routing();
+  }
 
+  routing() {
     this.app.get('/', (req, res) => res.send('Hello Bushitsuchan!'));
 
     this.app.get('/login', (req, res) => {
