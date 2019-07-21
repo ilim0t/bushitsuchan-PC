@@ -3,6 +3,13 @@
 OSK の部室の様子を様子をオンラインで確認できるプロジェクト 部室ちゃん
 その部室に置いてある PC 側で動かすプログラム
 
+## Support
+
+以下の OS をサポートします
+
+- Ubuntu 18.04
+- macOS 10.14
+
 ## Setup
 
 ### ngrok
@@ -41,7 +48,13 @@ ngrok で得られる URL はは変動するので，[API Gateway](https://aws.a
  │   └─ GET
  ├─ /login
  │   └─ GET
+ ├─ /logout
+ │   └─ GET
  ├─ /oauth-redirect
+ │   └─ GET
+ ├─ /photo.jpeg
+ │   └─ GET
+ ├─ /photo-viewer
  │   └─ GET
  ├─ /stream
  │   ├─ GET
@@ -85,7 +98,7 @@ export AWS_REST_API_ID="h7c..."
 export SLACK_CLIENT_ID="179..."
 export SLACK_CLIENT_SECRET="38b..."
 
-export LIVE_PRIVATE_KEY="presetprivatekey"
+export PRIVATE_KEY="presetprivatekey"
 
 export WORKSTATION_ID="VOW38CP2D"
 ```
@@ -108,60 +121,22 @@ brew install ffmpeg
 sudo apt-get install ffmpeg
 ```
 
+### RAM Disk
+
+Ubuntu では自動で行われますが，Mac の場合 OS 起動の度に手動で行う必要があります。
+以下のように実行してください。
+
+```bash=
+hdiutil attach -nomount ram://204800
+newfs_hfs /dev/disk2
+mkdir -p /path/to/bushitsuchan-PC/hls
+mount -t hfs /dev/disk2 /path/to/bushitsuchan-PC/hls
+```
+
 ## Run
 
 ```bash=
 npm start
-```
-
-### Streaming
-
-Linux の場合は自動で行われますが，それ以外のときエラーが発生します。  
-その時の手動実行方法を書き置きます。
-
-rtmp に向けストリーミングします。
-OBS などでも行えますがここでは ffmpeg の例を書きます。
-
-**Use Video files**
-
-```bash=
-ffmpeg -re -i example.mp4 -c copy -f flv rtmp://localhost/live/stream
-```
-
-**Use USB Camera on Ubuntu**
-
-```bash=
-ffmpeg \
-    -framerate 5 \
-    -video_size 960x720 \
-    -i /dev/video0 \
-    -vcodec libx264 \
-    -preset veryfast \
-    -tune zerolatency \
-    -b 8M \
-    -vf "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf: \
-    text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
-    -hls_flags delete_segments \
-    -g 20 \
-    -f hls [Directory of ramdisk]/output.m3u8
-```
-
-**Use USB Camera on macOS**
-
-```bash=
-ffmpeg \
-    -f avfoundation \
-    -framerate 30 \
-    -re -i 0 \
-    -r 5 \
-    -vcodec libx264 \
-    -preset veryfast \
-    -tune zerolatency \
-    -vf "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf: \
-    text='%{localtime\:%T}': fontcolor=white@0.8: x=7: y=700" \
-    -hls_flags delete_segments \
-    -g 20 \
-    -f hls [Directory of ramdisk]/output.m3u8
 ```
 
 ## Usage
@@ -184,5 +159,3 @@ Remote URL: https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod
 
 すると，初回実行時(過去に Slack で認証をしていなければ) Slack の認証ページへリダイレクトされます。  
 Sign in すると自動的に配信再生ページへ移動します。
-
-> 再生が開始されないことがあるので，静止画で止まったままのときはサイトをリロードしてください。
