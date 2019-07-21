@@ -3,7 +3,7 @@
 OSK の部室の様子を様子をオンラインで確認できるプロジェクト 部室ちゃん
 その部室に置いてある PC 側で動かすプログラム
 
-# サポート
+# Support
 
 以下の OS をサポートします
 
@@ -49,6 +49,10 @@ ngrok で得られる URL はは変動するので，[API Gateway](https://aws.a
  ├─ /login
  │   └─ GET
  ├─ /oauth-redirect
+ │   └─ GET
+ ├─ /photo
+ │   └─ GET
+ ├─ /photo-viewer
  │   └─ GET
  ├─ /stream
  │   ├─ GET
