@@ -3,6 +3,13 @@
 OSK の部室の様子を様子をオンラインで確認できるプロジェクト 部室ちゃん
 その部室に置いてある PC 側で動かすプログラム
 
+# サポート
+
+以下の OS をサポートします
+
+- Ubuntu 18.04
+- macOS 10.14
+
 ## Setup
 
 ### ngrok
@@ -110,9 +117,8 @@ sudo apt-get install ffmpeg
 
 ### RAM Disk
 
-自動で行われますが，Macの場合
-Mac の場合は手動でやる場合以下のように実行してください。
-Ubuntu は自動かつ失敗しません。
+Ubuntu では自動で行われますが，Mac の場合 OS 起動の度に手動で行う必要があります。
+以下のように実行してください。
 
 ```bash=
 hdiutil attach -nomount ram://204800

@@ -33,7 +33,7 @@ module.exports = class {
     });
   }
 
-  run(port = 1935) {
-    this.rtmpServer.listen(port);
+  async run(port = 1935) {
+    await new Promise(resolve => this.rtmpServer.listen(port, () => resolve()));
   }
 };

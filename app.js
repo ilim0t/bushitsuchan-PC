@@ -9,6 +9,7 @@ const config = {
   viewerResourceId: process.env.VIEWER_RESOURCE_ID,
   oauthResourceId: process.env.OAUTH_RESOURCE_ID,
   httpMethod: 'GET',
+  ngrokToken: process.env.NGROK_TOKEN,
   slackClientId: process.env.SLACK_CLIENT_ID,
   slackClientSecret: process.env.SLACK_CLIENT_SECRET,
   wsId: process.env.WORKSTATION_ID,
@@ -21,10 +22,17 @@ const liveServer = new RtmpServer();
 liveServer.on();
 liveServer.run();
 
-const disk = new Stream('hls-ramdisk');
+const disk = new Stream(
+  config.isMac ? `${__dirname}/hls` : '/dev/shm',
+  'bushitsuchan',
+  config.isMac,
+);
+console.log(`Regarding directory ${disk.mountPath} as RAM DISK`);
+
 disk
   .run(config.isMac)
   .then(async (mountPath) => {
+    console.log(`Please put HLS files in ${mountPath}`);
     let ngrokUrl;
     let awsUrl;
 
@@ -32,7 +40,9 @@ disk
       ngrokUrl = null;
       awsUrl = null;
     } else {
-      ngrokUrl = await ngrok.run(process.env.NGROK_TOKEN);
+      ngrokUrl = await ngrok.run(config.ngrokToken, 3000);
+      console.log(`Forwarding ${ngrokUrl} -> localhost:${3000}`);
+
       awsUrl = await aws.run(config, ngrokUrl);
       console.log(`Remote URL: ${awsUrl}`);
     }
@@ -47,7 +57,6 @@ disk
     server.run();
   })
   .catch((e) => {
-    disk.mountPath = disk.mountPath || '/tmp/hls-ramdisk';
-    disk.close();
     console.error(e);
+    disk.close();
   });
