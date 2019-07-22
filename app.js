@@ -45,7 +45,7 @@ disk
     );
 
     daemon(
-      `ffmpeg -i rtmp://localhost:1935/live/bushitsuchan -hls_flags delete_segments -codec:v copy -g 40 -f hls ${mountPath}/output.m3u8`,
+      `ffmpeg -i rtmp://localhost:1935/live/bushitsuchan -hls_flags delete_segments -g 40 -f hls ${mountPath}/output.m3u8`,
     );
 
     let ngrokUrl;
