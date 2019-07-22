@@ -59,10 +59,10 @@ const authorize = async (token, workstationId) => {
   return result.data.user.name;
 };
 
-const resPhoto = (ext = 'jpg') => (req, res) => {
+const resPhoto = (rtmpAddress, ext = 'jpg') => (req, res) => {
   const ffmpeg = childProcess.spawn('ffmpeg', [
     '-i',
-    `${this.rtmpAddress}`,
+    `${rtmpAddress}`,
     '-ss',
     '0.7',
     '-vframes',
@@ -228,7 +228,7 @@ module.exports = class {
 
     this.app.use('/stream', express.static(this.mountPath));
 
-    this.app.get('/photo.jpg', resPhoto());
+    this.app.get('/photo.jpg', resPhoto(this.rtmpAddress));
   }
 
   async run(port = 3000) {
