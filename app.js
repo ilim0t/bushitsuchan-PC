@@ -4,6 +4,7 @@ const Server = require('./server');
 const aws = require('./aws');
 const Stream = require('./stream');
 const { daemon } = require('./utils');
+const slack = require('./slack');
 
 const config = {
   restApiId: process.env.AWS_REST_API_ID,
@@ -69,6 +70,7 @@ disk
       config,
       `rtmp://localhost:1935/live/${'bushitsuchan'}`,
     );
+    server.app.use('/slack', slack(config.slackClientId, config.slackClientSecret));
     server.run(3000).then(() => console.log(`Express app listening on port ${3000}`));
   })
   .catch((e) => {

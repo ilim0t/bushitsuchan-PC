@@ -56,8 +56,10 @@ ngrok で得られる URL はは変動するので，[API Gateway](https://aws.a
  │   └─ GET
  ├─ /photo-viewer
  │   └─ GET
+ ├─ /slack
+ │   └ /{path+}
+ │      └─ GET
  ├─ /stream
- │   ├─ GET
  │   └ /{file+}
  │      └─ GET
  └─ /viewer
