@@ -14,10 +14,11 @@ const config = {
   ngrokToken: process.env.NGROK_TOKEN,
   slackClientId: process.env.SLACK_CLIENT_ID,
   slackClientSecret: process.env.SLACK_CLIENT_SECRET,
+  slackBotAccessToken: process.env.SLACK_BOT_ACCESS_TOKEN,
   wsId: process.env.WORKSTATION_ID,
   privateKey: process.env.PRIVATE_KEY,
-  debug: Boolean(process.env.DEBUG),
-  isMac: Boolean(process.env.IS_MAC),
+  debug: Boolean(JSON.parse(process.env.DEBUG)),
+  isMac: Boolean(JSON.parse(process.env.IS_MAC)),
 };
 
 const liveServer = new RtmpServer(1935);
@@ -44,10 +45,9 @@ disk
     daemon(
       `${input} -vcodec libx264 -pix_fmt yuv420p -preset veryfast -tune zerolatency,stillimage,film -vb 2500k -vf "drawtext=text='%{localtime}':fontcolor=white@0.8:x=0:y=h-lh*1.2:fontsize=24" -f flv rtmp://localhost:${1935}/live/bushitsuchan`,
     );
-
-    daemon(
-      `ffmpeg -i rtmp://localhost:1935/live/bushitsuchan -hls_flags delete_segments -g 40 -f hls ${mountPath}/output.m3u8`,
-    );
+    // daemon(
+    //   `ffmpeg -i rtmp://localhost:1935/live/bushitsuchan -hls_flags delete_segments -g 40 -f hls ${mountPath}/output.m3u8`,
+    // );
 
     let ngrokUrl;
     let awsUrl;
@@ -70,7 +70,10 @@ disk
       config,
       `rtmp://localhost:1935/live/${'bushitsuchan'}`,
     );
-    server.app.use('/slack', slack(config.slackClientId, config.slackClientSecret));
+    server.app.use(
+      '/slack',
+      slack(awsUrl, `rtmp://localhost:${1935}/live/bushitsuchan`, config.slackBotAccessToken),
+    );
     server.run(3000).then(() => console.log(`Express app listening on port ${3000}`));
   })
   .catch((e) => {

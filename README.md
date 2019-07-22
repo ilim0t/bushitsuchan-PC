@@ -58,7 +58,7 @@ ngrok で得られる URL はは変動するので，[API Gateway](https://aws.a
  │   └─ GET
  ├─ /slack
  │   └ /{path+}
- │      └─ GET
+ │      └─ POST
  ├─ /stream
  │   └ /{file+}
  │      └─ GET
@@ -104,6 +104,9 @@ export PRIVATE_KEY="presetprivatekey"
 
 export WORKSTATION_ID="VOW38CP2D"
 ```
+
+> `IS_MAC`, `DEBUG` この２つの変数で flag を立てることもできます
+> `true`, `false`, `0`, `1` で指定可能です。
 
 [direnv](https://direnv.net/)なら以上のように設定されているはずです。
 

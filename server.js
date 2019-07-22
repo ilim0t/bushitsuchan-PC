@@ -59,6 +59,23 @@ const authorize = async (token, workstationId) => {
   return result.data.user.name;
 };
 
+const resPhoto = (ext = 'jpg') => (req, res) => {
+  const ffmpeg = childProcess.spawn('ffmpeg', [
+    '-i',
+    `${this.rtmpAddress}`,
+    '-ss',
+    '0.7',
+    '-vframes',
+    '1',
+    '-f',
+    'image2',
+    'pipe:1',
+  ]);
+
+  res.contentType(`image/${ext}`);
+  ffmpeg.stdout.pipe(res);
+};
+
 module.exports = class {
   constructor(ngrokUrl, awsUrl, mountPath, config, rtmpAddress) {
     this.ngrokUrl = ngrokUrl;
@@ -211,24 +228,7 @@ module.exports = class {
 
     this.app.use('/stream', express.static(this.mountPath));
 
-    this.app.get('/photo.jpg', async (req, res) => {
-      const ext = 'jpeg';
-
-      const ffmpeg = childProcess.spawn('ffmpeg', [
-        '-i',
-        `${this.rtmpAddress}`,
-        '-ss',
-        '0.7',
-        '-vframes',
-        '1',
-        '-f',
-        'image2',
-        'pipe:1',
-      ]);
-
-      res.contentType(`image/${ext}`);
-      ffmpeg.stdout.pipe(res);
-    });
+    this.app.get('/photo.jpg', resPhoto());
   }
 
   async run(port = 3000) {
