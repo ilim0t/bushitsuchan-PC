@@ -97,6 +97,9 @@ Escape channels, users, and links sent to your app を有効
 `SLACK_CLIENT_ID`: Slack Apps の Client ID  
 `SLACK_CLIENT_SECRET`: Slack Apps の Client Secret
 
+`SLACK_BOT_ACCESS_TOKEN`: Slack Apps の OAuth Access Token  
+`SLACK_SIGNING_SECRET`: Slack Apps の Signing Secret  
+
 `LIVE_PRIVATE_KEY`: live streaming に認証をかけるための key, 暗に用いるので頑強であれば何でも良い
 
 `WORKSTATION_ID`: Slack の WorkSpace の ID
@@ -108,6 +111,9 @@ export AWS_REST_API_ID="h7c..."
 
 export SLACK_CLIENT_ID="179..."
 export SLACK_CLIENT_SECRET="38b..."
+
+export SLACK_BOT_ACCESS_TOKEN="xoxb-3814..."
+export SLACK_SIGNING_SECRET="fb36..."
 
 export PRIVATE_KEY="presetprivatekey"
 

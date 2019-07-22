@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const { WebClient } = require('@slack/web-api');
+const { createMessageAdapter } = require('@slack/interactive-messages');
 const store = require('store');
 const crypto = require('crypto');
 const expirePlugin = require('store/plugins/expire');
@@ -12,11 +13,23 @@ const { base64Encode, base64Decode } = require('./utils');
 store.addPlugin(expirePlugin);
 store.addPlugin(updatePlugin);
 
-module.exports = (awsUrl, rtmpAddress) => {
+module.exports = (awsUrl, rtmpAddress, slackBotAccessToken, slackSigningSecret) => {
   const router = express.Router();
+  const web = new WebClient(slackBotAccessToken);
+  const slackInteractions = createMessageAdapter(slackSigningSecret);
 
   router.use(bodyParser.urlencoded({ extended: false }));
   router.use(bodyParser.json());
+  router.use('/actions', slackInteractions.expressMiddleware());
+
+  slackInteractions.action({ type: 'button' }, (payload, respond) => {
+    const { actions, message, channel } = payload;
+    const { ts } = message;
+
+    if (actions[0].value === 'delete') {
+      web.chat.delete({ channel: channel.id, ts }).catch(e => console.error(e));
+    }
+  });
 
   router.post('/photo', (req, res) => {
     const now = Date.now();
@@ -78,7 +91,7 @@ module.exports = (awsUrl, rtmpAddress) => {
                   text: {
                     type: 'plain_text',
                     emoji: true,
-                    text: '投稿削除(前方互換用 未実装)',
+                    text: '投稿削除',
                   },
                   value: 'delete',
                 },
