@@ -17,8 +17,8 @@ const config = {
   // slackBotAccessToken: process.env.SLACK_BOT_ACCESS_TOKEN,
   wsId: process.env.WORKSTATION_ID,
   privateKey: process.env.PRIVATE_KEY,
-  debug: Boolean(JSON.parse(process.env.DEBUG)),
-  isMac: Boolean(JSON.parse(process.env.IS_MAC)),
+  debug: process.env.DEBUG && Boolean(JSON.parse(process.env.DEBUG)),
+  isMac: process.env.IS_MAC && Boolean(JSON.parse(process.env.IS_MAC)),
 };
 
 const liveServer = new RtmpServer(1935);

@@ -58,6 +58,7 @@ ngrok で得られる URL はは変動するので，[API Gateway](https://aws.a
  │   └─ GET
  ├─ /slack
  │   └ /{path+}
+ │      ├─ GET
  │      └─ POST
  ├─ /stream
  │   └ /{file+}
