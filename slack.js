@@ -18,10 +18,7 @@ module.exports = (awsUrl, rtmpAddress, slackBotAccessToken, slackSigningSecret) 
   const web = new WebClient(slackBotAccessToken);
   const slackInteractions = createMessageAdapter(slackSigningSecret);
 
-  router.use(bodyParser.urlencoded({ extended: false }));
-  router.use(bodyParser.json());
   router.use('/actions', slackInteractions.expressMiddleware());
-
   slackInteractions.action({ type: 'button' }, (payload, respond) => {
     const { actions, message, channel } = payload;
     const { ts } = message;
@@ -30,6 +27,9 @@ module.exports = (awsUrl, rtmpAddress, slackBotAccessToken, slackSigningSecret) 
       web.chat.delete({ channel: channel.id, ts }).catch(e => console.error(e));
     }
   });
+
+  router.use(bodyParser.urlencoded({ extended: false }));
+  router.use(bodyParser.json());
 
   router.post('/photo', (req, res) => {
     const now = Date.now();

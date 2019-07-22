@@ -84,9 +84,14 @@ Scopes に`identity.basic`を追加してください。
 
 [Slash Commands](https://api.slack.com/slash-commands)に従い slack api ページにて，  
 Command: `/bushitsu-photo`  
-Request URL: `https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/ slack/photo`  
+Request URL: `https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/slack/photo`  
 Escape channels, users, and links sent to your app を有効  
 に設定します。
+
+### Slack interactive message
+
+[Making messages interactive](https://api.slack.com/interactive-messages) に従い設定します。
+Request URL は`https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/slack/actions/`を設定してください。
 
 ### 環境変数
 
@@ -98,7 +103,7 @@ Escape channels, users, and links sent to your app を有効
 `SLACK_CLIENT_SECRET`: Slack Apps の Client Secret
 
 `SLACK_BOT_ACCESS_TOKEN`: Slack Apps の OAuth Access Token  
-`SLACK_SIGNING_SECRET`: Slack Apps の Signing Secret  
+`SLACK_SIGNING_SECRET`: Slack Apps の Signing Secret
 
 `LIVE_PRIVATE_KEY`: live streaming に認証をかけるための key, 暗に用いるので頑強であれば何でも良い
 
