@@ -103,8 +103,6 @@ module.exports = (awsUrl, rtmpAddress, slackBotAccessToken, slackSigningSecret) 
         console.error(e);
       });
     });
-
-    console.log(`${awsUrl}${req.baseUrl}/thumb.jpg?key=${base64Encode(key)}`);
     res.status(200).send('待ってね');
   });
 
