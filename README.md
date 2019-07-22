@@ -79,6 +79,14 @@ Bot User メニューにて Redirect URLs は
 `https://[RESOURCE_ID].execute-api.[REGION].amazonaws.com/prod/oauth-redirect`のみに設定し，
 Scopes に`identity.basic`を追加してください。
 
+### Slack bot
+
+[Slash Commands](https://api.slack.com/slash-commands)に従い slack api ページにて，  
+Command: `/bushitsu-photo`  
+Request URL: `https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/ slack/photo`  
+Escape channels, users, and links sent to your app を有効  
+に設定します。
+
 ### 環境変数
 
 `NGROK_TOKEN`: Tunnel Authtoken, 無料プランでプランでも動作します

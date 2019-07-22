@@ -12,14 +12,13 @@ const { base64Encode, base64Decode } = require('./utils');
 store.addPlugin(expirePlugin);
 store.addPlugin(updatePlugin);
 
-module.exports = (awsUrl, rtmpAddress, slackBotAccessToken) => {
+module.exports = (awsUrl, rtmpAddress) => {
   const router = express.Router();
-  const web = new WebClient(slackBotAccessToken);
 
   router.use(bodyParser.urlencoded({ extended: false }));
   router.use(bodyParser.json());
 
-  router.post('/test', (req, res) => {
+  router.post('/photo', (req, res) => {
     const now = Date.now();
     const key = crypto
       .createHash('md5')

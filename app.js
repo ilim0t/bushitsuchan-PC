@@ -14,7 +14,7 @@ const config = {
   ngrokToken: process.env.NGROK_TOKEN,
   slackClientId: process.env.SLACK_CLIENT_ID,
   slackClientSecret: process.env.SLACK_CLIENT_SECRET,
-  slackBotAccessToken: process.env.SLACK_BOT_ACCESS_TOKEN,
+  // slackBotAccessToken: process.env.SLACK_BOT_ACCESS_TOKEN,
   wsId: process.env.WORKSTATION_ID,
   privateKey: process.env.PRIVATE_KEY,
   debug: Boolean(JSON.parse(process.env.DEBUG)),
@@ -70,10 +70,7 @@ disk
       config,
       `rtmp://localhost:1935/live/${'bushitsuchan'}`,
     );
-    server.app.use(
-      '/slack',
-      slack(awsUrl, `rtmp://localhost:${1935}/live/bushitsuchan`, config.slackBotAccessToken),
-    );
+    server.app.use('/slack', slack(awsUrl, `rtmp://localhost:${1935}/live/bushitsuchan`));
     server.run(3000).then(() => console.log(`Express app listening on port ${3000}`));
   })
   .catch((e) => {
