@@ -69,7 +69,7 @@ ngrok で得られる URL はは変動するので，[API Gateway](https://aws.a
 
 上のような構造になります。
 
-> `app.js`内の`config.region`にて region を指定しています。この値と API Gateway を設定した region，AWSCLI で設定する region を一致させてください
+> API Gateway を設定した region，AWSCLI で設定する region を一致させてください
 
 ### Sign in with Slack
 
@@ -138,7 +138,7 @@ export WORKSTATION_ID="VOW38CP2D"
 
 ## ffmpeg
 
-画像,音声をを取得するときに必要です。
+画像,音声をを取得するときに必要です。インストールします。
 
 **Mac**
 
@@ -163,6 +163,8 @@ newfs_hfs /dev/disk2
 mkdir -p /path/to/bushitsuchan-PC/hls
 mount -t hfs /dev/disk2 /path/to/bushitsuchan-PC/hls
 ```
+
+> 一行目の実行結果が`/dev/disk2`以外だった場合は，それ以降の`/dev/disk2`を実行結果のパスへ変更してください。
 
 ## Run
 
@@ -190,3 +192,12 @@ Remote URL: https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod
 
 すると，初回実行時(過去に Slack で認証をしていなければ) Slack の認証ページへリダイレクトされます。  
 Sign in すると自動的に配信再生ページへ移動します。
+
+## Debug
+
+WEB サイトデザインのためのデバッグモード
+
+環境変数`DEBUG`をつけると他のすべての環境変数を省略できます。  
+外部や Slack からのアクセスができなくなる代わりに煩わしい設定が不要になります。
+
+> `http://localhost:3000/viewer`でアクセスできます。

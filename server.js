@@ -110,7 +110,7 @@ module.exports = class {
       morgan(
         ':remote-addr - :remote-user <@:user> [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"',
         {
-          stream: fs.createWriteStream(`${__dirname}/access.log`, { flags: 'a' }),
+          stream: fs.createWriteStream(`${__dirname}/log/access.log`, { flags: 'a' }),
         },
       ),
     );
@@ -166,7 +166,7 @@ module.exports = class {
     }
     this.app.get('/auth', (req, res) => {
       const { token } = req.session;
-      if (!this.config.debug) {
+      if (this.config.debug) {
         res.json({
           hlsAddress: 'stream/output.m3u8',
           photoAddress: 'photo.jpg',
