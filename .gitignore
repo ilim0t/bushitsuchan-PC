@@ -94,8 +94,12 @@ typings/
 
 # End of https://www.gitignore.io/api/node
 
+# env dile
 .envrc
+
+# photo, video file
 *.png
 *.jpeg
 *.jpg
-hls/
+*.m3u8
+*.ts

@@ -16,6 +16,7 @@ const config = {
   slackClientSecret: process.env.SLACK_CLIENT_SECRET,
   slackBotAccessToken: process.env.SLACK_BOT_ACCESS_TOKEN,
   slackSigningSecret: process.env.SLACK_SIGNING_SECRET,
+  contactChannel: process.env.CONTACT_CHANNEL,
   wsId: process.env.WORKSTATION_ID,
   privateKey: process.env.PRIVATE_KEY,
   debug: process.env.DEBUG && Boolean(JSON.parse(process.env.DEBUG)),
@@ -39,16 +40,16 @@ disk
     console.log(`Please put HLS files in ${mountPath}`);
     let input;
     if (config.isMac) {
-      input = 'ffmpeg -f avfoundation -framerate 30 -re -i 0 -r 10';
+      input = 'ffmpeg -f avfoundation -re -i 0 -r 10';
     } else {
       input = 'ffmpeg -i /dev/video0';
     }
     daemon(
       `${input} -vcodec libx264 -pix_fmt yuv420p -preset veryfast -tune zerolatency,stillimage,film -vb 2500k -vf "drawtext=text='%{localtime}':fontcolor=white@0.8:x=0:y=h-lh*1.2:fontsize=24" -f flv rtmp://localhost:${1935}/live/bushitsuchan`,
     );
-    // daemon(
-    //   `ffmpeg -i rtmp://localhost:1935/live/bushitsuchan -hls_flags delete_segments -g 40 -f hls ${mountPath}/output.m3u8`,
-    // );
+    daemon(
+      `ffmpeg -i rtmp://localhost:1935/live/bushitsuchan -hls_flags delete_segments -g 40 -f hls ${mountPath}/output.m3u8`,
+    );
 
     let ngrokUrl;
     let awsUrl;
@@ -75,6 +76,7 @@ disk
       '/slack',
       slack(
         awsUrl,
+        config.contactChannel,
         `rtmp://localhost:${1935}/live/bushitsuchan`,
         config.slackBotAccessToken,
         config.slackSigningSecret,

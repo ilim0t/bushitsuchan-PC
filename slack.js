@@ -7,13 +7,14 @@ const crypto = require('crypto');
 const expirePlugin = require('store/plugins/expire');
 const updatePlugin = require('store/plugins/update');
 const childProcess = require('child_process');
-const axios = require('axios');
+const fs = require('fs');
+const commentJSON = require('comment-json');
 const { base64Encode, base64Decode } = require('./utils');
 
 store.addPlugin(expirePlugin);
 store.addPlugin(updatePlugin);
 
-module.exports = (awsUrl, rtmpAddress, slackBotAccessToken, slackSigningSecret) => {
+module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slackSigningSecret) => {
   const router = express.Router();
   const web = new WebClient(slackBotAccessToken);
   const slackInteractions = createMessageAdapter(slackSigningSecret);
@@ -32,10 +33,12 @@ module.exports = (awsUrl, rtmpAddress, slackBotAccessToken, slackSigningSecret) 
   router.use(bodyParser.json());
 
   router.post('/photo', (req, res) => {
-    const now = Date.now();
+    const expired = new Date();
+    expired.setHours(expired.getHours() + 5);
+
     const key = crypto
       .createHash('md5')
-      .update(`${req.body.user_id}-${now}`)
+      .update(`${req.body.user_id}-${expired.getTime()}`)
       .digest('Base64');
 
     const ffmpeg = childProcess.spawn('ffmpeg', [
@@ -55,54 +58,29 @@ module.exports = (awsUrl, rtmpAddress, slackBotAccessToken, slackSigningSecret) 
       chunks.push(chunk);
     });
     ffmpeg.stdout.on('end', () => {
-      store.set(key, Buffer.concat(chunks), now + 1000 * 60 * 60 * 3);
-      axios({
-        method: 'post',
-        url: req.body.response_url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        data: {
-          response_type: 'in_channel',
-          text: '部室の様子',
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: '写真です',
-              },
-            },
-            {
-              type: 'image',
-              title: {
-                type: 'plain_text',
-                text: '部室の様子',
-                emoji: true,
-              },
-              image_url: `${awsUrl}${req.baseUrl}/thumb.jpg?key=${base64Encode(key)}`,
-              alt_text: '部室の様子',
-            },
-            {
-              type: 'actions',
-              elements: [
-                {
-                  type: 'button',
-                  text: {
-                    type: 'plain_text',
-                    emoji: true,
-                    text: '投稿削除',
-                  },
-                  value: 'delete',
-                },
-              ],
-            },
-          ],
-        },
-      }).catch((e) => {
-        console.error(e);
+      store.set(key, Buffer.concat(chunks), expired.getTime());
+      let template = fs.readFileSync('./block_template.json', 'utf8');
+      template = template.replace(
+        /\${photo_image}/g,
+        `${awsUrl}${req.baseUrl}/thumb.jpg?key=${base64Encode(key)}`,
+      );
+      template = template.replace(/\${viewer-url}/g, `${awsUrl}/viewer`);
+      template = template.replace(/\${photo-viewer-url}/g, `${awsUrl}/photo-viewer`);
+      template = template.replace(/\${contact-channel}/g, contactChannel);
+      template = template.replace(
+        /\${expired-time}/g,
+        `写真は<!date^${Math.floor(
+          expired.getTime() / 1000,
+        )}^{date_short_pretty}{time}まで有効です|${expired.toLocaleString()}まで有効です>`,
+      );
+      web.chat.postMessage({
+        channel: req.body.channel_id,
+        text: '部室の様子',
+        icon_emoji: ':slack:',
+        blocks: commentJSON.parse(template),
       });
     });
+
     res.status(200).send('待ってね');
   });
 
