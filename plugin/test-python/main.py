@@ -132,7 +132,7 @@ class ObjectDetector:
     # https://github.com/facebookresearch/maskrcnn-benchmark/blob/master/demo/predictor.py
     def select_top_prediction(
         self, prediction: Dict[str, torch.Tensor], threshold: float = 0.8
-    ):
+    ) -> Dict[str, torch.Tensor]:
         scores = prediction["scores"]
         keep = torch.nonzero(scores > threshold).squeeze(1)
         prediction = prediction.copy()
@@ -178,8 +178,7 @@ class ObjectDetector:
 
 
 def main():
-    # cap = cv2.VideoCapture("rtmp://localhost:1935/live/bushitsuchan")
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture("rtmp://localhost:1935/live/bushitsuchan")
     cv2.namedWindow("img", cv2.WINDOW_NORMAL)
     cv2.setWindowProperty("img", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
