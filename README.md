@@ -105,6 +105,10 @@ Request URL は`https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/pro
 `SLACK_BOT_ACCESS_TOKEN`: Slack Apps の OAuth Access Token  
 `SLACK_SIGNING_SECRET`: Slack Apps の Signing Secret
 
+`CONTACT_CHANNEL`: Slack でのメッセージにのせる問い合せ先の channel ID
+
+> 参考: [Formatting text in messages](https://api.slack.com/messaging/composing/formatting#linking-channels)
+
 `LIVE_PRIVATE_KEY`: live streaming に認証をかけるための key, 暗に用いるので頑強であれば何でも良い
 
 `WORKSTATION_ID`: Slack の WorkSpace の ID
@@ -119,6 +123,8 @@ export SLACK_CLIENT_SECRET="38b..."
 
 export SLACK_BOT_ACCESS_TOKEN="xoxb-3814..."
 export SLACK_SIGNING_SECRET="fb36..."
+
+export CONTACT_CHANNEL="JCP..."
 
 export PRIVATE_KEY="presetprivatekey"
 
