@@ -56,8 +56,11 @@ ngrok で得られる URL はは変動するので，[API Gateway](https://aws.a
  │   └─ GET
  ├─ /photo-viewer
  │   └─ GET
+ ├─ /slack
+ │   └ /{path+}
+ │      ├─ GET
+ │      └─ POST
  ├─ /stream
- │   ├─ GET
  │   └ /{file+}
  │      └─ GET
  └─ /viewer
@@ -77,6 +80,19 @@ Bot User メニューにて Redirect URLs は
 `https://[RESOURCE_ID].execute-api.[REGION].amazonaws.com/prod/oauth-redirect`のみに設定し，
 Scopes に`identity.basic`を追加してください。
 
+### Slack bot
+
+[Slash Commands](https://api.slack.com/slash-commands)に従い slack api ページにて，  
+Command: `/bushitsu-photo`  
+Request URL: `https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/slack/photo`  
+Escape channels, users, and links sent to your app を有効  
+に設定します。
+
+### Slack interactive message
+
+[Making messages interactive](https://api.slack.com/interactive-messages) に従い設定します。
+Request URL は`https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/slack/actions/`を設定してください。
+
 ### 環境変数
 
 `NGROK_TOKEN`: Tunnel Authtoken, 無料プランでプランでも動作します
@@ -85,6 +101,13 @@ Scopes に`identity.basic`を追加してください。
 
 `SLACK_CLIENT_ID`: Slack Apps の Client ID  
 `SLACK_CLIENT_SECRET`: Slack Apps の Client Secret
+
+`SLACK_BOT_ACCESS_TOKEN`: Slack Apps の OAuth Access Token  
+`SLACK_SIGNING_SECRET`: Slack Apps の Signing Secret
+
+`CONTACT_CHANNEL`: Slack でのメッセージにのせる問い合せ先の channel ID
+
+> 参考: [Formatting text in messages](https://api.slack.com/messaging/composing/formatting#linking-channels)
 
 `LIVE_PRIVATE_KEY`: live streaming に認証をかけるための key, 暗に用いるので頑強であれば何でも良い
 
@@ -98,10 +121,18 @@ export AWS_REST_API_ID="h7c..."
 export SLACK_CLIENT_ID="179..."
 export SLACK_CLIENT_SECRET="38b..."
 
+export SLACK_BOT_ACCESS_TOKEN="xoxb-3814..."
+export SLACK_SIGNING_SECRET="fb36..."
+
+export CONTACT_CHANNEL="JCP..."
+
 export PRIVATE_KEY="presetprivatekey"
 
 export WORKSTATION_ID="VOW38CP2D"
 ```
+
+> `IS_MAC`, `DEBUG` この２つの変数で flag を立てることもできます
+> `true`, `false`, `0`, `1` で指定可能です。
 
 [direnv](https://direnv.net/)なら以上のように設定されているはずです。
 
