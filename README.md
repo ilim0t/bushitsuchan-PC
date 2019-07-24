@@ -11,7 +11,8 @@ OSK の部室の様子を様子をオンラインで確認できるプロジェ�
 - macOS 10.14
 
 ## Design
-> [Sequence図](/docs/sequence.md)
+
+> [Sequence 図](/docs/sequence.md)
 
 ## Setup
 
@@ -212,3 +213,9 @@ WEB サイトデザインのためのデバッグモード
 外部や Slack からのアクセスができなくなる代わりに煩わしい設定が不要になります。
 
 > `http://localhost:3000/viewer`でアクセスできます。
+
+Setup では以下のもの以外は飛ばして構いません。
+
+- [ffmpeg](#ffmpeg)
+- [node_module](#node_module)
+- [環境変数](#環境変数)
