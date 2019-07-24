@@ -160,11 +160,19 @@ Ubuntu では自動で行われますが，Mac の場合 OS 起動の度に手�
 ```bash=
 hdiutil attach -nomount ram://204800
 newfs_hfs /dev/disk2
-mkdir -p /path/to/bushitsuchan-PC/hls
-mount -t hfs /dev/disk2 /path/to/bushitsuchan-PC/hls
+cd /path/to/bushitsuchan-PC
+mkdir -p hls/
+mount -t hfs /dev/disk2 hls/
 ```
 
 > 一行目の実行結果が`/dev/disk2`以外だった場合は，それ以降の`/dev/disk2`を実行結果のパスへ変更してください。
+
+### node_module
+
+```bash=
+cd /path/to/bushitsuchan-PC
+npm install
+```
 
 ## Run
 

@@ -98,6 +98,7 @@ module.exports = class {
     );
 
     morgan.token('user', (req, res) => req.session && (req.session.name || 'anonymous'));
+    morgan.token('date', () => new Date().toLocaleString());
     this.app.use(
       morgan(
         '<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms',
