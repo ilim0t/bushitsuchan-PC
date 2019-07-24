@@ -1,0 +1,41 @@
+@startuml WEB
+database "RAM Disk"
+
+box "NodeJS" #LightBlue
+participant Main
+participant "WEB Server"
+participant "RTM Server"
+end box
+
+participant ffmpeg
+participant Slack
+participant ngrok
+participant AWS
+
+participant Client
+
+Client -> AWS : GET
+AWS -> ngrok : 転送
+ngrok -> "WEB Server" : 転送
+
+alt アクセスが古い
+	"WEB Server" -> Slack: 権限確認
+	note right: Clientで保存されていたtokenを利用
+
+	Slack --> "WEB Server": Response
+end
+
+alt 動画配信
+	"WEB Server" -> "RAM Disk": 動画取得
+	"RAM Disk" --> "WEB Server": 動画をResponse
+else 写真
+	"WEB Server" -> ffmpeg: 写真取得
+	ffmpeg -> "RTM Server" : ストリーミング受信要求
+	"RTM Server" --> ffmpeg : Response
+	ffmpeg --> "WEB Server": 写真をResponse
+end
+
+"WEB Server" --> ngrok : Response
+ngrok --> AWS : 転送
+AWS --> Client : 転送
+@enduml

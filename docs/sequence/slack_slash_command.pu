@@ -1,0 +1,47 @@
+@startuml Slack_slash_command
+box "NodeJS" #LightBlue
+participant "WEB Server"
+participant "RTM Server"
+end box
+
+participant ffmpeg
+participant ngrok
+participant AWS
+
+participant Slack
+participant Client
+
+Client -> Slack : Slash command
+Slack -> AWS : POST
+AWS -> ngrok : 転送
+ngrok -> "WEB Server" : 転送
+
+"WEB Server" --> ngrok : OK
+ngrok --> AWS : 転送
+AWS --> Slack : 転送
+Slack --> Client : 転送
+
+"WEB Server" -> ffmpeg: 写真取得
+ffmpeg -> "RTM Server" : ストリーミング受信要求
+"RTM Server" --> ffmpeg : Response
+ffmpeg --> "WEB Server": 写真をResponse
+
+"WEB Server" -> "WEB Server": 保存
+"WEB Server" -> Slack: 投稿
+Slack --> "WEB Server": OK
+
+== 表示タイミング ==
+
+Client -> Slack: 表示要求
+Slack --> Client: Response
+
+Client -> AWS : 画像GET
+AWS -> ngrok : 転送
+ngrok -> "WEB Server" : 転送
+
+"WEB Server" -> "WEB Server" : 画像取得
+"WEB Server" --> ngrok : Response
+
+ngrok --> AWS : 転送
+AWS --> Client : 転送
+@enduml

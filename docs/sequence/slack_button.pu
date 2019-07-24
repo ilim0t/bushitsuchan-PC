@@ -1,0 +1,31 @@
+@startuml Slack_button
+box "NodeJS" #LightBlue
+participant "WEB Server"
+participant "RTM Server"
+end box
+
+participant ffmpeg
+participant ngrok
+participant AWS
+
+participant Slack
+participant Client
+
+Client -> Slack: Buttonを押す
+Slack --> AWS: 転送
+AWS --> ngrok: 転送
+ngrok -> "WEB Server" : 転送
+
+"WEB Server" --> ngrok : OK
+ngrok --> AWS : 転送
+AWS --> Slack : 転送
+Slack --> Client : 転送
+
+"WEB Server" -> Slack: 投稿or削除
+Slack --> "WEB Server": OK
+
+== 表示タイミング ==
+
+Client -> Slack: 表示要求
+Slack --> Client: Response
+@enduml

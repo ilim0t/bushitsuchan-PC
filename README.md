@@ -10,6 +10,9 @@ OSK の部室の様子を様子をオンラインで確認できるプロジェ�
 - Ubuntu 18.04
 - macOS 10.14
 
+## Design
+> [Sequence図](/docs/sequence.md)
+
 ## Setup
 
 ### ngrok
