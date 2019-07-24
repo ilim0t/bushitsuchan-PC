@@ -1,0 +1,31 @@
+@startuml WEB_login
+box "NodeJS" #LightBlue
+participant "WEB Server"
+end box
+
+participant Slack
+participant Client
+
+Client -> "WEB Server" : GET
+note right: 以下ngrok, AWSを省略します
+
+"WEB Server" --> Client : Redirect
+note right: Slackで認証するためリダイレクト
+
+
+Client -> Slack : GET
+Slack --> Client: Redirect
+note right
+	WEB Server 宛に一時トークン
+	をリダイレクト
+end note
+
+Client -> "WEB Server" : GET
+"WEB Server" -> Slack : アクセストークン要求
+Slack --> "WEB Server" : Response
+"WEB Server" --> Client: Response
+note right
+	Clentにアクセストークン
+	を暗号化して保存
+end note
+@enduml

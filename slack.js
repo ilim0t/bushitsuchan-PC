@@ -92,7 +92,7 @@ module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slac
     }
     const chunks = store.get(base64Decode(key));
     if (!chunks) {
-      res.sendStatus(204).end();
+      res.sendStatus(404).end();
       return;
     }
     res.contentType('image/jpg');

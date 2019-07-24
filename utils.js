@@ -8,10 +8,10 @@ const wait = ms => new Promise(reolve => setTimeout(() => reolve(), ms));
 
 module.exports.daemon = async (command, ms = 1000 * 10, maxCount = 100) => {
   const logger = new console.Console(
-    fs.createWriteStream('out.log'),
-    fs.createWriteStream('err.log'),
+    fs.createWriteStream(`${__dirname}/log/daemon-out.log`),
+    fs.createWriteStream(`${__dirname}/log/daemon-err.log`),
   );
-  console.log(`start daemon ${command.slice(0, 40)}...`);
+  console.log(`start daemon ${command}`);
   for (let i = 0; i < maxCount; i += 1) {
     try {
       // eslint-disable-next-line no-await-in-loop

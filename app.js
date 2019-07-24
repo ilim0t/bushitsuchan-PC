@@ -40,7 +40,7 @@ disk
     console.log(`Please put HLS files in ${mountPath}`);
     let input;
     if (config.isMac) {
-      input = 'ffmpeg -f avfoundation -re -i 0 -r 10';
+      input = 'ffmpeg -framerate 30 -f avfoundation -re -i 0 -r 10';
     } else {
       input = 'ffmpeg -i /dev/video0';
     }
