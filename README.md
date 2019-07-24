@@ -140,7 +140,7 @@ export WORKSTATION_ID="VOW38CP2D"
 
 [direnv](https://direnv.net/)なら以上のように設定されているはずです。
 
-## ffmpeg
+### ffmpeg
 
 画像,音声をを取得するときに必要です。インストールします。
 
@@ -217,5 +217,6 @@ WEB サイトデザインのためのデバッグモード
 Setup では以下のもの以外は飛ばして構いません。
 
 - [ffmpeg](#ffmpeg)
+- [RAM Disk](#RAM-Disk)
 - [node_module](#node_module)
 - [環境変数](#環境変数)
