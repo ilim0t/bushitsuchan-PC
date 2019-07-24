@@ -24,9 +24,77 @@ module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slac
     const { actions, message, channel } = payload;
     const { ts } = message;
 
+    if (!actions[0].value) {
+      return;
+    }
     if (actions[0].value === 'delete') {
       web.chat.delete({ channel: channel.id, ts }).catch(e => console.error(e));
     }
+  });
+
+  slackInteractions.action({ type: 'overflow' }, (payload, respond) => {
+    const { actions, message, channel } = payload;
+    const { ts } = message;
+
+    const actionValue = actions[0].selected_option.value;
+    if (!actionValue) {
+      return;
+    }
+    const f = {};
+    f.extension = () => {
+      const photoUrl = new URL(message.blocks[0].image_url);
+      const key = base64Decode(photoUrl.searchParams.get('key'));
+
+      const expired = new Date(
+        Number(message.blocks[2].elements[0].text.match(/\^(\d+)\^/)[1]) * 1000,
+      ); // TODO もし無期限延長されてたら
+      expired.setDate(expired.getDate() + 1);
+      store.set(`__storejs_expire_mixin_${key}`, expired.getTime()); // TODO これで伸びるかどうか確認
+
+      let template = fs.readFileSync('./block_template.json', 'utf8');
+      template = template.replace(/\${photo_image}/g, message.blocks[0].image_url);
+      template = template.replace(/\${viewer-url}/g, `${awsUrl}/viewer`);
+      template = template.replace(/\${photo-viewer-url}/g, `${awsUrl}/photo-viewer`);
+      template = template.replace(/\${contact-channel}/g, contactChannel);
+      template = template.replace(
+        /\${expired-time}/g,
+        `写真は<!date^${Math.floor(
+          expired.getTime() / 1000,
+        )}^{date_short_pretty}{time}まで有効です|${expired.toLocaleString()}まで有効です>`,
+      );
+      respond({
+        text: message.text,
+        blocks: commentJSON.parse(template),
+        replace_original: true,
+      });
+    };
+    f.save = () => {
+      const photoUrl = new URL(message.blocks[0].image_url);
+      const key = base64Decode(photoUrl.searchParams.get('key'));
+      store.remove(`__storejs_expire_mixin_${key}`); // TODO 再起動してないとき
+
+      const chunks = store.get(key);
+      if (!chunks) {
+        return;
+      }
+      fs.mkdirSync(`${__dirname}/photos`, { recursive: true });
+      fs.writeFileSync(`${__dirname}/photos/${key}.jpg`, chunks);
+
+      message.blocks[2].elements[0].text = '写真はずっと表示されます';
+      let template = fs.readFileSync('./block_template.json', 'utf8');
+      template = template.replace(/\${photo_image}/g, message.blocks[0].image_url);
+      template = template.replace(/\${viewer-url}/g, `${awsUrl}/viewer`);
+      template = template.replace(/\${photo-viewer-url}/g, `${awsUrl}/photo-viewer`);
+      template = template.replace(/\${contact-channel}/g, contactChannel);
+      template = template.replace(/\${expired-time}/g, '写真はずっと表示されます');
+      respond({
+        text: message.text,
+        blocks: commentJSON.parse(template),
+        replace_original: true,
+      });
+    };
+
+    f[actionValue]();
   });
 
   router.use(bodyParser.urlencoded({ extended: false }));
@@ -84,19 +152,29 @@ module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slac
     res.status(200).send('待ってね');
   });
 
-  router.get('/thumb.jpg', (req, res) => {
+  router.get('/thumb.jpg', (req, res, next) => {
     const { key } = req.query;
     if (!key) {
-      res.sendStatus(404).end();
+      next();
       return;
     }
     const chunks = store.get(base64Decode(key));
     if (!chunks) {
-      res.sendStatus(404).end();
+      next();
       return;
     }
     res.contentType('image/jpg');
     res.send(Buffer.from(chunks.data));
+  });
+
+  router.get('/thumb.jpg', (req, res) => {
+    const { key } = req.query;
+    if (fs.existsSync(`${__dirname}/photos/${key}.jpg`)) {
+      // 非推奨
+      res.sendFile(`${__dirname}/photos/${key}.jpg`);
+      return;
+    }
+    res.sendStatus(404).end();
   });
 
   return router;
