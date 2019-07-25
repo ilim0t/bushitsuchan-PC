@@ -40,61 +40,63 @@ module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slac
     if (!actionValue) {
       return;
     }
-    const f = {};
-    f.extension = () => {
-      const photoUrl = new URL(message.blocks[0].image_url);
-      const key = base64Decode(photoUrl.searchParams.get('key'));
 
+    const photoUrl = new URL(message.blocks[0].image_url);
+    const key = base64Decode(photoUrl.searchParams.get('key'));
+
+    let template = fs.readFileSync('./block_template.json', 'utf8');
+    template = template.replace(/\${photo_image}/g, message.blocks[0].image_url);
+    template = template.replace(/\${viewer-url}/g, `${awsUrl}/viewer`);
+    template = template.replace(/\${photo-viewer-url}/g, `${awsUrl}/photo-viewer`);
+    template = template.replace(/\${contact-channel}/g, contactChannel);
+
+    if (actionValue === 'extension') {
+      const former = message.blocks[2].elements[0].text.match(/\^(\d+)\^/);
+      if (!former || !store.get(key)) {
+        respond({
+          text:
+            '失敗 おそらくすでに無期限延長されているか，写真がされたあとプログラムが再実行されたことに起因すると思慮されます。',
+          response_type: 'ephemeral',
+          replace_original: false,
+        });
+        return;
+      }
       const expired = new Date(
         Number(message.blocks[2].elements[0].text.match(/\^(\d+)\^/)[1]) * 1000,
-      ); // TODO もし無期限延長されてたら
+      );
       expired.setDate(expired.getDate() + 1);
-      store.set(`__storejs_expire_mixin_${key}`, expired.getTime()); // TODO これで伸びるかどうか確認
 
-      let template = fs.readFileSync('./block_template.json', 'utf8');
-      template = template.replace(/\${photo_image}/g, message.blocks[0].image_url);
-      template = template.replace(/\${viewer-url}/g, `${awsUrl}/viewer`);
-      template = template.replace(/\${photo-viewer-url}/g, `${awsUrl}/photo-viewer`);
-      template = template.replace(/\${contact-channel}/g, contactChannel);
+      // https://github.com/marcuswestin/store.js/blob/master/src/store-engine.js#L60
+      store.set(`__storejs_expire_mixin_${key}`, expired.getTime());
+
       template = template.replace(
         /\${expired-time}/g,
         `写真は<!date^${Math.floor(
           expired.getTime() / 1000,
         )}^{date_short_pretty}{time}まで有効です|${expired.toLocaleString()}まで有効です>`,
       );
-      respond({
-        text: message.text,
-        blocks: commentJSON.parse(template),
-        replace_original: true,
-      });
-    };
-    f.save = () => {
-      const photoUrl = new URL(message.blocks[0].image_url);
-      const key = base64Decode(photoUrl.searchParams.get('key'));
-      store.remove(`__storejs_expire_mixin_${key}`); // TODO 再起動してないとき
-
+    } else if (actionValue === 'save') {
       const chunks = store.get(key);
       if (!chunks) {
+        respond({
+          text:
+            '失敗 おそらく写真がされたあとプログラムが再実行されたことに起因すると思慮されます。',
+          response_type: 'ephemeral',
+          replace_original: false,
+        });
         return;
       }
+
       fs.mkdirSync(`${__dirname}/photos`, { recursive: true });
       fs.writeFileSync(`${__dirname}/photos/${base64Encode(key)}.jpg`, chunks.data);
 
-      message.blocks[2].elements[0].text = '写真はずっと表示されます';
-      let template = fs.readFileSync('./block_template.json', 'utf8');
-      template = template.replace(/\${photo_image}/g, message.blocks[0].image_url);
-      template = template.replace(/\${viewer-url}/g, `${awsUrl}/viewer`);
-      template = template.replace(/\${photo-viewer-url}/g, `${awsUrl}/photo-viewer`);
-      template = template.replace(/\${contact-channel}/g, contactChannel);
       template = template.replace(/\${expired-time}/g, '写真はずっと表示されます');
-      respond({
-        text: message.text,
-        blocks: commentJSON.parse(template),
-        replace_original: true,
-      });
-    };
-
-    f[actionValue]();
+    }
+    respond({
+      text: message.text,
+      blocks: commentJSON.parse(template),
+      replace_original: true,
+    });
   });
 
   router.use(bodyParser.urlencoded({ extended: false }));
@@ -147,6 +149,7 @@ module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slac
         icon_emoji: ':slack:',
         blocks: commentJSON.parse(template),
       });
+      store.removeExpiredKeys();
     });
 
     res.status(200).send('待ってね');
@@ -158,6 +161,7 @@ module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slac
       next();
       return;
     }
+    store.removeExpiredKeys();
     const chunks = store.get(base64Decode(key));
     if (!chunks) {
       next();
