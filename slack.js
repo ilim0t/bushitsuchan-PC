@@ -78,7 +78,7 @@ module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slac
         return;
       }
       fs.mkdirSync(`${__dirname}/photos`, { recursive: true });
-      fs.writeFileSync(`${__dirname}/photos/${key}.jpg`, chunks);
+      fs.writeFileSync(`${__dirname}/photos/${base64Encode(key)}.jpg`, chunks.data);
 
       message.blocks[2].elements[0].text = '写真はずっと表示されます';
       let template = fs.readFileSync('./block_template.json', 'utf8');
@@ -169,9 +169,9 @@ module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slac
 
   router.get('/thumb.jpg', (req, res) => {
     const { key } = req.query;
-    if (fs.existsSync(`${__dirname}/photos/${key}.jpg`)) {
+    if (fs.existsSync(`${__dirname}/photos/${base64Encode(key)}.jpg`)) {
       // 非推奨
-      res.sendFile(`${__dirname}/photos/${key}.jpg`);
+      res.sendFile(`${__dirname}/photos/${base64Encode(key)}.jpg`);
       return;
     }
     res.sendStatus(404).end();
