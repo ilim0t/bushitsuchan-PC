@@ -17,6 +17,9 @@ module.exports.daemon = async (command, ms = 1000 * 10, maxCount = 100) => {
       // eslint-disable-next-line no-await-in-loop
       await module.exports.exec(command);
     } catch (e) {
+      if (i === 0) {
+        console.error(e);
+      }
       logger.error(e);
       // eslint-disable-next-line no-await-in-loop
       await wait(ms);

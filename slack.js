@@ -55,7 +55,7 @@ module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slac
       if (!former || !store.get(key)) {
         respond({
           text:
-            '失敗 おそらくすでに無期限延長されているか，写真がされたあとプログラムが再実行されたことに起因すると思慮されます。',
+            '失敗 おそらくすでに無期限延長されているか，写真がされたあと部室ちゃんが再実行されたことに起因すると思慮されます。',
           response_type: 'ephemeral',
           replace_original: false,
         });
@@ -80,7 +80,7 @@ module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slac
       if (!chunks) {
         respond({
           text:
-            '失敗 おそらく写真がされたあとプログラムが再実行されたことに起因すると思慮されます。',
+            '失敗 おそらく写真がされたあと部室ちゃんが再実行されたことに起因すると思慮されます。',
           response_type: 'ephemeral',
           replace_original: false,
         });
