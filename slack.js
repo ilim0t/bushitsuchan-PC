@@ -88,7 +88,7 @@ module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slac
       }
 
       fs.mkdirSync(`${__dirname}/photos`, { recursive: true });
-      fs.writeFileSync(`${__dirname}/photos/${base64Encode(key)}.jpg`, chunks.data);
+      fs.writeFileSync(`${__dirname}/photos/${base64Encode(key)}.jpg`, Buffer.from(chunks));
 
       template = template.replace(/\${expired-time}/g, '写真はずっと表示されます');
     }
@@ -168,7 +168,7 @@ module.exports = (awsUrl, contactChannel, rtmpAddress, slackBotAccessToken, slac
       return;
     }
     res.contentType('image/jpg');
-    res.send(Buffer.from(chunks.data));
+    res.send(Buffer.from(chunks));
   });
 
   router.get('/thumb.jpg', (req, res) => {
