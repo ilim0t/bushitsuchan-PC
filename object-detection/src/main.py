@@ -4,7 +4,7 @@ import torchvision
 import numpy as np
 
 import torch
-from typing import Dict, Union
+from typing import Dict, Union, List
 from matplotlib import cm
 from tqdm import tqdm
 
@@ -110,14 +110,15 @@ class ObjectDetector:
         )
         self.model.eval()
 
-        self.color = cm.hsv(
-            np.linspace(0, 1, len(COCO_INSTANCE_CATEGORY_NAMES) - 1)
-        ).tolist()
+        self.color: List[List[int]] = (
+            cm.hsv(np.linspace(0, 1, len(COCO_INSTANCE_CATEGORY_NAMES) - 1)) * 255
+        ).astype(np.uint8).tolist()
 
     def __call__(self, img: np.ndarray) -> Dict[str, torch.Tensor]:
-        prediction, = self.model(
-            [torch.from_numpy(img).permute((2, 0, 1)).float() / 255]
-        )
+        with torch.no_grad():
+            prediction, = self.model(
+                [torch.from_numpy(img).permute((2, 0, 1)).float() / 255]
+            )
         prediction = self.select_top_prediction(prediction)
         return prediction
 
@@ -153,7 +154,7 @@ class ObjectDetector:
 
         for box, color in zip(boxes, colors):
             box = box.long()
-            top_left, bottom_right = box[:2].tolist(), box[2:].tolist()
+            top_left, bottom_right = box[:2], box[2:]
             image = cv2.rectangle(
                 image, tuple(top_left), tuple(bottom_right), tuple(color), 1
             )
