@@ -42,7 +42,7 @@ disk
     if (config.isMac) {
       input = 'ffmpeg -f avfoundation -re -i 0 -r 10';
     } else {
-      input = 'ffmpeg -i /dev/video0';
+      input = 'ffmpeg -s 1280x960 -i /dev/video0';
     }
     daemon(
       `${input} -vcodec libx264 -pix_fmt yuv420p -preset veryfast -tune zerolatency,stillimage,film -vb 2500k -vf "drawtext=text='%{localtime}':fontcolor=blue@1:x=0:y=h-lh*1.2:fontsize=24" -f flv rtmp://localhost:${1935}/live/bushitsuchan -loglevel warning`,
