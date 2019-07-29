@@ -45,7 +45,7 @@ disk
       input = 'ffmpeg -s 1280x960 -i /dev/video0';
     }
     daemon(
-      `${input} -vcodec libx264 -pix_fmt yuv420p -preset veryfast -tune zerolatency,stillimage,film -vb 2500k -vf "drawtext=text='%{localtime}':fontcolor=blue@1:x=0:y=h-lh*1.2:fontsize=24" -f flv rtmp://localhost:${1935}/live/bushitsuchan -loglevel warning`,
+      `${input} -vcodec libx264 -pix_fmt yuv420p -preset veryfast -tune zerolatency,stillimage,film -vb 2500k -vf "drawtext=text='%{localtime}':fontcolor=white@0.7:bordercolor=black@0.7:borderw=3:x=0:y=h-lh*1.2:fontsize=24" -f flv rtmp://localhost:${1935}/live/bushitsuchan -loglevel warning`,
     );
     daemon(
       `ffmpeg -i rtmp://localhost:1935/live/bushitsuchan -hls_flags delete_segments -g 40 -f hls ${mountPath}/output.m3u8 -loglevel warning`,
