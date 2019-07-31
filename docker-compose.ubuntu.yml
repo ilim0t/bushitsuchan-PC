@@ -1,0 +1,17 @@
+version: "3"
+services:
+  rtmp:
+    container_name: rtmp_server
+    image: tiangolo/nginx-rtmp
+    ports:
+      - "1935:1935"
+  broadcast:
+    container_name: broadcast_server
+    build: ./broadcast-server
+    depends_on:
+      - rtmp
+    environment:
+      RTMP_SERVER_URL: "rtmp://rtmp:1935/live"
+      STREAM_NAME: bushitsuchan
+    devices:
+      - "/dev/video0:/dev/video0"

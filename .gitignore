@@ -234,3 +234,7 @@ dmypy.json
 *.jpg
 *.m3u8
 *.ts
+
+# Docker file
+.devcontainer/
+
