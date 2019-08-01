@@ -15,3 +15,20 @@ services:
       STREAM_NAME: bushitsuchan
     devices:
       - "/dev/video0:/dev/video0"
+  proxy:
+    image: nginx
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+  web:
+    image: node
+    ports:
+      - "3000:3000"
+  slack:
+    image: node
+    ports:
+      - "3001:3001"
+  # ngrok:
+  # aws-cli:
+  # python:
