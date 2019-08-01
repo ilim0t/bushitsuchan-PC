@@ -1,7 +1,0 @@
-version: "3"
-services:
-  rtmp:
-    container_name: rtmp_server
-    image: tiangolo/nginx-rtmp
-    ports:
-      - "1935:1935"
