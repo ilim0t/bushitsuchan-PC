@@ -1,6 +1,5 @@
-FROM jrottenberg/ffmpeg
+FROM jrottenberg/ffmpeg:alpine
+RUN wget https://oscdl.ipa.go.jp/IPAfont/ipag00303.zip && \
+    unzip ipag00303.zip && \
+    rm  -rf ipag00303.zip
 
-RUN ["chmod", "+x", "/usr/local/bin/broadcast.sh"]
-
-RUN apt-get update && apt-get install -y fonts-ipafont
-ENTRYPOINT [ "/usr/local/bin/broadcast.sh" ]
