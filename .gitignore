@@ -225,11 +225,11 @@ dmypy.json
 
 # End of https://www.gitignore.io/api/python
 
-# env file
+# env files
 .envrc
 .env
 
-# photo, video file
+# photo, video files
 *.png
 *.jpeg
 *.jpg
@@ -237,6 +237,8 @@ dmypy.json
 *.ts
 *.mp4
 
-# Docker file
+# Docker files
 .devcontainer/
 
+# database files
+*.rdb
