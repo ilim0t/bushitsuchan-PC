@@ -1,25 +1,20 @@
 version: "3.7"
 services:
-  rtmp:
+  streaming-server:
     image: tiangolo/nginx-rtmp
-    container_name: bushitsuchan-rtmp_server
     ports:
       - 1935:1935
-  broadcast:
-    build: ./broadcast-server
-    container_name: broadcast_server
+  streamer:
+    build: ./streamer
     volumes:
-      - ./broadcast-server/broadcast_debug.sh:/usr/local/bin/broadcast.sh
+      - ./streamer/stream_debug.sh:/usr/local/bin/stream.sh
       - ./sample_movie.mp4:/sample_movie.mp4
-    entrypoint: /usr/local/bin/broadcast.sh
+    entrypoint: /usr/local/bin/stream.sh
     environment:
-      RTMP_SERVER_URL: rtmp://rtmp:1935/live
-      STREAM_NAME: bushitsuchan
-    # devices:
-    #   - /dev/video0:/dev/video0
+      - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
+      - STREAM_NAME=bushitsuchan
   redis:
     image: redis:alpine
-    container_name: bushitsuchan-redis
     ports:
       - "6379:6379"
     # command: redis-server --appendonly yes --requirepass foobared
@@ -27,36 +22,33 @@ services:
       - ./redis-data:/data
   data-server:
     image: node:alpine
-    container_name: bushitsuchan-data-server
     working_dir: /app
     command: ash -c "npm install && npm run dev"
     volumes:
       - ./data-server:/app
-  proxy:
+  reverse-proxy:
     image: nginx:alpine
-    container_name: bushitsuchan-proxy
     volumes:
-      - ./proxy/default.conf:/etc/nginx/conf.d/default.conf
+      - ./reverse-proxy/default.conf:/etc/nginx/conf.d/default.conf
     ports:
       - 80:80
   web:
     image: node:alpine
-    container_name: bushitsuchan-web
     working_dir: /app
     command: ash -c "npm install && npm run dev"
     environment:
-      SESSION_SECRET: ${SESSION_SECRET}
-      SLACK_CLIENT_ID: ${SLACK_CLIENT_ID}
-      SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET}
-      WORKSTATION_ID: ${WORKSTATION_ID}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
+      - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
+      - WORKSTATION_ID=${WORKSTATION_ID}
     volumes:
       - ./web:/app
     ports:
-      - 9229:9229
       - 3000:80
   slack:
     image: nginx:alpine
-    container_name: bushitsuchan-slack
+    ports:
+      - 3001:80
   tunnel:
     image: taichunmin/serveo
     container_name: bushitsuchan-tunnel
