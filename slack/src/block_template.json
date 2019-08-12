@@ -89,15 +89,15 @@
     "elements": [
       {
         "type": "mrkdwn",
-        "text": "<${viewer-url}|WEB-配信動画版>"
+        "text": "<${viewer_url}|WEB-配信動画版>"
       },
       {
         "type": "mrkdwn",
-        "text": "<${photo-viewer-url}|WEB-画像版>"
+        "text": "<${photo-viewer_url}|WEB-画像版>"
       },
       {
         "type": "mrkdwn",
-        "text": "*問い合せ*: <#${contact-channel}>"
+        "text": "*問い合せ*: <#${contact_channel}>"
       }
     ]
   }
