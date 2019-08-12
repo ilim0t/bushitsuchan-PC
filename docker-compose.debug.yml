@@ -15,19 +15,7 @@ services:
     environment:
       - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
       - STREAM_NAME=bushitsuchan
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
-    # command: redis-server --appendonly yes --requirepass foobared
-    volumes:
-      - ./redis-data:/data
-  data-server:
-    image: node:alpine
-    working_dir: /app
-    command: ash -c "npm install && npm run dev"
-    volumes:
-      - ./data-server:/app
+
   reverse-proxy:
     image: nginx:alpine
     volumes:
@@ -37,23 +25,6 @@ services:
     depends_on:
       - web
       - slack
-  web:
-    image: node:alpine
-    working_dir: /app
-    command: ash -c "npm install && npm run dev"
-    environment:
-      - SESSION_SECRET=${SESSION_SECRET}
-      - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
-      - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
-      - WORKSTATION_ID=${WORKSTATION_ID}
-    volumes:
-      - ./web/src:/app
-    ports:
-      - 3000:80
-  slack:
-    image: nginx:alpine
-    ports:
-      - 3001:80
   tunnel:
     build: ./tunnel
     working_dir: /app
@@ -74,4 +45,36 @@ services:
       - AWS_REGION=ap-northeast-1
     ports:
       - 4040:4040
+
+  web:
+    image: node:alpine
+    working_dir: /app
+    command: ash -c "npm install && npm run dev"
+    environment:
+      - SESSION_SECRET=${SESSION_SECRET}
+      - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
+      - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
+      - WORKSTATION_ID=${WORKSTATION_ID}
+    volumes:
+      - ./web/src:/app
+    ports:
+      - 3000:80
+  slack:
+    image: nginx:alpine
+    ports:
+      - 3001:80
+  endpoint:
+    image: node:alpine
+    working_dir: /app
+    command: ash -c "npm install && npm run dev"
+    volumes:
+      - ./endpoint/src:/app
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    # command: redis-server --appendonly yes --requirepass foobared
+    volumes:
+      - ./redis-data:/data
   # python:
