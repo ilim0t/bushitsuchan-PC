@@ -21,7 +21,7 @@ const setApiGateway = async ngrokUrl => {
   } else {
     restApi = await promisify(apig.createRestApi)
       .bind(apig)({
-        name: "bushitsuchan",
+        name: process.env.AWS_API_NAME,
         endpointConfiguration: {
           types: ["REGIONAL"]
         }
