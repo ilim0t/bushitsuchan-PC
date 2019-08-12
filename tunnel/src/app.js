@@ -64,7 +64,12 @@ const setApiGateway = async ngrokUrl => {
       parentId: rootResource.id,
       pathPart: "{path+}"
     })
-    .catch(err => console.error("The '/{path+}' resource setup failed:\n", err))
+    .catch(err => {
+      console.error("The '/{path+}' resource setup failed:\n", err);
+      return promisify(apig.getResources)
+        .bind(apig)({ restApiId: restApi.id })
+        .then(data => data.items.find(item => item.path === "/{path+}"));
+    })
     .then(async resource => {
       await promisify(apig.putMethod)
         .bind(apig)({
@@ -109,6 +114,9 @@ const setApiGateway = async ngrokUrl => {
     .catch(err => console.error("Deploying API failed:\n", err));
 
   console.log("Deploying API succeeded\n", data);
+  return `https://${restApi.id}.execute-api.${
+    AWS.config.region
+  }.amazonaws.com/${"prod"}`;
 };
 
 ngrok
@@ -116,10 +124,14 @@ ngrok
   .then(() =>
     ngrok.connect({
       host: process.env.NGROK_HOST,
-      region: process.NGROK_REGION
+      region: process.env.NGROK_REGION
     })
   )
   .then(ngrokUrl => {
     console.log(`Forwarding ${ngrokUrl} -> ${process.env.NGROK_HOST}`);
-    setApiGateway(ngrokUrl);
+    setApiGateway(ngrokUrl).then(awsUrl =>
+      console.log(
+        `Forwarding  ${awsUrl} -> ${ngrokUrl}`
+      )
+    );
   });
