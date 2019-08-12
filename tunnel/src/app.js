@@ -3,7 +3,7 @@ const { promisify } = require("util");
 const ngrok = require("ngrok");
 
 AWS.config.update({
-  region: "ap-northeast-1", //Tokyo
+  region: process.env.AWS_REGION,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });

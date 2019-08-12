@@ -2,7 +2,7 @@
   "name": "tunnel",
   "version": "1.0.0",
   "description": "",
-  "main": "src/app.js",
+  "main": "app.js",
   "dependencies": {
     "aws-sdk": "^2.507.0",
     "ngrok": "^3.2.5"
@@ -11,8 +11,8 @@
     "nodemon": "^1.19.1"
   },
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "npx nodemon --inspect=0.0.0.0 src/app.js"
+    "start": "node app.js",
+    "dev": "npx nodemon --inspect=0.0.0.0 app.js"
   },
   "author": "",
   "license": "ISC"

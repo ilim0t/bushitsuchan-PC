@@ -43,7 +43,7 @@ services:
       - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
       - WORKSTATION_ID=${WORKSTATION_ID}
     volumes:
-      - ./web:/app
+      - ./web/src:/app
   slack:
     image: nginx:alpine
   tunnel:
@@ -51,7 +51,7 @@ services:
     working_dir: /app
     command: ash -c "npm install && npm start"
     volumes:
-      - ./tunnel:/app
+      - ./tunnel/src:/app
     environment:
       - NGROK_REGION=jp
       - AWS_REGION=ap-northeast-1
