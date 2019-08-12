@@ -12,14 +12,22 @@ const setApiGateway = async ngrokUrl => {
   const apig = new AWS.APIGateway({
     apiVersion: "2015/07/09"
   });
-  const restApi = await promisify(apig.createRestApi)
-    .bind(apig)({
-      name: "bushitsuchan",
-      endpointConfiguration: {
-        types: ["REGIONAL"]
-      }
-    })
-    .catch(err => console.error("Create API failed:\n", err));
+
+  let restApi;
+  if (process.env.AWS_REST_API_ID) {
+    restApi = await promisify(apig.getRestApi)
+      .bind(apig)({ restApiId: process.env.AWS_REST_API_ID })
+      .catch(err => console.error("Get API failed:\n", err));
+  } else {
+    restApi = await promisify(apig.createRestApi)
+      .bind(apig)({
+        name: "bushitsuchan",
+        endpointConfiguration: {
+          types: ["REGIONAL"]
+        }
+      })
+      .catch(err => console.error("Create API failed:\n", err));
+  }
 
   const rootResource = await promisify(apig.getResources)
     .bind(apig)({
@@ -113,5 +121,5 @@ ngrok
   )
   .then(ngrokUrl => {
     console.log(`Forwarding ${ngrokUrl} -> ${process.env.NGROK_HOST}`);
-    // setApiGateway(ngrokUrl);
+    setApiGateway(ngrokUrl);
   });
