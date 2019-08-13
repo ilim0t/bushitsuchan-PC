@@ -54,7 +54,14 @@ services:
     volumes:
       - ./web/src:/app
   slack:
-    image: nginx:alpine
+    image: node:alpine
+    working_dir: /app
+    command: ash -c "npm install && npm start"
+    environment:
+      - SLACK_BOT_ACCESS_TOKEN=${SLACK_BOT_ACCESS_TOKEN}
+      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
+    volumes:
+      - ./slack/src:/app
   endpoint:
     image: node:alpine
     working_dir: /app

@@ -2,16 +2,20 @@
   "name": "endpoint",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
-  "dependencies": {
-    "express": "^4.17.1",
-    "nodemon": "^1.19.1"
-  },
-  "devDependencies": {},
+  "main": "main.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "npx nodemon --inspect=0.0.0.0 app.js"
+    "start": "node main.js",
+    "dev": "npx nodemon --inspect=0.0.0.0 main.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "eslint": "^6.1.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "nodemon": "^1.19.1",
+    "eslint-plugin-import": "^2.18.2"
+  }
 }

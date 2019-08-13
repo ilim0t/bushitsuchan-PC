@@ -2,18 +2,21 @@
   "name": "tunnel",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "npx nodemon --inspect=0.0.0.0 main.js"
+  },
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.507.0",
     "ngrok": "^3.2.5"
   },
   "devDependencies": {
+    "eslint": "^6.1.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2",
     "nodemon": "^1.19.1"
-  },
-  "scripts": {
-    "start": "node app.js",
-    "dev": "npx nodemon --inspect=0.0.0.0 app.js"
-  },
-  "author": "",
-  "license": "ISC"
+  }
 }

@@ -1,22 +1,14 @@
 {
-  "name": "bushitsuchan-pc",
+  "name": "web",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "main.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "npx nodemon --inspect=0.0.0.0 app.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/TUS-OSK/bushitsuchan-PC.git"
+    "start": "node main.js",
+    "dev": "npx nodemon --inspect=0.0.0.0 main.js"
   },
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/TUS-OSK/bushitsuchan-PC/issues"
-  },
-  "homepage": "https://github.com/TUS-OSK/bushitsuchan-PC#readme",
   "dependencies": {
     "axios": "^0.19.0",
     "connect-redis": "^3.4.2",
@@ -29,12 +21,9 @@
     "proxy-middleware": "^0.15.0"
   },
   "devDependencies": {
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb-base": "^13.2.0",
-    "eslint-config-prettier": "^6.0.0",
+    "eslint": "^6.1.0",
+    "eslint-config-airbnb-base": "^14.0.0",
     "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-prettier": "^3.1.0",
-    "prettier": "^1.18.2",
     "nodemon": "^1.19.1"
   }
 }
