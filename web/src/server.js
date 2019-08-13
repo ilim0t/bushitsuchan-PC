@@ -27,7 +27,7 @@ const getToken = async (code, clientId, clientSecret) => {
     headers: {
       accept: 'application/json',
     },
-  }).catch(e => console.error(e));
+  }).catch((e) => console.error(e));
 
   // The code passed is incorrect or expired
   if (!tokenResponse.data.ok) {
@@ -48,7 +48,7 @@ const authorize = async (token, workstationId) => {
     headers: {
       accept: 'application/json',
     },
-  }).catch(e => console.error(e));
+  }).catch((e) => console.error(e));
 
   if (!result.data.ok) {
     throw new TypeError();
@@ -103,7 +103,7 @@ module.exports = class {
       morgan(
         '<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms',
         {
-          skip: (req, res) => ['.ts', '.m3u8', '.jpg'].some(element => req.path.endsWith(element)),
+          skip: (req, res) => ['.ts', '.m3u8', '.jpg'].some((element) => req.path.endsWith(element)),
         },
       ),
     );
@@ -144,7 +144,7 @@ module.exports = class {
           req.session.token = token;
           res.redirect('viewer');
         })
-        .catch(e => console.error(e));
+        .catch((e) => console.error(e));
     });
 
     this.app.get('/logout', (req, res) => {
@@ -233,6 +233,6 @@ module.exports = class {
   }
 
   async run(port = 3000) {
-    await new Promise(resolve => this.app.listen(port, () => resolve()));
+    await new Promise((resolve) => this.app.listen(port, () => resolve()));
   }
 };

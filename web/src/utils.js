@@ -4,7 +4,7 @@ const fs = require('fs');
 
 module.exports.exec = util.promisify(childProcess.exec);
 
-const wait = ms => new Promise(reolve => setTimeout(() => reolve(), ms));
+const wait = (ms) => new Promise((reolve) => setTimeout(() => reolve(), ms));
 
 module.exports.daemon = async (command, ms = 1000 * 10, maxCount = 100) => {
   const logger = new console.Console(
@@ -27,7 +27,7 @@ module.exports.daemon = async (command, ms = 1000 * 10, maxCount = 100) => {
   }
 };
 
-module.exports.base64Encode = str => str
+module.exports.base64Encode = (str) => str
   .replace(/\+/g, '-')
   .replace(/\//g, '_')
   .replace(/=+$/, '');

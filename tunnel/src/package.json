@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "node main.js",
-    "dev": "npx nodemon --inspect=0.0.0.0 main.js"
+    "dev": "nodemon --inspect=0.0.0.0 main.js",
+    "lint": "eslint --ext .js --fix ."
   },
   "author": "",
   "license": "ISC",

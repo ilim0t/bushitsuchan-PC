@@ -101,7 +101,7 @@ app.use(
 
 app.use(
   morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
-    skip: (req, res) => ['.ts', '.m3u8', '.jpg'].some(element => req.path.endsWith(element)),
+    skip: (req, res) => ['.ts', '.m3u8', '.jpg'].some((element) => req.path.endsWith(element)),
   }),
 );
 
@@ -143,7 +143,7 @@ app.get('/oauth-redirect', (req, res) => {
       req.session.token = token;
       res.redirect('viewer');
     })
-    .catch(e => console.error(e));
+    .catch((e) => console.error(e));
 });
 
 app.get('/logout', (req, res) => {
