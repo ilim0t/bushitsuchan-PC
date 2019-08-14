@@ -66,6 +66,8 @@ services:
     environment:
       - SLACK_BOT_ACCESS_TOKEN=${SLACK_BOT_ACCESS_TOKEN}
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
+      - CONTACT_CHANNEL=${CONTACT_CHANNEL}
+      - SESSION_SECRET=${SESSION_SECRET}
     volumes:
       - ./slack/src:/app
     ports:

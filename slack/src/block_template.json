@@ -5,7 +5,7 @@
       "type": "plain_text",
       "text": "部室の写真"
     },
-    "image_url": "${photo_image}",
+    "image_url": "{{image_url}}",
     "alt_text": "部室の写真"
   },
   {
@@ -63,15 +63,6 @@
     ]
   },
   {
-    "type": "context",
-    "elements": [
-      {
-        "type": "mrkdwn",
-        "text": "${expired-time}"
-      }
-    ]
-  },
-  {
     "type": "divider"
   },
 
@@ -89,15 +80,15 @@
     "elements": [
       {
         "type": "mrkdwn",
-        "text": "<${viewer_url}|WEB-配信動画版>"
+        "text": "<{{viewer_url}}|WEB-配信動画版>"
       },
       {
         "type": "mrkdwn",
-        "text": "<${photo-viewer_url}|WEB-画像版>"
+        "text": "<{{photo_viewer_url}}|WEB-画像版>"
       },
       {
         "type": "mrkdwn",
-        "text": "*問い合せ*: <#${contact_channel}>"
+        "text": "*問い合せ*: <#{{contact_channel}}>"
       }
     ]
   }
