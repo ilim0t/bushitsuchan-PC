@@ -88,11 +88,10 @@ app.use(cors());
 
 app.use(
   session({
-    // store: new RedisStore({
-    //   host: 'redis',
-    //   port: 6379,
-    //   //   prefix: "dev.web"
-    // }),
+    store: new RedisStore({
+      host: 'redis',
+      prefix: 'web:',
+    }),
     secret: sessionSecret,
     resave: false,
     cookie: { secure: true },
@@ -119,7 +118,13 @@ morgan.token('user', (req, res) => req.session && (req.session.name || 'anonymou
 //   )
 // );
 
-app.get('/', (req, res) => res.send('Hello Bushitsuchan!'));
+app.get('/', (req, res) => {
+  if (req.session.count === undefined) {
+    req.session.count = 0;
+  }
+  req.session.count += 1;
+  res.send(`Hello Bushitsuchan!${req.session.count}`);
+});
 
 app.get('/login', (req, res) => {
   const scopes = ['identity.basic'];

@@ -132,5 +132,6 @@ ngrok
         awsUrl,
         ngrokUrl,
       }));
+      app.listen(80, () => console.log('Express app listening on port 80.'));
     });
   });

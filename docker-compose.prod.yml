@@ -14,6 +14,19 @@ services:
       - STREAM_NAME=bushitsuchan
     devices:
       - /dev/video0:/dev/video0
+  media:
+    build: ./media
+    working_dir: /app
+    entrypoint: ash -c "npm install && npm start"
+    volumes:
+      - ./media/src:/app
+      - ./photo:/photo
+    environment:
+      - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
+      - STREAM_NAME=bushitsuchan
+    depends_on:
+      - streamer
+      - redis
 
   reverse-proxy:
     image: nginx:alpine
@@ -24,7 +37,7 @@ services:
   tunnel:
     build: ./tunnel
     working_dir: /app
-    command: ash -c "npm install && npm start"
+    entrypoint: ash -c "npm install && npm start"
     volumes:
       - ./tunnel/src:/app
     environment:
@@ -45,7 +58,7 @@ services:
   web:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm install && npm start"
+    entrypoint: ash -c "npm install && npm start"
     environment:
       - SESSION_SECRET=${SESSION_SECRET}
       - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
@@ -53,10 +66,12 @@ services:
       - WORKSTATION_ID=${WORKSTATION_ID}
     volumes:
       - ./web/src:/app
+    depends_on:
+      - redis
   slack:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm install && npm start"
+    entrypoint: ash -c "npm install && npm start"
     environment:
       - SLACK_BOT_ACCESS_TOKEN=${SLACK_BOT_ACCESS_TOKEN}
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
@@ -67,7 +82,7 @@ services:
   endpoint:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm install && npm start"
+    entrypoint: ash -c "npm install && npm start"
     volumes:
       - ./endpoint/src:/app
 
@@ -77,5 +92,5 @@ services:
       - "6379:6379"
     # command: redis-server --appendonly yes --requirepass foobared
     volumes:
-      - ./redis-data:/data
+      - ./redis:/data
   # python:

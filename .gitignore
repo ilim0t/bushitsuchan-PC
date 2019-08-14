@@ -242,3 +242,5 @@ dmypy.json
 
 # database files
 *.rdb
+
+*.http
