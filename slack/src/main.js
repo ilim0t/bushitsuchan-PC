@@ -9,6 +9,7 @@ const Redis = require('ioredis');
 const base64url = require('base64-url');
 const helmet = require('helmet');
 const cors = require('cors');
+const axios = require('axios');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -51,12 +52,13 @@ slackInteractions.action({ type: 'button' }, (payload, respond) => {
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.post('/bushitsu-photo', (req, res) => {
+app.post('/bushitsu-photo', async (req, res) => {
   const key = crypto
     .createHash('md5')
     .update(`${Date.now()}-${process.env.SESSION_SECRET}`, 'utf8')
     .digest('Base64');
 
+  const { awsUrl } = await axios.get('http://tunnel');
   const blocks = object(
     JSON.parse(fs.readFileSync('./block_template.json', 'utf8')),
     {

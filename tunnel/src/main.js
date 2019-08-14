@@ -1,6 +1,8 @@
 const AWS = require('aws-sdk');
 const { promisify } = require('util');
 const ngrok = require('ngrok');
+const express = require('express');
+const helmet = require('helmet');
 
 AWS.config.update({
   region: process.env.AWS_REGION,
@@ -119,7 +121,16 @@ ngrok
   }))
   .then((ngrokUrl) => {
     console.log(`Forwarding ${ngrokUrl} -> ${process.env.NGROK_HOST}`);
-    setApiGateway(ngrokUrl).then((awsUrl) => console.log(
-      `Forwarding  ${awsUrl} -> ${ngrokUrl}`,
-    ));
+    setApiGateway(ngrokUrl).then((awsUrl) => {
+      console.log(
+        `Forwarding  ${awsUrl} -> ${ngrokUrl}`,
+      );
+      const app = express();
+
+      app.use(helmet());
+      app.get('/', (req, res) => res.json({
+        awsUrl,
+        ngrokUrl,
+      }));
+    });
   });
