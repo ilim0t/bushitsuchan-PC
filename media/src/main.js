@@ -27,7 +27,7 @@ ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
 
 app.post('/photo', (req, res) => {
   const time = Date.now();
-  redis.set(`${time}-pending`, true);
+  redis.set(`${time}-pending`, true, 'EX', 20);
   ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
     .addOption('-ss', 0.7)
     .addOption('-vframes', 1)
@@ -36,10 +36,11 @@ app.post('/photo', (req, res) => {
       console.log('take photo');
     })
     .on('error', (err) => {
+      redis.del(`${time}-pending`);
       console.error('ffmpeg command about image2 failed:\n', err);
     })
     .save(`/photo/${time}.jpg`);
-  res.json({ path: `/photo/${time}` });
+  res.json({ path: `/photo/${time}`, photoId: time });
 });
 
 app.get('/photo/:time', async (req, res) => {

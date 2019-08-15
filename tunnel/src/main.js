@@ -3,6 +3,7 @@ const { promisify } = require('util');
 const ngrok = require('ngrok');
 const express = require('express');
 const helmet = require('helmet');
+const morgan = require('morgan');
 
 AWS.config.update({
   region: process.env.AWS_REGION,
@@ -128,6 +129,7 @@ ngrok
       const app = express();
 
       app.use(helmet());
+      app.use(morgan('short'));
       app.get('/', (req, res) => res.json({
         awsUrl,
         ngrokUrl,

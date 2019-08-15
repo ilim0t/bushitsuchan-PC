@@ -53,16 +53,17 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.post('/bushitsu-photo', async (req, res) => {
+  const { photoId } = await axios.post('http://media/photo').then((result) => result.data);
   const key = crypto
     .createHash('md5')
-    .update(`${Date.now()}-${process.env.SESSION_SECRET}`, 'utf8')
+    .update(`${photoId}-${process.env.SESSION_SECRET}`, 'utf8')
     .digest('Base64');
 
-  const { awsUrl } = await axios.get('http://tunnel');
+  const { awsUrl } = await axios.get('http://tunnel').then((result) => result.data);
   const blocks = object(
     JSON.parse(fs.readFileSync('./block_template.json', 'utf8')),
     {
-      image_url: `${awsUrl}${req.baseUrl}/photo/?key=${base64url.escape(key)}`,
+      image_url: `${awsUrl}/${req.hostname}/photo/${photoId}?key=${base64url.escape(key)}`, // TODO baseURLの確認
       viewer_url: `${awsUrl}/viewer`,
       photo_viewer_url: `${awsUrl}/photo-viewer`,
       contact_channel: process.env.CONTACT_CHANNEL,
@@ -79,7 +80,7 @@ app.post('/bushitsu-photo', async (req, res) => {
 
 
 // Others
-app.get('/photo/:photoId', (req, res) => {
+app.get('/photo/:photoId', async (req, res) => {
   const { key } = req.query;
   const { photoId } = req.params;
 
@@ -88,15 +89,21 @@ app.get('/photo/:photoId', (req, res) => {
   }
   const correctKey = crypto
     .createHash('md5')
-    .update(`${Date.now()}-${process.env.SESSION_SECRET}`, 'utf8')
+    .update(`${photoId}-${process.env.SESSION_SECRET}`, 'utf8')
     .digest('Base64');
 
   if (correctKey !== base64url.unescape(key)) {
     return;
   }
 
-  const img = null;
-
+  const img = await axios.get(`http://media/photo/${photoId}`, {
+    responseType: 'arraybuffer',
+    headers: {
+      'Content-Type': 'image/jpg',
+    },
+  });
   res.contentType('image/jpg');
-  res.send(Buffer.from(img));
+  res.send(img.data);
 });
+
+app.listen(80, () => console.log('Express app listening on port 80.'));

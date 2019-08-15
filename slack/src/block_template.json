@@ -39,33 +39,12 @@
             "text": "キャンセル"
           }
         }
-      },
-      {
-        "type": "overflow",
-        "options": [
-          {
-            "text": {
-              "type": "plain_text",
-              "text": "1day延長"
-            },
-            "value": "extension"
-          },
-          {
-            "text": {
-              "type": "plain_text",
-              "text": "無期限延長"
-            },
-            "value": "save"
-          }
-        ],
-        "action_id": "overflow"
       }
     ]
   },
   {
     "type": "divider"
   },
-
   {
     "type": "context",
     "elements": [
