@@ -4,7 +4,6 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const helmet = require('helmet');
-const fs = require('fs');
 const assert = require('assert');
 const querystring = require('querystring');
 const proxy = require('proxy-middleware');
@@ -12,10 +11,9 @@ const proxy = require('proxy-middleware');
 const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
 
-const sessionSecret = process.env.SESSION_SECRET;
-const slackClientId = process.env.SLACK_CLIENT_ID;
-const slackClientSecret = process.env.SLACK_CLIENT_SECRET;
-const wsId = process.env.WORKSTATION_ID;
+// const sessionSecret = process.env.SESSION_SECRET;
+// const slackClientId = process.env.SLACK_CLIENT_ID;
+// const slackClientSecret = process.env.SLACK_CLIENT_SECRET;
 
 const getToken = async (code, clientId, clientSecret) => {
   assert(code !== undefined);
@@ -55,36 +53,13 @@ const authorize = async (token, workstationId) => {
   return data.user.name;
 };
 
-// const resPhoto = (rtmpAddress, ext = "jpg") => (req, res) => {
-//   const ffmpeg = childProcess.spawn("ffmpeg", [
-//     "-i",
-//     `${rtmpAddress}`,
-//     "-ss",
-//     "0.7",
-//     "-vframes",
-//     "1",
-//     "-f",
-//     "image2",
-//     "pipe:1"
-//   ]);
-
-//   res.contentType(`image/${ext}`);
-//   ffmpeg.stdout.pipe(res);
-// };
 
 const app = express();
 
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors());
-// app.use(
-//   cookieSession({
-//     secret: this.config.privateKey,
-//     maxAge: 1000 * 60 * 60 * 24 * 15, // 有効期限15日
-//     secure: true,
-//     httpOnly: true
-//   })
-// );
+app.set('view engine', 'ejs');
 
 app.use(
   session({
@@ -92,7 +67,7 @@ app.use(
       host: 'redis',
       prefix: 'web:',
     }),
-    secret: sessionSecret,
+    secret: process.env.SESSION_SECRET,
     resave: false,
     cookie: { secure: true },
   }),
@@ -100,135 +75,86 @@ app.use(
 
 app.use(
   morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
-    skip: (req, res) => ['.ts', '.m3u8', '.jpg'].some((element) => req.path.endsWith(element)),
+    skip: (req, res) => req.path.startsWith('/data/'),
   }),
 );
-
-morgan.token('user', (req, res) => req.session && (req.session.name || 'anonymous'));
-// morgan.token("date", () => new Date().toLocaleString());
-
-// app.use(
-//   morgan(
-//     ':remote-addr - :remote-user <@:user> [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"',
-//     {
-//       stream: fs.createWriteStream(`${__dirname}/log/access.log`, {
-//         flags: "a"
-//       })
-//     }
-//   )
-// );
+morgan.token('user', (req, res) => (req.session && req.session.name) || 'anonymous');
 
 app.get('/', (req, res) => {
-  if (req.session.count === undefined) {
-    req.session.count = 0;
-  }
-  req.session.count += 1;
-  res.send(`Hello Bushitsuchan!${req.session.count}`);
+  res.send('Hello Bushitsuchan!');
 });
 
 app.get('/login', (req, res) => {
-  const scopes = ['identity.basic'];
+  const redirectPath = req.query.redirect_path;
+
+  const querys = {
+    client_id: process.env.SLACK_CLIENT_ID,
+    scope: ['identity.basic'].join(' '),
+    team: process.env.WORKSTATION_ID, // うまく機能しない
+  };
+  if (redirectPath !== undefined) {
+    querys.state = redirectPath;
+  }
   res.redirect(
-    `https://slack.com/oauth/authorize?${querystring.stringify({
-      client_id: slackClientId,
-      scope: scopes.join(' '),
-      team: wsId, // うまく機能しない
-    })}`,
+    `https://slack.com/oauth/authorize?${querystring.stringify(querys)}`,
   );
 });
 
 app.get('/oauth-redirect', (req, res) => {
-  const { code } = req.query;
+  const { code, state } = req.query;
   if (code === undefined) {
-    // TODO
+    res.sendStatus(401).end();
     return;
   }
-  getToken(code, slackClientId, slackClientSecret)
+
+  getToken(code, process.env.SLACK_CLIENT_ID, process.env.SLACK_CLIENT_SECRET)
     .then((token) => {
       req.session.token = token;
-      res.redirect('viewer');
+      authorize(token, process.env.WORKSTATION_ID).then((name) => {
+        req.session.isAuth = true;
+        req.session.name = name;
+        req.session.lastAuthedTime = Date.now();
+        res.redirect(state || 'viewer');
+      }); // TODO catch & response
     })
-    .catch((e) => console.error(e));
+    .catch((err) => console.error(err));
 });
 
 app.get('/logout', (req, res) => {
-  // TODO When not logged in
+  if (req.session.token === undefined) {
+    res.send('You are not logged in');
+    return;
+  }
   req.session.destroy();
   res.send('You have successfully logged out');
 });
 
-app.use(['/viewer', '/photo-viewer'], (req, res, next) => {
-  const { token } = req.session;
-  if (token === undefined) {
-    // TODO debug mode
-    res.redirect('login');
-    return;
-  }
-  next();
-});
-
-app.use(['/auth', '/data'], (req, res, next) => {
-  const { token } = req.session;
-  if (token === undefined) {
-    // TODO debug mode
-    res.sendStatus(401).end();
-    return;
-  }
-  next();
-});
-
-app.get('/auth', (req, res) => {
-  // TODO debug mode
-  authorize(req.session.token, wsId)
-    .then((name) => {
-      req.session.name = name;
-      req.session.lastAuthedTime = Date.now();
-      res.json({
-        hlsAddress: ' data/output.m3u8',
-        photoAddress: 'data/photo.jpg',
-      });
-    })
-    .catch((e) => {
-      if (e instanceof TypeError) {
-        res.sendStatus(401).end(); // 再login
-      } else {
-        res.sendStatus(403).end(); // 権限をもっていない
-      }
-    });
-});
-
-app.get(['/viewer', '/photo-viewer'], (req, res) => {
-  res.sendFile(`./views/${req.url}.html`, { root: __dirname });
-});
-
-const expireTime = 60 * 1000;
-
-app.use('/data', (req, res, next) => {
-  const { token, lastAuthedTime } = req.session;
-  assert(lastAuthedTime !== undefined);
-
-  if (lastAuthedTime + expireTime > Date.now()) {
+app.get(['/viewer', '/photo-viewer'], (req, res, next) => {
+  if (req.session.isAuth) {
     next();
     return;
   }
-  authorize(token, wsId)
-    .then((name) => {
-      req.session.name = name;
-      req.session.lastAuthedTime = Date.now();
-      next();
-    })
-    .catch(() => res.send(403).end());
+  res.redirect(`login?redirect_path=${req.path.slice(1)}`);
 });
 
-// this.app.use("/data", (req, res, next) => {
-//   const { lastAuthedTime } = req.session;
-//   if (lastAuthedTime > Date.now()) {
-//     req.session = null;
-//     res.sendStatus(403).end();
-//   }
-//   next();
-// });
+app.get('/viewer', (req, res) => {
+  res.sendFile(`./views/${req.path.slice(1)}.html`, { root: __dirname });
+});
 
-app.use('/data', proxy(url.parse('http://data-server/')));
+app.get('/photo-viewer', async (req, res) => {
+  const { photoId } = await axios.post('http://media/photo').then((result) => result.data);
+  res.render('photo-viewer.ejs', { photoId });
+});
+
+app.get('/data', (req, res, next) => {
+  const { isAuth } = req.session;
+  if (!isAuth) {
+    res.status(404).end();
+    return;
+  }
+  next();
+});
+
+app.use('/data', proxy(url.parse('http://media/')));
 
 app.listen(80, () => console.log('Express app listening on port 80.'));

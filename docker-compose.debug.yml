@@ -24,6 +24,7 @@ services:
       - ./photo:/photo
     ports:
       - 3000:80
+      - 4000:9229
     environment:
       - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
       - STREAM_NAME=bushitsuchan
@@ -60,6 +61,8 @@ services:
       - AWS_REGION=ap-northeast-1
     ports:
       - 4040:4040
+      - 3001:80
+      - 4001:9229
 
   web:
     image: node:alpine
@@ -73,7 +76,8 @@ services:
     volumes:
       - ./web/src:/app
     ports:
-      - 3001:80
+      - 3002:80
+      - 4002:9229
     depends_on:
       - redis
   slack:
@@ -88,7 +92,8 @@ services:
     volumes:
       - ./slack/src:/app
     ports:
-      - 3002:80
+      - 3003:80
+      - 4003:9229
   endpoint:
     image: node:alpine
     working_dir: /app

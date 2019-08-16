@@ -18,31 +18,19 @@
 
     <script>
       var video = document.getElementById("video");
-      fetch("auth", { credentials: "include" })
-        .then(response => {
-          if (response.status === 403) {
-            throw new Error("指定のOrganizationにに属していません");
-          }
-          if (!response.ok) {
-            location.href = "login";
-          }
-          return response.json();
-        })
-        .then(res => {
-          if (Hls.isSupported()) {
-            var hls = new Hls();
-            hls.loadSource(res.hlsAddress);
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-              video.play();
-            });
-          } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-            video.src = res.hlsAddress;
-            video.addEventListener("loadedmetadata", function() {
-              video.play();
-            });
-          }
+      if (Hls.isSupported()) {
+        var hls = new Hls();
+        hls.loadSource("data/hls/output.m3u8");
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () =>  {
+          video.play();
         });
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = "data/hls/output.m3u8";
+        video.addEventListener("loadedmetadata", ()  => {
+          video.play();
+        });
+      }
     </script>
   </body>
 </html>
