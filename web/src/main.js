@@ -11,9 +11,6 @@ const proxy = require('proxy-middleware');
 const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
 
-// const sessionSecret = process.env.SESSION_SECRET;
-// const slackClientId = process.env.SLACK_CLIENT_ID;
-// const slackClientSecret = process.env.SLACK_CLIENT_SECRET;
 
 const getToken = async (code, clientId, clientSecret) => {
   assert(code !== undefined);
@@ -22,8 +19,10 @@ const getToken = async (code, clientId, clientSecret) => {
       client_id: clientId,
       client_secret: clientSecret,
       code,
-    })}`, // TODO header: application/json
-  ); // TODO cactch
+    })}`,
+  ).catch((err) => {
+    console.error('Failed to send post requesting token:\n', err);
+  });
   const { data } = tokenResponse;
   assert(data !== undefined);
 
@@ -39,7 +38,7 @@ const authorize = async (token, workstationId) => {
 
   const response = await axios.get(
     `https://slack.com/api/users.identity?${querystring.stringify({ token })}`,
-  ); // TODO header: application/json, catch
+  ).catch((err) => console.err('Failed to send request to fetch user identity:\n', err));
 
   const { data } = response;
   assert(data !== undefined);
@@ -115,9 +114,15 @@ app.get('/oauth-redirect', (req, res) => {
         req.session.name = name;
         req.session.lastAuthedTime = Date.now();
         res.redirect(state || 'viewer');
-      }); // TODO catch & response
+      }).catch((err) => {
+        console.error('Certification failed:\n', err);
+        res.sendStatus(403);
+      });
     })
-    .catch((err) => console.error(err));
+    .catch((err) => {
+      console.error('Failed to fetch token:\n', err);
+      res.sendStatus(400);
+    });
 });
 
 app.get('/logout', (req, res) => {

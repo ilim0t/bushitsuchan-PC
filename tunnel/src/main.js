@@ -20,7 +20,7 @@ const setApiGateway = async (ngrokUrl) => {
   if (process.env.AWS_REST_API_ID) {
     restApi = await promisify(apig.getRestApi)
       .bind(apig)({ restApiId: process.env.AWS_REST_API_ID })
-      .catch((err) => console.error('Get API failed:\n', err));
+      .catch((err) => console.error('Failed to fetch API on AWS:\n', err));
   } else {
     restApi = await promisify(apig.createRestApi)
       .bind(apig)({
@@ -29,7 +29,7 @@ const setApiGateway = async (ngrokUrl) => {
           types: ['REGIONAL'],
         },
       })
-      .catch((err) => console.error('Create API failed:\n', err));
+      .catch((err) => console.error('Failed to create API on AWS:\n', err));
   }
 
   const rootResource = await promisify(apig.getResources)
@@ -37,7 +37,7 @@ const setApiGateway = async (ngrokUrl) => {
       restApiId: restApi.id,
     })
     .then((data) => data.items.find((item) => item.path === '/'))
-    .catch((err) => console.error('Get the root resource failed:\n', err));
+    .catch((err) => console.error('Failed to fetch root resource on AWS:\n', err));
 
   const rootPromise = promisify(apig.putMethod)
     .bind(apig)({
@@ -46,7 +46,7 @@ const setApiGateway = async (ngrokUrl) => {
       httpMethod: 'ANY',
       authorizationType: 'NONE',
     })
-    .catch((err) => console.error("The 'ANY /' method setup failed:\n", err))
+    .catch((err) => console.error("Failed to setup 'ANY /' method:\n", err))
     .then(() => promisify(apig.putIntegration).bind(apig)({
       restApiId: restApi.id,
       resourceId: rootResource.id,
@@ -55,7 +55,7 @@ const setApiGateway = async (ngrokUrl) => {
       integrationHttpMethod: 'ANY',
       uri: `${ngrokUrl}`,
     }))
-    .catch((err) => console.log("The 'ANY /' method integration setup failed:\n", err));
+    .catch((err) => console.error("Failed to setup 'ANY /' integration:\n", err));
 
   const pathPromise = promisify(apig.createResource)
     .bind(apig)({
@@ -64,7 +64,7 @@ const setApiGateway = async (ngrokUrl) => {
       pathPart: '{path+}',
     })
     .catch((err) => {
-      console.error("The '/{path+}' resource setup failed:\n", err);
+      console.error("Failed to setup '/{path+} resource:\n", err);
       return promisify(apig.getResources)
         .bind(apig)({ restApiId: restApi.id })
         .then((data) => data.items.find((item) => item.path === '/{path+}'));
@@ -80,7 +80,7 @@ const setApiGateway = async (ngrokUrl) => {
             'method.request.path.path': true,
           },
         })
-        .catch((err) => console.error("The 'ANY /{path+}' method setup failed:\n", err));
+        .catch((err) => console.error("Failed to setup 'ANY /{path+}' method:\n", err));
 
       await promisify(apig.putIntegration)
         .bind(apig)({
@@ -94,7 +94,7 @@ const setApiGateway = async (ngrokUrl) => {
             'integration.request.path.path': 'method.request.path.path',
           },
         })
-        .catch((err) => console.log(
+        .catch((err) => console.error(
           "The 'ANY /{path+}' method integration setup failed:\n",
           err,
         ));
@@ -106,7 +106,7 @@ const setApiGateway = async (ngrokUrl) => {
       restApiId: restApi.id,
       stageName: 'prod',
     })
-    .catch((err) => console.error('Deploying API failed:\n', err));
+    .catch((err) => console.error('Failed to deploy API:\n', err));
 
   console.log('Deploying API succeeded\n', data);
   return `https://${restApi.id}.execute-api.${
@@ -123,9 +123,7 @@ ngrok
   .then((ngrokUrl) => {
     console.log(`Forwarding ${ngrokUrl} -> ${process.env.NGROK_HOST}`);
     setApiGateway(ngrokUrl).then((awsUrl) => {
-      console.log(
-        `Forwarding  ${awsUrl} -> ${ngrokUrl}`,
-      );
+      console.log(`Forwarding  ${awsUrl} -> ${ngrokUrl}`);
       const app = express();
 
       app.use(helmet());

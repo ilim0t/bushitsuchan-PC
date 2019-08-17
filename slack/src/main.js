@@ -10,7 +10,6 @@ const helmet = require('helmet');
 const cors = require('cors');
 const axios = require('axios');
 const morgan = require('morgan');
-const querystring = require('querystring');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -59,7 +58,7 @@ slackInteractions.action({ type: 'button' }, (payload, respond) => {
   if (actions[0].value === 'delete') {
     web.chat
       .delete({ channel: channel.id, ts })
-      .catch((err) => console.error('Delete message failed:\n', err));
+      .catch((err) => console.error('Failed to delete message:\n', err));
   }
 });
 

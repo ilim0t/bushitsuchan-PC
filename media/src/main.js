@@ -21,7 +21,7 @@ ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
   .addOption('-hls_flags', '+delete_segments')
   .addOption('-g', 40)
   .on('error', (err) => {
-    console.error('ffmpeg command about hls failed:\n', err);
+    console.error('ffmpeg command to convert to HLS failed or aborted:\n', err);
   })
   .save(`${hlsDir}/output.m3u8`);
 
@@ -36,7 +36,7 @@ app.post('/photo', (req, res) => {
     })
     .on('error', (err) => {
       redis.del(`${time}-pending`);
-      console.error('ffmpeg command about image2 failed:\n', err);
+      console.error('ffmpeg command to convert to image failed:\n', err);
     })
     .save(`/photo/${time}.jpg`);
   res.json({ path: `/photo/${time}`, photoId: time });
