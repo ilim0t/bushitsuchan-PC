@@ -18,7 +18,8 @@ services:
   media:
     build: ./media
     working_dir: /app
-    entrypoint: npm run dev
+    command: npm run dev
+    entrypoint: docker-entrypoint.sh
     volumes:
       - ./media/src:/app
       - ./photo:/photo
@@ -67,7 +68,7 @@ services:
   web:
     image: node:alpine
     working_dir: /app
-    entrypoint: npm run dev
+    command: npm run dev
     environment:
       - SESSION_SECRET=${SESSION_SECRET}
       - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
@@ -83,7 +84,7 @@ services:
   slack:
     image: node:alpine
     working_dir: /app
-    entrypoint: npm run dev
+    command: npm run dev
     environment:
       - SLACK_BOT_ACCESS_TOKEN=${SLACK_BOT_ACCESS_TOKEN}
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
@@ -97,7 +98,7 @@ services:
   endpoint:
     image: node:alpine
     working_dir: /app
-    entrypoint: npm run dev
+    command: npm run dev
     volumes:
       - ./endpoint/src:/app
     ports:

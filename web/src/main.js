@@ -67,6 +67,7 @@ app.use(
       prefix: 'web:',
     }),
     secret: process.env.SESSION_SECRET,
+    saveUninitialized: false,
     resave: false,
     cookie: { secure: true },
   }),

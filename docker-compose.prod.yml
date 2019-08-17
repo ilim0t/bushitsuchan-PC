@@ -17,7 +17,8 @@ services:
   media:
     build: ./media
     working_dir: /app
-    entrypoint: ash -c "npm install && npm start"
+    command: ash -c "npm install && npm start"
+    entrypoint: docker-entrypoint.sh
     volumes:
       - ./media/src:/app
       - ./photo:/photo
@@ -37,7 +38,7 @@ services:
   tunnel:
     build: ./tunnel
     working_dir: /app
-    entrypoint: ash -c "npm install && npm start"
+    command: ash -c "npm install && npm start"
     volumes:
       - ./tunnel/src:/app
     environment:
@@ -58,7 +59,7 @@ services:
   web:
     image: node:alpine
     working_dir: /app
-    entrypoint: ash -c "npm install && npm start"
+    command: ash -c "npm install && npm start"
     environment:
       - SESSION_SECRET=${SESSION_SECRET}
       - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
@@ -71,7 +72,7 @@ services:
   slack:
     image: node:alpine
     working_dir: /app
-    entrypoint: ash -c "npm install && npm start"
+    command: ash -c "npm install && npm start"
     environment:
       - SLACK_BOT_ACCESS_TOKEN=${SLACK_BOT_ACCESS_TOKEN}
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
@@ -82,7 +83,7 @@ services:
   endpoint:
     image: node:alpine
     working_dir: /app
-    entrypoint: ash -c "npm install && npm start"
+    command: ash -c "npm install && npm start"
     volumes:
       - ./endpoint/src:/app
 
