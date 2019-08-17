@@ -33,7 +33,6 @@ app.post('/photo', (req, res) => {
     .addOption('-vframes', 1)
     .on('end', () => {
       redis.del(`${time}-pending`);
-      console.log('take photo');
     })
     .on('error', (err) => {
       redis.del(`${time}-pending`);

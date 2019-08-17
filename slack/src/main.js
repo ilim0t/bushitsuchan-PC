@@ -1,5 +1,4 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const { WebClient } = require('@slack/web-api');
 const { createMessageAdapter } = require('@slack/interactive-messages');
 const crypto = require('crypto');
@@ -10,11 +9,26 @@ const base64url = require('base64-url');
 const helmet = require('helmet');
 const cors = require('cors');
 const axios = require('axios');
+const morgan = require('morgan');
+const querystring = require('querystring');
 
 const app = express();
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors());
+
+app.use(/^(?!\/actions).*/, express.urlencoded({ extended: true }));
+app.use(/^(?!\/actions).*/, express.json());
+app.use('/actions', express.urlencoded({
+  extended: true,
+  verify: (req, res, buf, encoding) => {
+    req.rawBody = buf;
+  },
+}));
+app.use('/actions', (req, res, next) => {
+  req.body.payload = JSON.parse(req.body.payload);
+  next();
+});
 
 const web = new WebClient(process.env.SLACK_BOT_ACCESS_TOKEN);
 const slackInteractions = createMessageAdapter(
@@ -25,13 +39,15 @@ const redis = new Redis({
   host: 'redis',
 });
 
-// app.use(
-//   morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
-//     skip: (req, res) => req.path.startWith("/photo"), // TODO check
-//   }),
-// );
-
-// morgan.token('user', (req, res) => req.session.name || 'anonymous'); // TODO check
+app.use(morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
+  skip: (req, res) => ['/hls/', '/photo/'].some((element) => req.baseUrl.startsWith(element)),
+}));
+morgan.token('user', (req, res) => {
+  if (req.body.payload !== undefined) {
+    return req.body.payload.user.username;
+  }
+  return req.body.user_name || 'anonymous';
+});
 
 
 // slackInteractions
@@ -49,11 +65,9 @@ slackInteractions.action({ type: 'button' }, (payload, respond) => {
 
 
 // Slash command
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
 app.post('/bushitsu-photo', async (req, res) => {
   const { photoId } = await axios.post('http://media/photo').then((result) => result.data);
+  res.status(200).end();
   const key = crypto
     .createHash('md5')
     .update(`${photoId}-${process.env.SESSION_SECRET}`, 'utf8')
@@ -63,7 +77,7 @@ app.post('/bushitsu-photo', async (req, res) => {
   const blocks = object(
     JSON.parse(fs.readFileSync('./block_template.json', 'utf8')),
     {
-      image_url: `${awsUrl}/${req.hostname}/photo/${photoId}?key=${base64url.escape(key)}`, // TODO baseURLの確認
+      image_url: `${awsUrl}/${req.hostname}/photo/${photoId}?key=${base64url.escape(key)}`,
       viewer_url: `${awsUrl}/viewer`,
       photo_viewer_url: `${awsUrl}/photo-viewer`,
       contact_channel: process.env.CONTACT_CHANNEL,
