@@ -227,7 +227,6 @@ dmypy.json
 
 # env files
 .envrc
-.env
 
 # photo, video files
 *.png
