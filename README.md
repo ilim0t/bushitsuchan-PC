@@ -8,7 +8,7 @@ OSK の部室の様子を様子をオンラインで確認できるプロジェ�
 以下の OS をサポートします
 
 - Ubuntu 18.04
-- macOS 10.14
+- macOS 10.14 (debug のみ)
 
 ## Design
 
@@ -18,205 +18,132 @@ OSK の部室の様子を様子をオンラインで確認できるプロジェ�
 
 ### ngrok
 
-[ngrok](https://ngrok.com/)に登録して，`Tunnel Authtoken` を取得します。
+#### 説明
 
-### AWS CLI
+特定のネットワーク下では，権限なしにウェブサーバーを外部に公開することはできません。
+その状況下でも外部に暴露させることができるサービスの 1 つに ngrok があります。  
+ngrok はユーザー登録をしていると使い勝手が良くなるので， bushitsuchan-PC ではユーザーを対応づけて利用しています。  
+このとき，ユーザーごとに割り振られたキーが必要です。
 
-[AWS CLI](https://aws.amazon.com/jp/cli/)をインストール
-かつ，その設定をします。
+#### 設定
 
-**macOS**
-
-```bash=
-brew install awscli
-aws configure
-```
-
-**Ubuntu**
-
-```bash=
-sudo apt-get install awscli
-aws configure
-```
+[ngrok](https://ngrok.com/)に登録して，`Tunnel Authtoken` を取得します。  
+それを後述する環境変数`NGROK_AUTH`にセットしてください。
 
 ### AWS API Gateway
 
-ngrok で得られる URL はは変動するので，[API Gateway](https://aws.amazon.com/jp/api-gateway/)を用いて固定 URL を ngrok の URL へリダイレクトするように設定します。
+#### 説明
 
-[ngrok を無料プランで URL 固定してみる](https://qiita.com/miso_develop/items/bdcf15489b069ba1fa61) に従い設定します。
+ngrok 外部に公開したサイトへの URL は変動するので，[API Gateway](https://aws.amazon.com/jp/api-gateway/)を用いて固定された URL を ngrok の URL へリダイレクトします。  
+API Gateway を利用するためには AWS アカウントと AWS へアクセスするキーが必要です。
 
-```text=
- /
- ├─ GET
- ├─ /auth
- │   └─ GET
- ├─ /login
- │   └─ GET
- ├─ /logout
- │   └─ GET
- ├─ /oauth-redirect
- │   └─ GET
- ├─ /photo.jpeg
- │   └─ GET
- ├─ /photo-viewer
- │   └─ GET
- ├─ /slack
- │   └ /{path+}
- │      ├─ GET
- │      └─ POST
- ├─ /stream
- │   └ /{file+}
- │      └─ GET
- └─ /viewer
-      └─ GET
-```
+#### 設定
 
-上のような構造になります。
+[AWS アクセスキーの作成方法](https://aws.amazon.com/jp/premiumsupport/knowledge-center/create-access-key/)に従い
 
-> API Gateway を設定した region，AWSCLI で設定する region を一致させてください
+新たにユーザー作成し，`アクセスキー ID`と`シークレットアクセスキー`を作成してください。  
+それを後述する環境変数`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`にセットしてください。
+
+そのユーザーにはポリシー`AmazonAPIGatewayAdministrator`をアクセス権にアタッチしてください。
+
+二回目以降の起動時は環境変数に`AWS_REST_API_ID`をセットする必要があります。この値は[Usage remote](#remote)にかかれている方法で確認できます。
 
 ### Sign in with Slack
 
-Slack と連携し，指定の Workspace に属する場合のみ LIVE Streaming 視聴を許可するように設定します。
-[Sign in with Slack](https://api.slack.com/docs/sign-in-with-slack) に従い Slack Apps を作成してください。
+#### 説明
+
+Slack と連携し特定の Workspace に属する場合のみ LIVE Streaming 視聴を許可するように設定します。  
+その際,Slack App という枠組みを利用しています。新たに Slack App を作成し，それに対応するいくつかの ID やキーが必要です。
+
+また，Slash Commands やメッセージへのアクションを受け取るための設定があるため[設定](slack/README.md)に従ってください。
+
+#### 設定
+
+まず[Sign in with Slack](https://api.slack.com/docs/sign-in-with-slack) に従い Slack App を作成してください。
 
 Bot User メニューにて Redirect URLs は
 `https://[RESOURCE_ID].execute-api.[REGION].amazonaws.com/prod/oauth-redirect`のみに設定し，
 Scopes に`identity.basic`を追加してください。
 
-### Slack bot
+作成した Slack App から以下の環境変数を設定してください。詳細は後述します。  
+どの部分から得るのかの対応を書いておきます。
 
-[Slash Commands](https://api.slack.com/slash-commands)に従い slack api ページにて，  
-Command: `/bushitsu-photo`  
-Request URL: `https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/slack/photo`  
-Escape channels, users, and links sent to your app を有効  
-に設定します。
+- `SLACK_CLIENT_ID`: Basic Information > App Credentials > Client ID
+- `SLACK_CLIENT_SECRET`: Basic Information > App Credentials > Signing Client Secret
+- `SLACK_BOT_ACCESS_TOKEN`: OAuth & Permissions > Tokens for Your Workspace > Bot User OAuth Access Token
+- `SLACK_SIGNING_SECRET`: Basic Information > App Credentials > Signing Secret
 
-### Slack interactive message
+### Slack Workspace
 
-[Making messages interactive](https://api.slack.com/interactive-messages) に従い設定します。
-Request URL は`https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/slack/actions/`を設定してください。
+#### 説明
+
+bushitsuchan-PC では slack で特定のワークスペースに属する場合のみ配信等を提供します。  
+そのワークスペースに属するかどうかの判定に，ワークスペース固有の ID が必要です。
+
+#### 設定
+
+まず，そのワークスペースのサイトをブラウザで開きます。  
+URL が`https://app.slack.com/client/VYS39C27C/UC7CHE35J`のようになっているはずです。  
+この URL の`VYS39C27C`部分が必要な ID です。
+後述する環境変数`WORKSTATION_ID`にセットしてください。
 
 ### 環境変数
 
-`NGROK_TOKEN`: Tunnel Authtoken, 無料プランでプランでも動作します
+#### 説明
 
-`AWS_REST_API_ID`: API Gateway で得た ID
+環境変数は独立したアプリケーション間で共通の値を参照できるもので，通常は不変な ID やパスワードを設定します。
 
-`SLACK_CLIENT_ID`: Slack Apps の Client ID  
-`SLACK_CLIENT_SECRET`: Slack Apps の Client Secret
+#### 設定
 
-`SLACK_BOT_ACCESS_TOKEN`: Slack Apps の OAuth Access Token  
-`SLACK_SIGNING_SECRET`: Slack Apps の Signing Secret
+`.env`ファイルに以下の様に書き保存してください，
 
-`CONTACT_CHANNEL`: Slack でのメッセージにのせる問い合せ先の channel ID
+```text
+AWS_REST_API_ID="j3i..."  # 二回目以降に必要
+AWS_ACCESS_KEY_ID="FUB..."
+AWS_SECRET_ACCESS_KEY="vKw..."
 
-> 参考: [Formatting text in messages](https://api.slack.com/messaging/composing/formatting#linking-channels)
+NGROK_AUTH="8HU..."
 
-`LIVE_PRIVATE_KEY`: live streaming に認証をかけるための key, 暗に用いるので頑強であれば何でも良い
+SESSION_SECRET="presetprivatekey"  # 暗に暗号化へ使う任意の頑強な文字列
 
-`WORKSTATION_ID`: Slack の WorkSpace の ID
+SLACK_CLIENT_ID="179..."
+SLACK_CLIENT_SECRET="38b..."
+WORKSTATION_ID="VOW38CP2D"
 
-```bash=
-export NGROK_TOKEN="8HU..."
-
-export AWS_REST_API_ID="h7c..."
-
-export SLACK_CLIENT_ID="179..."
-export SLACK_CLIENT_SECRET="38b..."
-
-export SLACK_BOT_ACCESS_TOKEN="xoxb-3814..."
-export SLACK_SIGNING_SECRET="fb36..."
-
-export CONTACT_CHANNEL="JCP..."
-
-export PRIVATE_KEY="presetprivatekey"
-
-export WORKSTATION_ID="VOW38CP2D"
+SLACK_BOT_ACCESS_TOKEN="xoxb-3814..."
+SLACK_SIGNING_SECRET="fb36..."
 ```
 
-> `IS_MAC`, `DEBUG` この２つの変数で flag を立てることもできます
-> `true`, `false`, `0`, `1` で指定可能です。
+> ファイルを作成せずに [direnv](https://direnv.net/)などで環境変数に代入しても代入しても動作します。
 
-[direnv](https://direnv.net/)なら以上のように設定されているはずです。
+## Requirement
 
-### ffmpeg
-
-画像,音声をを取得するときに必要です。インストールします。
-
-**Mac**
-
-```bash=
-brew install ffmpeg
-```
-
-**Ubuntu**
-
-```bash=
-sudo apt-get install ffmpeg
-```
-
-### RAM Disk
-
-Ubuntu では自動で行われますが，Mac の場合 OS 起動の度に手動で行う必要があります。
-以下のように実行してください。
-
-```bash=
-hdiutil attach -nomount ram://204800
-newfs_hfs /dev/disk2
-cd /path/to/bushitsuchan-PC
-mkdir -p hls/
-mount -t hfs /dev/disk2 hls/
-```
-
-> 一行目の実行結果が`/dev/disk2`以外だった場合は，それ以降の`/dev/disk2`を実行結果のパスへ変更してください。
-
-### node_module
-
-```bash=
-cd /path/to/bushitsuchan-PC
-npm install
-```
+- [Docker compose](https://docs.docker.com/compose/install/)
+- Camera
 
 ## Run
 
 ```bash=
-npm start
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ## Usage
 
-**local**
+### local
 
-`http://localhost:3000/viewer`を開く
+`http://localhost/viewer`を開いてください。
 
-**remote**
+### remote
 
-`app.js`を実行したときの log に
+`docker-compose -f docker-compose.prod.yml logs tunnel`を実行すると見れる log に
 
 ```text=
-Remote URL: https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod
+Forwarding  https://[AWS_REST_API_ID].execute-api.[AWS_REGION].amazonaws.com/prod -> https://[NGROK_DOMAIN].jp.ngrok.io
 ```
 
-とあります。それに`/viewer`を付け加えた`https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/viewer`を開いてください。
+とあります。1 つ目の URL に`/viewer`を付け加えた`https://[AWS_REST_API_ID].execute-api.[AWS_REGION].amazonaws.com/prod/viewer`を開いてください。
 
 > この AWS の URL は半永久的に変わりません
 
 すると，初回実行時(過去に Slack で認証をしていなければ) Slack の認証ページへリダイレクトされます。  
 Sign in すると自動的に配信再生ページへ移動します。
-
-## Debug
-
-WEB サイトデザインのためのデバッグモード
-
-環境変数`DEBUG`をつけると他のすべての環境変数を省略できます。  
-外部や Slack からのアクセスができなくなる代わりに煩わしい設定が不要になります。
-
-> `http://localhost:3000/viewer`でアクセスできます。
-
-Setup では以下のもの以外は飛ばして構いません。
-
-- [ffmpeg](#ffmpeg)
-- [RAM Disk](#RAM-Disk)
-- [node_module](#node_module)
-- [環境変数](#環境変数)

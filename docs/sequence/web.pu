@@ -1,41 +1,29 @@
 @startuml WEB
-database "RAM Disk"
 
-box "NodeJS" #LightBlue
-participant Main
-participant "WEB Server"
-participant "RTM Server"
+box docker #LightBlue
+database redis
+participant media
+participant web
 end box
 
-participant ffmpeg
 participant Slack
-participant ngrok
-participant AWS
-
 participant Client
 
-Client -> AWS : GET
-AWS -> ngrok : 転送
-ngrok -> "WEB Server" : 転送
+Client -> web : GET
 
-alt アクセスが古い
-	"WEB Server" -> Slack: 権限確認
-	note right: Clientで保存されていたtokenを利用
+alt 認証情報が古い
+	web -> redis: token取得
+	note right: Clientで保存されていたキーを利用
 
-	Slack --> "WEB Server": Response
+	redis --> web: Response
+	web -> Slack: 権限確認
+
+	Slack --> web: Response
 end
 
-alt 動画配信
-	"WEB Server" -> "RAM Disk": 動画取得
-	"RAM Disk" --> "WEB Server": 動画をResponse
-else 写真
-	"WEB Server" -> ffmpeg: 写真取得
-	ffmpeg -> "RTM Server" : ストリーミング受信要求
-	"RTM Server" --> ffmpeg : Response
-	ffmpeg --> "WEB Server": 写真をResponse
-end
+web -> media: 動画, 写真の取得
+media -> media: 取得
+media --> web: Response
 
-"WEB Server" --> ngrok : Response
-ngrok --> AWS : 転送
-AWS --> Client : 転送
+web --> Client : Response
 @enduml

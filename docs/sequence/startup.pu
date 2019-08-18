@@ -1,37 +1,24 @@
 @startuml Startup
-database "RAM Disk"
-
-box "NodeJS" #LightBlue
-participant Main
-participant "WEB Server"
-participant "RTM Server"
+box docker #LightBlue
+participant media
+participant "streaming-server"
+participant streamer
+participant tunnel
 end box
 
-participant ffmpeg
-participant ngrok
-participant AWS
-
-Main -> "RTM Server" : Run
-"RTM Server" --> Main : OK
-
-Main -> ffmpeg : RTMPストリーミング実行
 loop
-	ffmpeg -> "RTM Server": ストリーミング配信
+	streamer -> "streaming-server": ストリーミング配信
 end
 
-Main -> ffmpeg : HLSファイル出力
 loop
-	ffmpeg -> "RTM Server" : ストリーミング受信要求
-	"RTM Server" --> ffmpeg : Respose
-	ffmpeg -> "RAM Disk" : ファイル生成
+	media -> "streaming-server" : ストリーミング受信要求
+	"streaming-server" --> media : Respose
+	media -> media : ファイル生成
 end
 
-Main -> ngrok : 設定
-ngrok --> Main : OK
+tunnel -> ngrok : 設定
+ngrok --> tunnel : OK
 
-Main -> AWS : 設定
-AWS --> Main : OK
-
-Main -> "WEB Server" : Run
-"WEB Server" --> Main : OK
+tunnel -> AWS : 設定
+AWS --> tunnel : OK
 @enduml

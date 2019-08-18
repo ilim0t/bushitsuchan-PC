@@ -1,0 +1,115 @@
+version: "3.7"
+services:
+  streaming-server:
+    image: tiangolo/nginx-rtmp
+    ports:
+      - 1935:1935
+  streamer:
+    build: ./streamer
+    volumes:
+      - ./streamer/stream_debug.sh:/usr/local/bin/stream.sh
+      - ./sample_movie.mp4:/sample_movie.mp4
+    entrypoint: /usr/local/bin/stream.sh
+    depends_on:
+      - streaming-server
+    environment:
+      - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
+      - STREAM_NAME=bushitsuchan
+  media:
+    build: ./media
+    working_dir: /app
+    command: npm run dev
+    entrypoint: docker-entrypoint.sh
+    volumes:
+      - ./media/src:/app
+      - ./photo:/photo
+    ports:
+      - 3000:80
+      - 4000:9229
+    environment:
+      - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
+      - STREAM_NAME=bushitsuchan
+    depends_on:
+      - streamer
+      - redis
+
+  reverse-proxy:
+    image: nginx:alpine
+    volumes:
+      - ./reverse-proxy/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - 80:80
+    depends_on:
+      - web
+      - slack
+  tunnel:
+    build: ./tunnel
+    working_dir: /app
+    command: npm run dev
+    volumes:
+      - ./tunnel/src:/app
+    environment:
+      - AWS_API_NAME=bushitsuchan-dev
+      - AWS_REST_API_ID=${AWS_REST_API_ID}
+
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+
+      - NGROK_AUTH=${NGROK_AUTH}
+      - NGROK_HOST=reverse-proxy:80
+
+      - NGROK_REGION=jp
+      - AWS_REGION=ap-northeast-1
+    ports:
+      - 4040:4040
+      - 3001:80
+      - 4001:9229
+
+  web:
+    image: node:alpine
+    working_dir: /app
+    command: npm run dev
+    environment:
+      - SESSION_SECRET=${SESSION_SECRET}
+      - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
+      - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
+      - WORKSTATION_ID=${WORKSTATION_ID}
+    volumes:
+      - ./web/src:/app
+    ports:
+      - 3002:80
+      - 4002:9229
+    depends_on:
+      - redis
+  slack:
+    image: node:alpine
+    working_dir: /app
+    command: npm run dev
+    environment:
+      - SLACK_BOT_ACCESS_TOKEN=${SLACK_BOT_ACCESS_TOKEN}
+      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
+      - CONTACT_CHANNEL=${CONTACT_CHANNEL}
+      - SESSION_SECRET=${SESSION_SECRET}
+    volumes:
+      - ./slack/src:/app
+    ports:
+      - 3003:80
+      - 4003:9229
+  endpoint:
+    image: node:alpine
+    working_dir: /app
+    command: npm run dev
+    volumes:
+      - ./endpoint/src:/app
+    ports:
+      - 3004:80
+      - 4004:9229
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    # command: redis-server --appendonly yes --requirepass foobared
+    volumes:
+      - ./redis:/data
+  # python:
