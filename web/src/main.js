@@ -110,10 +110,10 @@ app.get('/oauth-redirect', (req, res) => {
   getToken(code, process.env.SLACK_CLIENT_ID, process.env.SLACK_CLIENT_SECRET)
     .then((token) => {
       req.session.token = token;
+      req.session.lastAuthedTime = Date.now();
       authorize(token, process.env.WORKSTATION_ID).then((name) => {
         req.session.isAuth = true;
         req.session.name = name;
-        req.session.lastAuthedTime = Date.now();
         res.redirect(state || 'viewer');
       }).catch((err) => {
         console.error('Certification failed:\n', err);
@@ -135,12 +135,37 @@ app.get('/logout', (req, res) => {
   res.send('You have successfully logged out');
 });
 
-app.get(['/viewer', '/photo-viewer'], (req, res, next) => {
+app.use(['/viewer', '/photo-viewer', '/data'], (req, res, next) => {
+  if (req.session.lastAuthedTime < Date.now() - 1000 * 60 * 60 * 24) {
+    req.session.isAuth = false;
+  }
+  next();
+});
+
+app.use(['/viewer', '/photo-viewer', '/data'], (req, res, next) => {
+  const { token } = req.session;
+  if (token === undefined) {
+    res.redirect(`/prod/login?redirect_path=${req.path.slice(1)}`);
+    return;
+  }
   if (req.session.isAuth) {
     next();
     return;
   }
-  res.redirect(`login?redirect_path=${req.path.slice(1)}`);
+  if (req.session.lastAuthedTime > Date.now() - 1000 * 10) {
+    res.send(429).end();
+    return;
+  }
+  req.session.lastAuthedTime = Date.now();
+  authorize(token, process.env.WORKSTATION_ID).then((name) => {
+    req.session.isAuth = true;
+    req.session.name = name;
+    req.session.authPendding = false;
+    next();
+  }).catch((err) => {
+    console.error('Certification failed:\n', err);
+    res.sendStatus(403);
+  });
 });
 
 app.get('/viewer', (req, res) => {
@@ -150,15 +175,6 @@ app.get('/viewer', (req, res) => {
 app.get('/photo-viewer', async (req, res) => {
   const { photoId } = await axios.post('http://media/photo').then((result) => result.data);
   res.render('photo-viewer.ejs', { photoId });
-});
-
-app.get('/data', (req, res, next) => {
-  const { isAuth } = req.session;
-  if (!isAuth) {
-    res.status(404).end();
-    return;
-  }
-  next();
 });
 
 app.use('/data', proxy(url.parse('http://media/')));

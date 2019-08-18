@@ -27,7 +27,7 @@ ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
 
 app.post('/photo', (req, res) => {
   const time = Date.now();
-  redis.set(`${time}-pending`, true, 'EX', 20);
+  redis.set(`${time}-pending`, true, 'EX', 5);
   ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
     .addOption('-ss', 0.7)
     .addOption('-vframes', 1)
@@ -44,17 +44,12 @@ app.post('/photo', (req, res) => {
 
 app.get('/photo/:time', async (req, res) => {
   const { time } = req.params;
-  while (true) {
-    if (await redis.get(`${time}-pending`)) {
-      const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
-      await wait(100);
-      continue;
-    }
-    break;
+  const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
+  while (await redis.get(`${time}-pending`)) {
+    await wait(100);
   }
 
-  if (fs.existsSync(`/photo/${time}.jpg`)) {
-    // 非推奨
+  if (fs.existsSync(`/photo/${time}.jpg`)) { // 非推奨
     res.sendFile(`/photo/${time}.jpg`);
   }
 });
