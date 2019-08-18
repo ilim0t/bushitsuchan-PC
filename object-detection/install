@@ -1,0 +1,62 @@
+ #!/usr/bin/expect
+spawn ./install.sh
+expect "Please type a selection"
+send "\n"
+expect "Press \"Enter\" key to continue"
+send "\n"
+expect "End User License Agreement"
+send "q"
+expect "Type \"accept\" to continue"
+send "accept\n"
+expect "Please type a selection"
+send "2\n"
+expect "Please type a selection"
+send "\n"
+expect "'q' to quit."
+send "q"
+expect "Please type a selection"
+send "2\n"
+
+expect "Please type a selection"
+send "3\n"
+expect "Please type a selection"
+send "a\n"
+expect "Please type a selection"
+send "a\n"
+
+# Inference Engine
+expect "Please type a selection"
+send "2\n"
+expect "Please type a selection"
+send "3\n"
+expect "Please type a selection"
+send "4\n"
+expect "Please type a selection"
+send "6\n"
+expect "Please type a selection"
+send "b\n"
+
+# Model Optimizer
+expect "Please type a selection"
+send "3\n"
+expect "Please type a selection"
+send "2\n"
+expect "Please type a selection"
+send "b\n"
+
+# OpenCV
+expect "Please type a selection"
+send "5\n"
+expect "Please type a selection"
+send "2\n"
+expect "Please type a selection"
+send "b\n"
+
+expect "Please type a selection"
+send "\n"
+expect "Please type a selection"
+send "\n"
+
+expect "Press \"Enter\" key"
+send "\n"
+expect eof
