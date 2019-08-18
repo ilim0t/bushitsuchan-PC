@@ -46,6 +46,8 @@ API Gateway を利用するためには AWS アカウントと AWS へアクセ�
 
 そのユーザーにはポリシー`AmazonAPIGatewayAdministrator`をアクセス権にアタッチしてください。
 
+二回目以降の起動時は環境変数に`AWS_REST_API_ID`をセットする必要があります。この値は[Usage remote](#remote)にかかれている方法で確認できます。
+
 ### Sign in with Slack
 
 #### 説明
@@ -96,12 +98,13 @@ URL が`https://app.slack.com/client/VYS39C27C/UC7CHE35J`のようになって�
 `.env`ファイルに以下の様に書き保存してください，
 
 ```text
+AWS_REST_API_ID="j3i..."  # 二回目以降に必要
 AWS_ACCESS_KEY_ID="FUB..."
 AWS_SECRET_ACCESS_KEY="vKw..."
 
 NGROK_AUTH="8HU..."
 
-SESSION_SECRET="presetprivatekey"  # 暗に暗号化へ使う任意の頑強な文字列
+SESSION_SECRET="presetprivatekey"  # 暗に暗号化へ使う任意の頑強な文字列
 
 SLACK_CLIENT_ID="179..."
 SLACK_CLIENT_SECRET="38b..."
@@ -113,6 +116,11 @@ SLACK_SIGNING_SECRET="fb36..."
 
 > ファイルを作成せずに [direnv](https://direnv.net/)などで環境変数に代入しても代入しても動作します。
 
+## Requirement
+
+- [Docker compose](https://docs.docker.com/compose/install/)
+- Camera
+
 ## Run
 
 ```bash=
@@ -123,17 +131,17 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ### local
 
-`http://localhost/viewer`を開く
+`http://localhost/viewer`を開いてください。
 
 ### remote
 
 `docker-compose -f docker-compose.prod.yml logs tunnel`を実行すると見れる log に
 
 ```text=
-Forwarding  https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod-> https://[NGROK_DOMAIN].jp.ngrok.io
+Forwarding  https://[AWS_REST_API_ID].execute-api.[AWS_REGION].amazonaws.com/prod -> https://[NGROK_DOMAIN].jp.ngrok.io
 ```
 
-とあります。1 つ目の URL に`/viewer`を付け加えた`https://[AWS_REST_API_ID].execute-api.[REGION].amazonaws.com/prod/viewer`を開いてください。
+とあります。1 つ目の URL に`/viewer`を付け加えた`https://[AWS_REST_API_ID].execute-api.[AWS_REGION].amazonaws.com/prod/viewer`を開いてください。
 
 > この AWS の URL は半永久的に変わりません
 
