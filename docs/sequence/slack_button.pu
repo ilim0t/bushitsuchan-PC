@@ -1,31 +1,42 @@
 @startuml Slack_button
-box "NodeJS" #LightBlue
-participant "WEB Server"
-participant "RTM Server"
+box docker #LightBlue
+participant "streaming-server"
+participant media
+participant slack
 end box
-
-participant ffmpeg
-participant ngrok
-participant AWS
 
 participant Slack
 participant Client
 
 Client -> Slack: Buttonを押す
-Slack --> AWS: 転送
-AWS --> ngrok: 転送
-ngrok -> "WEB Server" : 転送
+Slack -> slack: POST
 
-"WEB Server" --> ngrok : OK
-ngrok --> AWS : 転送
-AWS --> Slack : 転送
+slack --> Slack : Response
 Slack --> Client : 転送
 
-"WEB Server" -> Slack: 投稿or削除
-Slack --> "WEB Server": OK
+alt 画像を含むmessageを投稿する
+	slack -> media: 画像変換要求
+	note right: Clientで保存されていたtokenを利用
+
+    media --> slack: 画像IDをResponse
+
+	media -> "streaming-server": ストリーミング受信要求
+	"streaming-server" --> media: Resoibse
+    media -> media: 写真保存
+end
+
+slack -> Slack: 投稿or削除
+Slack --> slack: OK
 
 == 表示タイミング ==
 
 Client -> Slack: 表示要求
 Slack --> Client: Response
+
+== 画像表示タイミング ==
+Client -> slack: GET
+slack -> media: 画像要求
+media -> media: 画像取得
+media --> slack: Response
+slack --> Client: Response
 @enduml
