@@ -39,7 +39,7 @@ const redis = new Redis({
 });
 
 app.use(morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
-  skip: (req, res) => ['/hls/', '/photo/'].some((element) => req.baseUrl.startsWith(element)),
+  skip: (req, res) => ['/hls/', '/photo/'].some((element) => req.path.startsWith(element)),
 }));
 morgan.token('user', (req, res) => {
   if (req.body.payload !== undefined) {
