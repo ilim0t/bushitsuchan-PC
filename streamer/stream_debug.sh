@@ -1,4 +1,4 @@
-#!/bin/ash
+#!/bin/bash
 
 ffmpeg \
     -stream_loop -1 \
