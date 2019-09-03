@@ -9,6 +9,8 @@ services:
     volumes:
       - ./streamer/stream.sh:/usr/local/bin/stream.sh
     entrypoint: /usr/local/bin/stream.sh
+    depends_on:
+      - streaming-server
     environment:
       - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
       - STREAM_NAME=bushitsuchan
@@ -35,6 +37,9 @@ services:
       - ./reverse-proxy/default.conf:/etc/nginx/conf.d/default.conf
     ports:
       - 80:80
+    depends_on:
+      - web
+      - slack
   tunnel:
     build: ./tunnel
     working_dir: /app
