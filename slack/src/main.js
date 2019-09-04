@@ -25,7 +25,10 @@ app.use('/actions', express.urlencoded({
   },
 }));
 app.use('/actions', (req, res, next) => {
-  req.body.payload = JSON.parse(req.body.payload);
+  const { payload } = req.body;
+  if (payload !== undefined) {
+    req.body.payload = JSON.parse(payload);
+  }
   next();
 });
 
@@ -39,7 +42,7 @@ const redis = new Redis({
 });
 
 app.use(morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
-  skip: (req, res) => ['/hls/', '/photo/'].some((element) => req.baseUrl.startsWith(element)),
+  skip: (req, res) => ['/hls/', '/photo/'].some((element) => req.path.startsWith(element)),
 }));
 morgan.token('user', (req, res) => {
   if (req.body.payload !== undefined) {

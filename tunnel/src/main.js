@@ -134,4 +134,4 @@ ngrok
       }));
       app.listen(80, () => console.log('Express app listening on port 80.'));
     });
-  });
+  }).catch((err) => console.error('Failed to connet ngrok:\n', err));
