@@ -25,7 +25,10 @@ app.use('/actions', express.urlencoded({
   },
 }));
 app.use('/actions', (req, res, next) => {
-  req.body.payload = JSON.parse(req.body.payload);
+  const { payload } = req.body;
+  if (payload !== undefined) {
+    req.body.payload = JSON.parse(payload);
+  }
   next();
 });
 

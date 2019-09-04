@@ -51,6 +51,8 @@ app.get('/photo/:time', async (req, res) => {
 
   if (fs.existsSync(`/photo/${time}.jpg`)) { // 非推奨
     res.sendFile(`/photo/${time}.jpg`);
+  } else {
+    res.sendStatus(404);
   }
 });
 app.use('/hls', express.static(hlsDir));

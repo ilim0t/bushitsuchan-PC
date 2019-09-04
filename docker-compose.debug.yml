@@ -95,6 +95,8 @@ services:
     ports:
       - 3003:80
       - 4003:9229
+    depends_on:
+      - redis
   endpoint:
     image: node:alpine
     working_dir: /app
