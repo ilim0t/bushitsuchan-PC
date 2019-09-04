@@ -14,6 +14,7 @@ services:
     environment:
       - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
       - STREAM_NAME=bushitsuchan
+      - /etc/localtime:/etc/localtime:ro
     devices:
       - /dev/video0:/dev/video0
   media:
@@ -27,6 +28,7 @@ services:
     environment:
       - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
       - STREAM_NAME=bushitsuchan
+      - /etc/localtime:/etc/localtime:ro
     depends_on:
       - streamer
       - redis
@@ -73,6 +75,7 @@ services:
       - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
       - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
       - WORKSTATION_ID=${WORKSTATION_ID}
+      - /etc/localtime:/etc/localtime:ro
     volumes:
       - ./web/src:/app
     depends_on:
@@ -86,6 +89,7 @@ services:
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
       - CONTACT_CHANNEL=${CONTACT_CHANNEL}
       - SESSION_SECRET=${SESSION_SECRET}
+      - /etc/localtime:/etc/localtime:ro
     volumes:
       - ./slack/src:/app
   endpoint:
@@ -94,6 +98,7 @@ services:
     command: ash -c "npm install && npm start"
     volumes:
       - ./endpoint/src:/app
+      - /etc/localtime:/etc/localtime:ro
     restart: always
 
   redis:

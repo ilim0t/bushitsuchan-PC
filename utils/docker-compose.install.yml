@@ -1,0 +1,37 @@
+version: "3.7"
+services:
+  media:
+    build: ../media
+    working_dir: /app
+    command: ash -c "npm install && npm audit fix"
+    entrypoint: docker-entrypoint.sh
+    volumes:
+      - ../media/src:/app
+
+  tunnel:
+    build: ../tunnel
+    working_dir: /app
+    command: ash -c "npm install && npm audit fix"
+    volumes:
+      - ../tunnel/src:/app
+
+  web:
+    image: node:alpine
+    working_dir: /app
+    command: ash -c "npm install && npm audit fix"
+    volumes:
+      - ../web/src:/app
+
+  slack:
+    image: node:alpine
+    working_dir: /app
+    command: ash -c "npm install && npm audit fix"
+    volumes:
+      - ../slack/src:/app
+    
+  endpoint:
+    image: node:alpine
+    working_dir: /app
+    command: ash -c "npm install && npm audit fix"
+    volumes:
+      - ../endpoint/src:/app
