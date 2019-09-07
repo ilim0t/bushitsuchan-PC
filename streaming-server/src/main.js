@@ -1,4 +1,4 @@
-const NodeMediaServer = require("node-media-server");
+const NodeMediaServer = require('node-media-server');
 
 const nms = new NodeMediaServer({
   logType: 1,
@@ -8,8 +8,8 @@ const nms = new NodeMediaServer({
     chunk_size: 60000,
     gop_cache: true,
     ping: 30,
-    ping_timeout: 60
-  }
+    ping_timeout: 60,
+  },
 });
 
 nms.run();
