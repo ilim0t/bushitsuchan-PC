@@ -12,13 +12,13 @@ services:
     build: ./streamer
     volumes:
       - ./streamer/stream.sh:/usr/local/bin/stream.sh
+      - /etc/localtime:/etc/localtime:ro
     entrypoint: /usr/local/bin/stream.sh
     depends_on:
       - streaming-server
     environment:
       - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
       - STREAM_NAME=bushitsuchan
-      - /etc/localtime:/etc/localtime:ro
     devices:
       - /dev/video0:/dev/video0
   media:
@@ -29,10 +29,10 @@ services:
     volumes:
       - ./media/src:/app
       - ./photo:/photo
+      - /etc/localtime:/etc/localtime:ro
     environment:
       - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
       - STREAM_NAME=bushitsuchan
-      - /etc/localtime:/etc/localtime:ro
     depends_on:
       - streamer
       - redis
@@ -79,9 +79,9 @@ services:
       - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
       - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
       - WORKSTATION_ID=${WORKSTATION_ID}
-      - /etc/localtime:/etc/localtime:ro
     volumes:
       - ./web/src:/app
+      - /etc/localtime:/etc/localtime:ro
     depends_on:
       - redis
   slack:
@@ -93,9 +93,9 @@ services:
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
       - CONTACT_CHANNEL=${CONTACT_CHANNEL}
       - SESSION_SECRET=${SESSION_SECRET}
-      - /etc/localtime:/etc/localtime:ro
     volumes:
       - ./slack/src:/app
+      - /etc/localtime:/etc/localtime:ro
   endpoint:
     image: node:alpine
     working_dir: /app
