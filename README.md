@@ -22,7 +22,7 @@ OSK の部室の様子を様子をオンラインで確認できるプロジェ�
 
 特定のネットワーク下では，権限なしにウェブサーバーを外部に公開することはできません。
 その状況下でも外部に暴露させることができるサービスの 1 つに ngrok があります。  
-ngrok はユーザー登録をしていると使い勝手が良くなるので， bushitsuchan-PC ではユーザーを対応づけて利用しています。  
+ngrok はユーザー登録をしていると使い勝手が良くなるので， bushitsuchan-PC ではそうしています。  
 このとき，ユーザーごとに割り振られたキーが必要です。
 
 #### 設定
@@ -55,7 +55,7 @@ API Gateway を利用するためには AWS アカウントと AWS へアクセ�
 Slack と連携し特定の Workspace に属する場合のみ LIVE Streaming 視聴を許可するように設定します。  
 その際,Slack App という枠組みを利用しています。新たに Slack App を作成し，それに対応するいくつかの ID やキーが必要です。
 
-また，Slash Commands やメッセージへのアクションを受け取るための設定があるため[設定](slack/README.md)に従ってください。
+また，Slash Commands やメッセージへのアクションを受け取るための設定があるため[slack設定](slack/README.md)に従ってください。
 
 #### 設定
 
@@ -114,7 +114,7 @@ SLACK_BOT_ACCESS_TOKEN="xoxb-3814..."
 SLACK_SIGNING_SECRET="fb36..."
 ```
 
-> ファイルを作成せずに [direnv](https://direnv.net/)などで環境変数に代入しても代入しても動作します。
+> ファイルを作成せずに [direnv](https://direnv.net/)などで環境変数に代入しても動作します。
 
 ## Requirement
 
