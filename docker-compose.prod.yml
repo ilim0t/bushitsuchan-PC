@@ -1,7 +1,11 @@
 version: "3.7"
 services:
   streaming-server:
-    image: tiangolo/nginx-rtmp
+    image: node:alpine
+    working_dir: /app
+    command: ash -c "npm install && npm start"
+    volumes:
+      - ./streaming-server/src:/app
     ports:
       - 1935:1935
   streamer:
