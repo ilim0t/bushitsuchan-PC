@@ -1,0 +1,22 @@
+{
+  "name": "streaming-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "nodemon --inspect=0.0.0.0 main.js",
+    "lint": "eslint --ext .js --fix ."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-media-server": "^2.1.3"
+  },
+  "devDependencies": {
+    "eslint": "^6.1.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2",
+    "nodemon": "^1.19.1"
+  }
+}

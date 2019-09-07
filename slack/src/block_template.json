@@ -1,0 +1,74 @@
+[
+  {
+    "type": "image",
+    "title": {
+      "type": "plain_text",
+      "text": "部室の写真"
+    },
+    "image_url": "{{image_url}}",
+    "alt_text": "部室の写真"
+  },
+  {
+    "type": "actions",
+    "block_id": "action_block",
+    "elements": [
+      {
+        "type": "button",
+        "text": {
+          "type": "plain_text",
+          "text": "削除"
+        },
+        "value": "delete",
+        "action_id": "delete_button",
+        "style": "danger",
+        "confirm": {
+          "title": {
+            "type": "plain_text",
+            "text": "メッセージ削除"
+          },
+          "text": {
+            "type": "plain_text",
+            "text": "削除しますか?"
+          },
+          "confirm": {
+            "type": "plain_text",
+            "text": "削除実行"
+          },
+          "deny": {
+            "type": "plain_text",
+            "text": "キャンセル"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "context",
+    "elements": [
+      {
+        "type": "mrkdwn",
+        "text": "📷 View photo with `/bushitsu-photo`"
+      }
+    ]
+  },
+  {
+    "type": "context",
+    "elements": [
+      {
+        "type": "mrkdwn",
+        "text": "<{{viewer_url}}|WEB-配信動画版>"
+      },
+      {
+        "type": "mrkdwn",
+        "text": "<{{photo_viewer_url}}|WEB-画像版>"
+      },
+      {
+        "type": "mrkdwn",
+        "text": "*問い合せ*: <#{{contact_channel}}>"
+      }
+    ]
+  }
+]
