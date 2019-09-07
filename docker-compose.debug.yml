@@ -13,7 +13,6 @@ services:
     volumes:
       - ./streamer/stream_debug.sh:/usr/local/bin/stream.sh
       - ./sample_movie.mp4:/sample_movie.mp4
-      - /etc/localtime:/etc/localtime:ro
     entrypoint: /usr/local/bin/stream.sh
     depends_on:
       - streaming-server
@@ -28,7 +27,6 @@ services:
     volumes:
       - ./media/src:/app
       - ./photo:/photo
-      - /etc/localtime:/etc/localtime:ro
     ports:
       - 3000:80
       - 4000:9229
@@ -82,7 +80,6 @@ services:
       - WORKSTATION_ID=${WORKSTATION_ID}
     volumes:
       - ./web/src:/app
-      - /etc/localtime:/etc/localtime:ro
     ports:
       - 3002:80
       - 4002:9229
@@ -99,7 +96,6 @@ services:
       - SESSION_SECRET=${SESSION_SECRET}
     volumes:
       - ./slack/src:/app
-      - /etc/localtime:/etc/localtime:ro
     ports:
       - 3003:80
       - 4003:9229
@@ -111,7 +107,6 @@ services:
     command: npm run dev
     volumes:
       - ./endpoint/src:/app
-      - /etc/localtime:/etc/localtime:ro
     ports:
       - 3004:80
       - 4004:9229
