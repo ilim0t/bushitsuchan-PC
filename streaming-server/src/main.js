@@ -13,3 +13,4 @@ const nms = new NodeMediaServer({
 });
 
 nms.run();
+console.log('Streaming server listening on port 1935.');
