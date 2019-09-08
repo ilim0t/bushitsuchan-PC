@@ -118,4 +118,9 @@ services:
     # command: redis-server --appendonly yes --requirepass foobared
     volumes:
       - ./redis:/data
-  # python:
+  object-detection:
+    build: ./object-detection
+    working_dir: /app
+    command: pipenv run start
+    volumes:
+      - ./object-detection/src:/app

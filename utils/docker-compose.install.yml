@@ -42,3 +42,10 @@ services:
     command: ash -c "npm install && npm audit fix"
     volumes:
       - ../endpoint/src:/app
+
+  object-detection:
+    build: ../object-detection
+    working_dir: /app
+    command: bash -c "pipenv install && pipenv update"
+    volumes:
+      - ../object-detection/src:/app
