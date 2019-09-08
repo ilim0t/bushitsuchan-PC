@@ -119,7 +119,10 @@ services:
     volumes:
       - ./redis:/data
   object-detection:
-    build: ./object-detection
+    build:
+      context: ./object-detection
+      args:
+        PYTHON_VERSION: 3.7.4
     working_dir: /app
     command: pipenv run start
     volumes:
