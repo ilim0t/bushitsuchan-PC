@@ -118,6 +118,7 @@ services:
     # command: redis-server --appendonly yes --requirepass foobared
     volumes:
       - ./redis:/data
+
   object-detection:
     build:
       context: ./object-detection
@@ -125,5 +126,9 @@ services:
         PYTHON_VERSION: 3.7.4
     working_dir: /app
     command: pipenv run start
+    privileged: true
     volumes:
       - ./object-detection/src:/app
+      - /dev:/dev
+    depends_on:
+      - streamer

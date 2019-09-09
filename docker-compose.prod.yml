@@ -114,8 +114,15 @@ services:
       - ./redis:/data
 
   object-detection:
-    build: ./object-detection
+    build:
+      context: ./object-detection
+      args:
+        PYTHON_VERSION: 3.7.4
     working_dir: /app
     command: bash -c "pipenv install && pipenv run start"
+    privileged: true
     volumes:
       - ./object-detection/src:/app
+      - /dev:/dev
+    depends_on:
+      - streamer
