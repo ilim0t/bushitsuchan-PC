@@ -1,6 +1,8 @@
 FROM python:3.7.4-slim-stretch AS python
 FROM ubuntu:16.04
 
+ENV LANG C.UTF-8
+
 # COPY --from=python /bin /bin
 # COPY --from=python /boot /boot
 # COPY --from=python /dev /dev
