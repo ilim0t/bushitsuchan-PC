@@ -35,7 +35,7 @@ services:
     command: ash -c "npm install && npm audit fix"
     volumes:
       - ../slack/src:/app
-    
+
   endpoint:
     image: node:alpine
     working_dir: /app
