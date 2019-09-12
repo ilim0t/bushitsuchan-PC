@@ -55,7 +55,7 @@ API Gateway を利用するためには AWS アカウントと AWS へアクセ�
 Slack と連携し特定の Workspace に属する場合のみ LIVE Streaming 視聴を許可するように設定します。  
 その際,Slack App という枠組みを利用しています。新たに Slack App を作成し，それに対応するいくつかの ID やキーが必要です。
 
-また，Slash Commands やメッセージへのアクションを受け取るための設定があるため[slack設定](slack/README.md)に従ってください。
+また，Slash Commands やメッセージへのアクションを受け取るための設定があるため[slack 設定](slack/README.md)に従ってください。
 
 #### 設定
 
@@ -147,3 +147,42 @@ Forwarding  https://[AWS_REST_API_ID].execute-api.[AWS_REGION].amazonaws.com/pro
 
 すると，初回実行時(過去に Slack で認証をしていなければ) Slack の認証ページへリダイレクトされます。  
 Sign in すると自動的に配信再生ページへ移動します。
+
+## Container
+
+bushitsuchan-PC では[Docker](https://www.docker.com/)というソフトフェアを活用しています。  
+Docker はコンテナ技術を体現したシステムの一つで，独立したサービス単位で環境それぞれを Container という形で OS レベルに分離させることができます。必要最低な構成を独立して扱うため再利用性が高まり，また分離しているため取り回しも良くなります。
+
+bushitsuchan-PC における container の一覧と用途を記します。
+
+### streaming-server
+
+同時に複数のプロセスがカメラにアクセスすることができないため，この container で映像を管理し，複数のプロセスへとカメラ画像を受け渡します。
+
+### streamer
+
+**streaming-server** へと実際にカメラ画像をストリーミングします。遅延を減らすための圧縮や codec の変換も行います。
+
+### media
+
+各 container が必要とするカメラ画像や映像を **streaming-server** から代理で取り出します。また取り出す際さらなる変換も行います。
+
+### reverse-proxy
+
+外部からのアクセスを URL 別に **web** または **slack** へ振り分ける処理を行います。
+
+### tunnel
+
+外部へ **reverse-proxy** サーバを公開する際の初期設定などの処理を行います。
+
+### web
+
+ブラウザでウェブサイトへアクセスされた際の処理を担当します。ログイン処理なども担います。
+
+### slack
+
+Slack 上での slash command や action への応答を処理しています。
+
+### redis
+
+データベースとして機能し，ログイン情報の保持や画像変換の待機管理を行います。
