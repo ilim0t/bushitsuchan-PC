@@ -5,12 +5,12 @@ OSK の部室の様子をオンラインで確認できるプロジェクト 部
 
 ## Support
 
-以下の OS をサポートします
+以下の OS をサポートします。
 
 - Ubuntu 18.04
 - macOS 10.14 (Debug mode のみ)
 
-Debug mode 下では挙動に以下の差異があります
+Debug mode 下では挙動に以下の差異があります。
 
 - ストリーミング映像がカメラからではなく任意の動画ファイルから取得される
 - Time zone の設定がされず時刻がずれる
@@ -68,7 +68,7 @@ bushitsuchan-PC 全体のフロー
 
 特定のネットワーク下では，権限なしにウェブサーバーを外部に公開することはできません。
 その状況下でも外部に暴露させることができるサービスの 1 つに ngrok があります。  
-ngrok はユーザー登録をしていると使い勝手が良くなるので， bushitsuchan-PC ではそうしています。  
+ngrok はユーザー登録をしていると使い勝手が良くなるので， bushitsuchan-PC ではユーザ登録後に有効な機能を使っています。  
 このとき，ユーザーごとに割り振られたキーが必要です。
 
 #### 設定
@@ -141,7 +141,7 @@ URL が`https://app.slack.com/client/VYS39C27C/UC7CHE35J`のようになって�
 
 #### 設定
 
-`.env`ファイルに以下の様に書き保存してください，
+`.env`ファイルに以下の様に書き保存してください。
 
 ```text
 AWS_REST_API_ID="j3i..."  # 二回目以降に必要
@@ -160,7 +160,7 @@ SLACK_BOT_ACCESS_TOKEN="xoxb-3814..."
 SLACK_SIGNING_SECRET="fb36..."
 ```
 
-> ファイルを作成せずに [direnv](https://direnv.net/)などで環境変数に代入しても動作します。
+> ファイルを作成せずに [direnv](https://direnv.net/)などで環境変数に代入しても動作します
 
 ## Requirement
 
@@ -169,7 +169,7 @@ SLACK_SIGNING_SECRET="fb36..."
 
 ## Run
 
-```bash=
+```shell=
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
@@ -189,7 +189,7 @@ Forwarding  https://[AWS_REST_API_ID].execute-api.[AWS_REGION].amazonaws.com/pro
 
 とあります。1 つ目の URL に`/viewer`を付け加えた`https://[AWS_REST_API_ID].execute-api.[AWS_REGION].amazonaws.com/prod/viewer`を開いてください。
 
-> この AWS の URL は半永久的に変わりません
+> この URL は半永久的に変わりません
 
 すると，初回実行時(過去に Slack で認証をしていなければ) Slack の認証ページへリダイレクトされます。  
 Sign in すると自動的に配信再生ページへ移動します。
