@@ -8,9 +8,55 @@ OSK の部室の様子を様子をオンラインで確認できるプロジェ�
 以下の OS をサポートします
 
 - Ubuntu 18.04
-- macOS 10.14 (debug のみ)
+- macOS 10.14 (Debug mode のみ)
+
+Debug mode 下では挙動に以下の差異があります
+
+- ストリーミング映像がカメラからではなく任意の動画ファイルから取得される
+- Time zone の設定がされず時刻がずれる
+
+## Container
+
+bushitsuchan-PC では[Docker](https://www.docker.com/)というソフトフェアを活用しています。  
+Docker はコンテナ技術を体現したシステムの一つで，独立したサービス単位で環境それぞれを Container という形で OS レベルに分離させることができます。必要最低な構成を独立して扱うため再利用性が高まり，また分離しているため取り回しも良くなります。
+
+bushitsuchan-PC における container の一覧と用途を記します。
+
+### streaming-server
+
+同時に複数のプロセスがカメラにアクセスすることができないため，この container で映像を管理し，複数のプロセスへとカメラ画像を受け渡します。
+
+### streamer
+
+**streaming-server** へと実際にカメラ画像をストリーミングします。遅延を減らすための圧縮や codec の変換も行います。
+
+### media
+
+各 container が必要とするカメラ画像や映像を **streaming-server** から代理で取り出します。また取り出す際さらなる変換も行います。
+
+### reverse-proxy
+
+外部からのアクセスを URL 別に **web** または **slack** へ振り分ける処理を行います。
+
+### tunnel
+
+外部へ **reverse-proxy** サーバを公開する際の初期設定などの処理を行います。
+
+### web
+
+ブラウザでウェブサイトへアクセスされた際の処理を担当します。ログイン処理なども担います。
+
+### slack
+
+Slack 上での slash command や action への応答を処理しています。
+
+### redis
+
+データベースとして機能し，ログイン情報の保持や画像変換の待機管理を行います。
 
 ## Design
+
+bushitsuchan-PC 全体のフロー
 
 > [Sequence 図](/docs/sequence.md)
 
@@ -147,42 +193,3 @@ Forwarding  https://[AWS_REST_API_ID].execute-api.[AWS_REGION].amazonaws.com/pro
 
 すると，初回実行時(過去に Slack で認証をしていなければ) Slack の認証ページへリダイレクトされます。  
 Sign in すると自動的に配信再生ページへ移動します。
-
-## Container
-
-bushitsuchan-PC では[Docker](https://www.docker.com/)というソフトフェアを活用しています。  
-Docker はコンテナ技術を体現したシステムの一つで，独立したサービス単位で環境それぞれを Container という形で OS レベルに分離させることができます。必要最低な構成を独立して扱うため再利用性が高まり，また分離しているため取り回しも良くなります。
-
-bushitsuchan-PC における container の一覧と用途を記します。
-
-### streaming-server
-
-同時に複数のプロセスがカメラにアクセスすることができないため，この container で映像を管理し，複数のプロセスへとカメラ画像を受け渡します。
-
-### streamer
-
-**streaming-server** へと実際にカメラ画像をストリーミングします。遅延を減らすための圧縮や codec の変換も行います。
-
-### media
-
-各 container が必要とするカメラ画像や映像を **streaming-server** から代理で取り出します。また取り出す際さらなる変換も行います。
-
-### reverse-proxy
-
-外部からのアクセスを URL 別に **web** または **slack** へ振り分ける処理を行います。
-
-### tunnel
-
-外部へ **reverse-proxy** サーバを公開する際の初期設定などの処理を行います。
-
-### web
-
-ブラウザでウェブサイトへアクセスされた際の処理を担当します。ログイン処理なども担います。
-
-### slack
-
-Slack 上での slash command や action への応答を処理しています。
-
-### redis
-
-データベースとして機能し，ログイン情報の保持や画像変換の待機管理を行います。
