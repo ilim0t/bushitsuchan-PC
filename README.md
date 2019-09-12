@@ -1,16 +1,62 @@
 # bushitsuchan-PC
 
-OSK の部室の様子を様子をオンラインで確認できるプロジェクト 部室ちゃん
-その部室に置いてある PC 側で動かすプログラム
+OSK の部室の様子をオンラインで確認できるプロジェクト 部室ちゃん
+その部室に置いてある PC で動かすプログラム
 
 ## Support
 
-以下の OS をサポートします
+以下の OS をサポートします。
 
 - Ubuntu 18.04
-- macOS 10.14 (debug のみ)
+- macOS 10.14 (Debug mode のみ)
+
+Debug mode 下では挙動に以下の差異があります。
+
+- ストリーミング映像がカメラからではなく任意の動画ファイルから取得される
+- Time zone の設定がされず時刻がずれる
+
+## Container
+
+bushitsuchan-PC では[Docker](https://www.docker.com/)というソフトフェアを活用しています。  
+Docker はコンテナ技術を体現したシステムの一つで，独立したサービス単位で環境それぞれを Container という形で OS レベルに分離させることができます。必要最低な構成を独立して扱うため再利用性が高まり，また分離しているため取り回しも良くなります。
+
+bushitsuchan-PC における container の一覧と用途を記します。
+
+### streaming-server
+
+同時に複数のプロセスがカメラにアクセスすることができないためこの container で映像を管理し，複数のプロセスへとカメラ画像を受け渡します。
+
+### streamer
+
+**streaming-server** へと実際にカメラ画像をストリーミングします。遅延を減らすための圧縮や codec の変換も行います。
+
+### media
+
+各 container が必要とするカメラ画像や映像を **streaming-server** から代理で取り出します。また取り出す際のさらなる変換も行います。
+
+### reverse-proxy
+
+外部からのアクセスを URL 毎に **web** または **slack** へ振り分ける処理を行います。
+
+### tunnel
+
+外部へ **reverse-proxy** サーバを公開する際の初期設定などの処理を行います。
+
+### web
+
+ブラウザでウェブサイトへアクセスされた際の処理を行います。ログイン処理なども担います。
+
+### slack
+
+Slack 上での slash command や action への応答を処理しています。
+
+### redis
+
+データベースとして機能し，ログイン情報の保持や画像変換の待機管理を行います。
 
 ## Design
+
+bushitsuchan-PC 全体のフロー
 
 > [Sequence 図](/docs/sequence.md)
 
@@ -22,7 +68,7 @@ OSK の部室の様子を様子をオンラインで確認できるプロジェ�
 
 特定のネットワーク下では，権限なしにウェブサーバーを外部に公開することはできません。
 その状況下でも外部に暴露させることができるサービスの 1 つに ngrok があります。  
-ngrok はユーザー登録をしていると使い勝手が良くなるので， bushitsuchan-PC ではそうしています。  
+ngrok はユーザー登録をしていると使い勝手が良くなるので， bushitsuchan-PC ではユーザ登録後に有効な機能を使っています。  
 このとき，ユーザーごとに割り振られたキーが必要です。
 
 #### 設定
@@ -53,9 +99,9 @@ API Gateway を利用するためには AWS アカウントと AWS へアクセ�
 #### 説明
 
 Slack と連携し特定の Workspace に属する場合のみ LIVE Streaming 視聴を許可するように設定します。  
-その際,Slack App という枠組みを利用しています。新たに Slack App を作成し，それに対応するいくつかの ID やキーが必要です。
+その際，Slack App という枠組みを利用しています。新たに Slack App を作成し，それに対応するいくつかの ID やキーが必要です。
 
-また，Slash Commands やメッセージへのアクションを受け取るための設定があるため[slack設定](slack/README.md)に従ってください。
+また，Slash Commands やメッセージへのアクションを受け取るためには[slack 設定](slack/README.md)に従う必要があります。
 
 #### 設定
 
@@ -95,7 +141,7 @@ URL が`https://app.slack.com/client/VYS39C27C/UC7CHE35J`のようになって�
 
 #### 設定
 
-`.env`ファイルに以下の様に書き保存してください，
+`.env`ファイルに以下の様に書き保存してください。
 
 ```text
 AWS_REST_API_ID="j3i..."  # 二回目以降に必要
@@ -114,7 +160,7 @@ SLACK_BOT_ACCESS_TOKEN="xoxb-3814..."
 SLACK_SIGNING_SECRET="fb36..."
 ```
 
-> ファイルを作成せずに [direnv](https://direnv.net/)などで環境変数に代入しても動作します。
+> ファイルを作成せずに [direnv](https://direnv.net/)などで環境変数に代入しても動作します
 
 ## Requirement
 
@@ -123,7 +169,7 @@ SLACK_SIGNING_SECRET="fb36..."
 
 ## Run
 
-```bash=
+```shell=
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
@@ -135,7 +181,7 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ### remote
 
-`docker-compose -f docker-compose.prod.yml logs tunnel`を実行すると見れる log に
+`docker-compose -f docker-compose.prod.yml logs tunnel`を実行すると表示される log の中に
 
 ```text=
 Forwarding  https://[AWS_REST_API_ID].execute-api.[AWS_REGION].amazonaws.com/prod -> https://[NGROK_DOMAIN].jp.ngrok.io
@@ -143,7 +189,7 @@ Forwarding  https://[AWS_REST_API_ID].execute-api.[AWS_REGION].amazonaws.com/pro
 
 とあります。1 つ目の URL に`/viewer`を付け加えた`https://[AWS_REST_API_ID].execute-api.[AWS_REGION].amazonaws.com/prod/viewer`を開いてください。
 
-> この AWS の URL は半永久的に変わりません
+> この URL は半永久的に変わりません
 
 すると，初回実行時(過去に Slack で認証をしていなければ) Slack の認証ページへリダイレクトされます。  
 Sign in すると自動的に配信再生ページへ移動します。
