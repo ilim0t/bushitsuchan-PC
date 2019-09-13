@@ -9,6 +9,7 @@ const querystring = require('querystring');
 const proxy = require('proxy-middleware');
 
 const session = require('express-session');
+const Redis = require('ioredis');
 const RedisStore = require('connect-redis')(session);
 
 
@@ -63,7 +64,7 @@ app.set('view engine', 'ejs');
 app.use(
   session({
     store: new RedisStore({
-      host: 'redis',
+      client: new Redis({ host: 'redis' }),
       prefix: 'web:',
     }),
     secret: process.env.SESSION_SECRET,
