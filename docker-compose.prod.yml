@@ -116,8 +116,6 @@ services:
   object-detection:
     build:
       context: ./object-detection
-      args:
-        PYTHON_VERSION: 3.7.4
     working_dir: /app
     command: bash -c "pipenv sync && pipenv run start"
     privileged: true
