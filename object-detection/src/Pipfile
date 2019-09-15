@@ -4,16 +4,21 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "*"
-flake8 = "*"
+black = "~=19.3b0"
+flake8 = "~=3.7.8"
+watchdog = "~=0.9.0"
 
 [packages]
-opencv-python = "*"
+opencv-python = "~=4.1.1.26"
 
 [requires]
 python_version = "3.7"
 
 [scripts]
 start = "python main.py"
+dev = "watchmedo shell-command --patterns='*.py' --command='python main.py' ."
 lint = "flake8 --exclude .venv ."
 format = "black ."
+
+[pipenv]
+allow_prereleases = true

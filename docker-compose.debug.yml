@@ -125,7 +125,7 @@ services:
       args:
         PYTHON_VERSION: 3.7.4
     working_dir: /app
-    command: pipenv run start
+    command: pipenv run dev
     privileged: true
     volumes:
       - ./object-detection/src:/app

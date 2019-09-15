@@ -119,7 +119,7 @@ services:
       args:
         PYTHON_VERSION: 3.7.4
     working_dir: /app
-    command: bash -c "pipenv install && pipenv run start"
+    command: bash -c "pipenv sync && pipenv run start"
     privileged: true
     volumes:
       - ./object-detection/src:/app
