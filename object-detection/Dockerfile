@@ -1,13 +1,10 @@
 FROM ubuntu:18.04
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3.7 wget gnupg curl ca-certificates && \
-    apt-get download python3-distutils && \
-    dpkg-deb -x python3-distutils* / && \
-    rm python3-distutils* && \
-    update-ca-certificates
+ENV LANG C.UTF-8
 
-RUN curl -kL https://bootstrap.pypa.io/get-pip.py | python3.7 && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3.7 libpython3.7-dev python3-pip wget curl gnupg ca-certificates && \
+    update-ca-certificates && \
     pip3 install pipenv
 
 # ENV PIPENV_YES true
@@ -18,7 +15,8 @@ RUN wget https://apt.repos.intel.com/openvino/2019/GPG-PUB-KEY-INTEL-OPENVINO-20
     bash -c "echo 'deb https://apt.repos.intel.com/openvino/2019/ all main' >> /etc/apt/sources.list.d/intel-openvino-2019.list" & \
     apt-key adv --keyserver apt.repos.intel.com --recv-keys && \
     apt-get update && \
-    apt-get install -y --no-install-recommends intel-openvino-dev-ubuntu18 libglib2.0-dev libsm-dev libxrender-dev libxext-dev lsb-release
+    apt-get install -y --no-install-recommends intel-openvino-dev-ubuntu18 libglib2.0-dev libsm-dev libxrender-dev libxext-dev lsb-release libgtk-3-dev
 # TODO /opt/intel/openvino/install_dependicy.sh の必要性とその中で行われるので省略できる処理の確認
 
 RUN echo '/opt/intel/openvino/bin/setupvars.sh' >> ~/.bashrc
+# ENV PYTHONPATH /opt/intel/openvino/python/python3.7:$PYTHONPATH
