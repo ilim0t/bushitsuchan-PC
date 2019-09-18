@@ -6,7 +6,9 @@ verify_ssl = true
 [dev-packages]
 black = "~=19.3b0"
 flake8 = "~=3.7.8"
+mypy = "~=0.720"
 watchdog = "~=0.9.0"
+ptvsd = "~=4.3.2"
 
 [packages]
 opencv-python = "~=4.1.1.26"
@@ -15,8 +17,9 @@ opencv-python = "~=4.1.1.26"
 python_version = "3.7"
 
 [scripts]
-start = "python main.py"
-dev = "watchmedo shell-command --patterns='*.py' --command='python main.py' ."
+start = "bash -c 'source /opt/intel/openvino/bin/setupvars.sh && python main.py'"
+# dev = "watchmedo shell-command --patterns='*.py' --command='source /opt/intel/openvino/bin/setupvars.sh && python -m ptvsd --host 0.0.0.0 --port 5678 --wait main,py' ."
+dev = "bash -c 'source /opt/intel/openvino/bin/setupvars.sh && python main.py'"
 lint = "flake8 --exclude .venv ."
 format = "black ."
 
