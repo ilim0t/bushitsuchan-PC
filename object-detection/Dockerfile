@@ -15,7 +15,7 @@ ENV PIPENV_VENV_IN_PROJECT true
 RUN wget https://apt.repos.intel.com/openvino/2019/GPG-PUB-KEY-INTEL-OPENVINO-2019 && \
     apt-key add GPG-PUB-KEY-INTEL-OPENVINO-2019 & \
     bash -c "echo 'deb https://apt.repos.intel.com/openvino/2019/ all main' >> /etc/apt/sources.list.d/intel-openvino-2019.list" & \
-    apt-key adv --keyserver apt.repos.intel.com --recv-keys && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1A8497B11911E097 && \
     apt-get update && \
     apt-get install -y --no-install-recommends intel-openvino-dev-ubuntu18 libgtk-3-dev
 

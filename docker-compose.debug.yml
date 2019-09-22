@@ -123,14 +123,14 @@ services:
     build:
       context: ./object-detection
     working_dir: /app
-    command: pipenv run dev
+    command: sleep 10000000
     environment:
       - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
       - STREAM_NAME=bushitsuchan
       - INFERENCE_INTERVAL_SEC=60
       - DEVICE=CPU
-      - MODEL_FILE=classification/alexnet.xml
-      - WEIGHTS_FILE=classification/alexnet.bin
+      - MODEL_FILE=object_detection/common/faster_rcnn/faster_rcnn_resnet101_coco/tf/FP32/faster_rcnn_resnet101_coco.xml
+      - WEIGHTS_FILE=object_detection/common/faster_rcnn/faster_rcnn_resnet101_coco/tf/FP32/faster_rcnn_resnet101_coco.bin
     privileged: true
     volumes:
       - ./object-detection/src:/app

@@ -1,2 +1,4 @@
+openvino
 src/node_modules
 src/.venv
+src/object_detection
