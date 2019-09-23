@@ -129,8 +129,6 @@ services:
       - STREAM_NAME=bushitsuchan
       - INFERENCE_INTERVAL_SEC=60
       - DEVICE=CPU
-      - MODEL_FILE=models/object_detection/common/faster_rcnn/faster_rcnn_resnet101_coco/tf/FP32/faster_rcnn_resnet101_coco.xml
-      - WEIGHTS_FILE=models/object_detection/common/faster_rcnn/faster_rcnn_resnet101_coco/tf/FP32/faster_rcnn_resnet101_coco.bin
     privileged: true
     volumes:
       - ./object-detection/src:/app
