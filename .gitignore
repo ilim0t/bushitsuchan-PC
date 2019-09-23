@@ -244,3 +244,7 @@ dmypy.json
 
 *.http
 yarn.lock
+
+# model data
+openvino
+models

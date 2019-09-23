@@ -5,7 +5,7 @@ import cv2
 # from logging import getLogger
 import json
 import asyncio
-from model import Net
+from model import Net, FasterRCNNResnet101Coco
 
 # logger = getLogger(__name__)
 
@@ -53,7 +53,7 @@ def main():
     print(json.dumps(args.__dict__, indent=2))
 
     cap = cv2.VideoCapture(f"{args.rtmp_server_url}/{args.stream_name}")
-    net = Net(args.model_file, args.weights_file, args.device, args.cpu_extension, cap)
+    net = FasterRCNNResnet101Coco(args.model_file, args.weights_file, args.device, args.cpu_extension, cap)
 
     loop = asyncio.get_event_loop()
     loop.call_later(args.interval, inference, net, loop)

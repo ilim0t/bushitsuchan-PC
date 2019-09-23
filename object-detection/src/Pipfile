@@ -26,7 +26,6 @@ python_version = "3.7"
 
 [scripts]
 start = "bash -c 'source /opt/intel/openvino/bin/setupvars.sh && python main.py'"
-# dev = "watchmedo shell-command --patterns='*.py' --command='source /opt/intel/openvino/bin/setupvars.sh && python -m ptvsd --host 0.0.0.0 --port 5678 --wait main,py' ."
-dev = "bash -c 'source /opt/intel/openvino/bin/setupvars.sh && python main.py'"
+dev = "bash -c 'source /opt/intel/openvino/bin/setupvars.sh && python -m ptvsd --host 0.0.0.0 --port 5678 --wait main.py'"
 lint = "bash -c 'mypy . && flake8 --show-source --exclude .venv .'"
 format = "bash -c 'isort -rc . && autopep8 -ivr .'"
