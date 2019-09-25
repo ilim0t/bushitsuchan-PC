@@ -144,20 +144,20 @@ URL が`https://app.slack.com/client/VYS39C27C/UC7CHE35J`のようになって�
 `.env`ファイルに以下の様に書き保存してください。
 
 ```text
-AWS_REST_API_ID="j3i..."  # 二回目以降に必要
-AWS_ACCESS_KEY_ID="FUB..."
-AWS_SECRET_ACCESS_KEY="vKw..."
+AWS_REST_API_ID=j3i...  # 二回目以降に必要
+AWS_ACCESS_KEY_ID=FUB...
+AWS_SECRET_ACCESS_KEY=vKw...
 
-NGROK_AUTH="8HU..."
+NGROK_AUTH=8HU...
 
-SESSION_SECRET="presetprivatekey"  # 暗に暗号化へ使う任意の頑強な文字列
+SESSION_SECRET=presetprivatekey  # 暗に暗号化へ使う任意の頑強な文字列
 
-SLACK_CLIENT_ID="179..."
-SLACK_CLIENT_SECRET="38b..."
-WORKSTATION_ID="VOW38CP2D"
+SLACK_CLIENT_ID=179...
+SLACK_CLIENT_SECRET=38b...
+WORKSTATION_ID=VOW38CP2D
 
-SLACK_BOT_ACCESS_TOKEN="xoxb-3814..."
-SLACK_SIGNING_SECRET="fb36..."
+SLACK_BOT_ACCESS_TOKEN=xoxb-3814...
+SLACK_SIGNING_SECRET=fb36...
 ```
 
 > ファイルを作成せずに [direnv](https://direnv.net/)などで環境変数に代入しても動作します
