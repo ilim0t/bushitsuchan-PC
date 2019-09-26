@@ -4,13 +4,28 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+flake8 = "~=3.7.8"
+mypy = "~=0.720"
+autopep8 = "~=1.4.4"
+isort = "~=4.3.21"
+watchdog = "~=0.9.0"
+ptvsd = "~=4.3.2"
 
 [packages]
-opencv-python = "*"
-torch = "*"
-torchvision = "*"
-matplotlib = "*"
-tqdm = "*"
+requests = "~=2.22.0"
+pyyaml = "~=5.1.2"
+networkx = ">=1.11"
+tensorflow = ">=1.2.0,<2.0.0"
+defusedxml = ">=0.5.0"
+test-generator = "==0.1.1"
+opencv-python = "~=4.1.1.26"
+
 
 [requires]
 python_version = "3.7"
+
+[scripts]
+start = "bash -c 'source /opt/intel/openvino/bin/setupvars.sh && python main.py'"
+dev = "bash -c 'source /opt/intel/openvino/bin/setupvars.sh && python -m ptvsd --host 0.0.0.0 --port 5678 --wait main.py'"
+lint = "bash -c 'mypy . --ignore-missing-imports && flake8 --show-source --exclude .venv --max-line-length 120 .'"
+format = "bash -c 'isort -rc . && autopep8 --max-line-length 120 -ivr .'"

@@ -1,209 +1,84 @@
 #!/usr/bin/env python3
+import argparse
+import asyncio
+import json
+import os
+from typing import Dict
+
 import cv2
-import torchvision
 import numpy as np
 
-import torch
-from typing import Dict, Union
-from matplotlib import cm
-from tqdm import tqdm
+from model import FasterRCNNResnet101Coco, Model
+from openvino.inference_engine import IECore
 
-COCO_INSTANCE_CATEGORY_NAMES = [
-    "__background__",
-    "person",
-    "bicycle",
-    "car",
-    "motorcycle",
-    "airplane",
-    "bus",
-    "train",
-    "truck",
-    "boat",
-    "traffic light",
-    "fire hydrant",
-    "N/A",
-    "stop sign",
-    "parking meter",
-    "bench",
-    "bird",
-    "cat",
-    "dog",
-    "horse",
-    "sheep",
-    "cow",
-    "elephant",
-    "bear",
-    "zebra",
-    "giraffe",
-    "N/A",
-    "backpack",
-    "umbrella",
-    "N/A",
-    "N/A",
-    "handbag",
-    "tie",
-    "suitcase",
-    "frisbee",
-    "skis",
-    "snowboard",
-    "sports ball",
-    "kite",
-    "baseball bat",
-    "baseball glove",
-    "skateboard",
-    "surfboard",
-    "tennis racket",
-    "bottle",
-    "N/A",
-    "wine glass",
-    "cup",
-    "fork",
-    "knife",
-    "spoon",
-    "bowl",
-    "banana",
-    "apple",
-    "sandwich",
-    "orange",
-    "broccoli",
-    "carrot",
-    "hot dog",
-    "pizza",
-    "donut",
-    "cake",
-    "chair",
-    "couch",
-    "potted plant",
-    "bed",
-    "N/A",
-    "dining table",
-    "N/A",
-    "N/A",
-    "toilet",
-    "N/A",
-    "tv",
-    "laptop",
-    "mouse",
-    "remote",
-    "keyboard",
-    "cell phone",
-    "microwave",
-    "oven",
-    "toaster",
-    "sink",
-    "refrigerator",
-    "N/A",
-    "book",
-    "clock",
-    "vase",
-    "scissors",
-    "teddy bear",
-    "hair drier",
-    "toothbrush",
-]
-
-
-class ObjectDetector:
-    def __init__(self) -> None:
-        self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn(
-            pretrained=True
-        )
-        self.model.eval()
-
-        self.color = cm.hsv(
-            np.linspace(0, 1, len(COCO_INSTANCE_CATEGORY_NAMES) - 1)
-        ).tolist()
-
-    def __call__(self, img: np.ndarray) -> Dict[str, torch.Tensor]:
-        prediction, = self.model(
-            [torch.from_numpy(img).permute((2, 0, 1)).float() / 255]
-        )
-        prediction = self.select_top_prediction(prediction)
-        return prediction
-
-    def draw(self, img: np.ndarray, prediction: Dict[str, torch.Tensor]) -> np.ndarray:
-        img = self.overlay_boxes(img, prediction)
-        img = self.overlay_class_names(img, prediction)
-
-        if isinstance(img, cv2.UMat):
-            img = img.get()
-        return img
-
-    # https://github.com/facebookresearch/maskrcnn-benchmark/blob/master/demo/predictor.py
-    def select_top_prediction(
-        self, prediction: Dict[str, torch.Tensor], threshold: float = 0.8
-    ) -> Dict[str, torch.Tensor]:
-        scores = prediction["scores"]
-        keep = torch.nonzero(scores > threshold).squeeze(1)
-        prediction = prediction.copy()
-
-        for key, value in prediction.items():
-            prediction[key] = value[keep]
-
-        # scores.sort(0, descending=True)
-        return prediction
-
-    def overlay_boxes(
-        self, image: Union[np.ndarray, cv2.UMat], prediction: Dict[str, torch.Tensor]
-    ) -> Union[np.ndarray, cv2.UMat]:
-        labels = prediction["labels"]
-        boxes = prediction["boxes"]
-
-        colors = [self.color[i - 1] for i in labels]
-
-        for box, color in zip(boxes, colors):
-            box = box.long()
-            top_left, bottom_right = box[:2].tolist(), box[2:].tolist()
-            image = cv2.rectangle(
-                image, tuple(top_left), tuple(bottom_right), tuple(color), 1
-            )
-        return image
-
-    def overlay_class_names(
-        self, image: Union[np.ndarray, cv2.UMat], prediction: Dict[str, torch.Tensor]
-    ) -> Union[np.ndarray, cv2.UMat]:
-        scores = prediction["scores"]
-        labels = prediction["labels"]
-        boxes = prediction["boxes"]
-
-        labels = [COCO_INSTANCE_CATEGORY_NAMES[i] for i in labels]
-
-        for box, score, label in zip(boxes, scores, labels):
-            x, y = box[:2]
-            text = f"{label}: {score :.2f}"
-            cv2.putText(
-                image, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1
-            )
-        return image
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-l", "--cpu-extension",
+    help="Required for CPU custom layers. MKLDNN (CPU)-targeted custom layers. Absolute path to a shared library with "
+         "the kernels implementations.",
+    default="/opt/intel/openvino/inference_engine/lib/intel64/libcpu_extension_avx2.so",
+    type=str)
+parser.add_argument(
+    "-d", "--device",
+    help="Specify the target device to infer. The sample will look for a suitable plugin for device specified.",
+    default=os.getenv("DEVICE", "CPU"),
+    choices=IECore().available_devices,
+    type=str)
+parser.add_argument(
+    "--interval",
+    help="Infers through the network every specified number of seconds.",
+    default=os.getenv("INFERENCE_INTERVAL_SEC", 60 * 5),
+    type=int)
+parser.add_argument(
+    "--rtmp-server-url",
+    help="Streaming server address starting with rtmp:// .",
+    default=os.getenv("RTMP_SERVER_URL", "rtmp://streaming-server/live"),
+    type=str)
+parser.add_argument(
+    "--stream-name",
+    help="The stream name assigned to the stream on the streaming server.",
+    default=os.getenv("STREAM_NAME", "bushitsuchan"),
+    type=str)
+parser.add_argument(
+    "-t",
+    "--threshold",
+    help="Ignore predictions below a specified value.",
+    default=os.getenv("THRESHOLD", 0.7),
+    type=float)
 
 
 def main():
-    cap = cv2.VideoCapture("rtmp://localhost:1935/live/bushitsuchan")
-    cv2.namedWindow("img", cv2.WINDOW_NORMAL)
-    cv2.setWindowProperty("img", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    args = parser.parse_args()
+    print(json.dumps(args.__dict__, indent=2))
 
-    detector = ObjectDetector()
+    cap = cv2.VideoCapture(f"{args.rtmp_server_url}/{args.stream_name}")
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    net = FasterRCNNResnet101Coco(args.device, args.cpu_extension)
 
-    with tqdm() as pbar:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+    loop = asyncio.get_event_loop()
+    loop.call_later(args.interval, inference, net, cap, args.threshold, loop)
+    loop.run_forever()
+    # loop.close()
 
-            frame = np.asarray(frame)
-            prediction = detector(frame)
-            frame = detector.draw(frame, prediction)
 
-            cv2.imshow("img", frame)
+def inference(net: Model, cap: cv2.VideoCapture, threshold: float, loop=None):
+    loop = loop or asyncio.get_event_loop()
+    ret, frame = cap.read()
+    assert ret, f"Can't get image from {cap}"  # TODO capのf-string内での表示
 
-            key = cv2.waitKey(1)
-            if key == 27:
-                break
-            pbar.update(1)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    output = net(frame)
+    output = select_top_prediction(output, threshold)
+    loop.stop()
 
-        cap.release()
-        cv2.destroyAllWindows()
+
+def select_top_prediction(prediction: Dict[str, np.ndarray], threshold: float) -> Dict[str, np.ndarray]:
+    assert 0 <= threshold <= 1, "Specify 0 to 1 for threshold."
+    keep = np.argsort(-prediction["conf"])[:(prediction["conf"] >= threshold).sum()]
+    prediction = {key: value[keep] for key, value in prediction.items()}
+    return prediction
 
 
 if __name__ == "__main__":
+    print("start")
     main()

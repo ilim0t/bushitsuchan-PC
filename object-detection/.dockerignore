@@ -1,0 +1,5 @@
+openvino
+src/node_modules
+src/.venv
+src/.cache
+src/models
