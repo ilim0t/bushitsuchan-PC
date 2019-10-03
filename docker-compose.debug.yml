@@ -134,6 +134,7 @@ services:
       - ./object-detection/src:/app
       - /dev:/dev
     ports:
+      - 3005:5000
       - 5678:5678
     depends_on:
       - streamer
