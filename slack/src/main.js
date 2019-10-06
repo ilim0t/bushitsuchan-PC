@@ -4,12 +4,12 @@ const { createMessageAdapter } = require('@slack/interactive-messages');
 const crypto = require('crypto');
 const fs = require('fs');
 const object = require('json-templater/object');
-const Redis = require('ioredis');
 const base64url = require('base64-url');
 const helmet = require('helmet');
 const cors = require('cors');
 const axios = require('axios');
 const morgan = require('morgan');
+const { objectsNotification } = require('./object_detection');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -37,9 +37,6 @@ const slackInteractions = createMessageAdapter(
   process.env.SLACK_SIGNING_SECRET,
 );
 
-const redis = new Redis({
-  host: 'redis',
-});
 
 app.use(morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
   skip: (req, res) => ['/hls/', '/photo/'].some((element) => req.path.startsWith(element)),
@@ -123,3 +120,4 @@ app.get('/photo/:photoId', async (req, res) => {
 });
 
 app.listen(80, () => console.log('Express app listening on port 80.'));
+setInterval(() => objectsNotification(web), Number(process.env.NOTIFICATION_INTERVAL) * 1000);

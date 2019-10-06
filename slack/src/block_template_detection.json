@@ -1,0 +1,54 @@
+[
+  {
+    "type": "image",
+    "title": {
+      "type": "plain_text",
+      "text": "[定期]部室スキャン"
+    },
+    "image_url": "{{image_url}}",
+    "alt_text": "部室の物体検出結果"
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "{{text}}"
+    }
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "{{time}}"
+    }
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "context",
+    "elements": [
+      {
+        "type": "mrkdwn",
+        "text": "📷 View photo with `/bushitsu-photo`"
+      }
+    ]
+  },
+  {
+    "type": "context",
+    "elements": [
+      {
+        "type": "mrkdwn",
+        "text": "<{{viewer_url}}|WEB-配信動画版>"
+      },
+      {
+        "type": "mrkdwn",
+        "text": "<{{photo_viewer_url}}|WEB-画像版>"
+      },
+      {
+        "type": "mrkdwn",
+        "text": "*問い合せ*: <#{{contact_channel}}>"
+      }
+    ]
+  }
+]
