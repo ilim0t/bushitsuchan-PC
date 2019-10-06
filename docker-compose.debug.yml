@@ -129,6 +129,8 @@ services:
       - STREAM_NAME=bushitsuchan
       - INFERENCE_INTERVAL_SEC=60
       - DEVICE=CPU
+      - CPU_EXTENSION=/opt/intel/openvino/inference_engine/lib/intel64/libcpu_extension_avx2.so
+      - FLASK_ENV=development
     privileged: true
     volumes:
       - ./object-detection/src:/app
