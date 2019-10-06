@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import io
+import json
 import os
 from typing import Dict
 
@@ -16,13 +17,17 @@ app.logger.info("Loading network")
 net = FasterRCNNResnet101Coco(os.getenv("DEVICE", "CPU"), os.getenv("CPU_EXTENSION"))
 app.logger.info("Network loading finished")
 
+with open("labels.json") as f:
+    label_names = json.load(f)
+
 
 @app.route('/faster_rcnn_resnet101_coco')
 def object_detection():
-    url = request.json.get("url")
-    threshold = request.json.get("threshold", os.getenv("THRESHOLD", 0.7))
-    image = requests.get(url)
+    photo_id = request.args.get("photo_id")
+    threshold = request.args.get("threshold", os.getenv("THRESHOLD", 0.7))
 
+    url = f"http://media/photo/{photo_id}"
+    image = requests.get(url)
     image = Image.open(io.BytesIO(image.content)).convert('RGB')
     image = np.asarray(image)
 
@@ -30,8 +35,9 @@ def object_detection():
     output = select_top_prediction(output, threshold)
     return jsonify({
         "bbox": (output["bbox"].reshape(-1, 2, 2) * np.array(image.shape[:2])).reshape(-1, 4).astype(int).tolist(),
-        "conf": output["conf"].tolist(),
-        "label": output["label"].astype(int).tolist()
+        "confidence": output["conf"].tolist(),
+        "label_id": output["label"].astype(int).tolist(),
+        "label_name": [label_names[label] for label in output["label"].astype(int)]
     })
 
 
@@ -43,4 +49,4 @@ def select_top_prediction(prediction: Dict[str, np.ndarray], threshold: float) -
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(port=80)

@@ -94,6 +94,8 @@ services:
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
       - CONTACT_CHANNEL=${CONTACT_CHANNEL}
       - SESSION_SECRET=${SESSION_SECRET}
+      - NOTIFICATION_CHANNEL=${NOTIFICATION_CHANNEL}
+      - NOTIFICATION_INTERVAL=${NOTIFICATION_INTERVAL}
     volumes:
       - ./slack/src:/app
     ports:
@@ -136,7 +138,7 @@ services:
       - ./object-detection/src:/app
       - /dev:/dev
     ports:
-      - 3005:5000
+      - 3005:80
       - 5678:5678
     depends_on:
       - streamer
