@@ -93,7 +93,7 @@ app.post('/bushitsu-photo', async (req, res) => {
 
 
 // Others
-app.get('/photo/:photoId', async (req, res) => {
+app.get(['/photo/:photoId', '/detected-photo/:photoId'], async (req, res) => {
   const { key } = req.query;
   const { photoId } = req.params;
 
@@ -109,7 +109,8 @@ app.get('/photo/:photoId', async (req, res) => {
     return;
   }
 
-  const img = await axios.get(`http://media/photo/${photoId}`, {
+  const server = req.path.startsWith('/photo') ? 'media' : 'object-detection';
+  const img = await axios.get(`http://${server}/photo/${photoId}`, {
     responseType: 'arraybuffer',
     headers: {
       'Content-Type': 'image/jpg',
@@ -120,4 +121,4 @@ app.get('/photo/:photoId', async (req, res) => {
 });
 
 app.listen(80, () => console.log('Express app listening on port 80.'));
-setInterval(() => objectsNotification(web), Number(process.env.NOTIFICATION_INTERVAL) * 1000);
+setInterval(() => objectsNotification(web, Number(process.env.NOTIFICATION_INTERVAL)), Number(process.env.NOTIFICATION_INTERVAL) * 1000);

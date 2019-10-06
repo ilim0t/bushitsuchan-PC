@@ -10,21 +10,26 @@ const redis = new Redis({
   host: 'redis',
   keyPrefix: 'slack:',
 });
+const hostname = 'slack';
 
-module.exports.objectsNotification = async (web) => {
+module.exports.objectsNotification = async (web, retention) => {
   const { photoId } = await axios.post('http://media/photo').then((result) => result.data);
 
   const [awsUrl, objects] = await Promise.all([
     axios.get('http://tunnel').then((result) => result.data.awsUrl),
-    axios.get('http://object-detection/faster_rcnn_resnet101_coco', { params: { photo_id: photoId } }).then((result) => result.data),
+    axios.get('http://object-detection/faster_rcnn_resnet101_coco', { params: { photo_id: photoId, retention } }).then((result) => result.data),
   ]);
 
   const text = objects.label_name.map((value, index) => `- \`${value}\`: ${objects.confidence[index].toFixed(3)}`).join('\n') || '何も検出されませんでした';
+  const key = crypto
+    .createHash('md5')
+    .update(`${photoId}-${process.env.SESSION_SECRET}`, 'utf8')
+    .digest('Base64');
 
   const blocks = object(
     JSON.parse(fs.readFileSync('./block_template_detection.json', 'utf8')),
     {
-      image_url: 'https://4.bp.blogspot.com/-ZHlXgooA38A/Wn1WVe2XBhI/AAAAAAABKJY/5BE6ZAbyeRwv3UlGsVU2YfPWVS_uT0PFQCLcBGAs/s800/text_kakko_kari.png',
+      image_url: `${awsUrl}/${hostname}/detected-photo/${photoId}?key=${base64url.escape(key)}`,
       text,
       time: new Date().toLocaleString(),
       viewer_url: `${awsUrl}/viewer`,
@@ -47,7 +52,6 @@ module.exports.objectsNotification = async (web) => {
     const result = await web.chat.postMessage({
       channel: process.env.NOTIFICATION_CHANNEL,
       text: '[定期]部室スキャン',
-      ts,
       icon_emoji: ':slack:',
       blocks,
     });
