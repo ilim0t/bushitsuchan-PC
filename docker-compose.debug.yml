@@ -94,6 +94,8 @@ services:
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
       - CONTACT_CHANNEL=${CONTACT_CHANNEL}
       - SESSION_SECRET=${SESSION_SECRET}
+      - NOTIFICATION_CHANNEL=${NOTIFICATION_CHANNEL}
+      - NOTIFICATION_INTERVAL=${NOTIFICATION_INTERVAL}
     volumes:
       - ./slack/src:/app
     ports:
@@ -127,13 +129,15 @@ services:
     environment:
       - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
       - STREAM_NAME=bushitsuchan
-      - INFERENCE_INTERVAL_SEC=60
       - DEVICE=CPU
+      - CPU_EXTENSION=/opt/intel/openvino/inference_engine/lib/intel64/libcpu_extension_avx2.so
+      - FLASK_ENV=development
     privileged: true
     volumes:
       - ./object-detection/src:/app
       - /dev:/dev
     ports:
+      - 3005:80
       - 5678:5678
     depends_on:
       - streamer

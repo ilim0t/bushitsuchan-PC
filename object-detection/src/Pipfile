@@ -19,13 +19,15 @@ tensorflow = ">=1.2.0,<2.0.0"
 defusedxml = ">=0.5.0"
 test-generator = "==0.1.1"
 opencv-python = "~=4.1.1.26"
-
+flask = "~=1.1.1"
+pillow = "~=6.2.0"
+matplotlib = "~=3.1.1"
 
 [requires]
 python_version = "3.7"
 
 [scripts]
-start = "bash -c 'source /opt/intel/openvino/bin/setupvars.sh && python main.py'"
-dev = "bash -c 'source /opt/intel/openvino/bin/setupvars.sh && python -m ptvsd --host 0.0.0.0 --port 5678 --wait main.py'"
+start = "bash -c 'source /opt/intel/openvino/bin/setupvars.sh && flask run --host=0.0.0.0 --port 80'"
+dev = "bash -c 'source /opt/intel/openvino/bin/setupvars.sh && python -m ptvsd --host 0.0.0.0 -m flask run --host=0.0.0.0 --port 80 --no-reload --no-debugger'"
 lint = "bash -c 'mypy . --ignore-missing-imports && flake8 --show-source --exclude .venv --max-line-length 120 .'"
 format = "bash -c 'isort -rc . && autopep8 --max-line-length 120 -ivr .'"

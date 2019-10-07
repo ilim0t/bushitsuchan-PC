@@ -93,6 +93,8 @@ services:
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
       - CONTACT_CHANNEL=${CONTACT_CHANNEL}
       - SESSION_SECRET=${SESSION_SECRET}
+      - NOTIFICATION_CHANNEL=${NOTIFICATION_CHANNEL}
+      - NOTIFICATION_INTERVAL=${NOTIFICATION_INTERVAL}
     volumes:
       - ./slack/src:/app
       - /etc/localtime:/etc/localtime:ro
@@ -121,10 +123,7 @@ services:
     environment:
       - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
       - STREAM_NAME=bushitsuchan
-      - INFERENCE_INTERVAL_SEC=60
       - DEVICE=MYRIAD
-      - MODEL_FILE=classification/alexnet.xml
-      - WEIGHTS_FILE=classification/alexnet.bin
     privileged: true
     volumes:
       - ./object-detection/src:/app

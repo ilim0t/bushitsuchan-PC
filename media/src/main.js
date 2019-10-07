@@ -9,7 +9,7 @@ const morgan = require('morgan');
 const app = express();
 app.use(helmet());
 app.use(morgan('short'));
-const hlsDir = '/dev/shm';
+const hlsDir = '/dev/shm/hls';
 
 const redis = new Redis({
   host: 'redis',

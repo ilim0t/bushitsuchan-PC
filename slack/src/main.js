@@ -4,12 +4,12 @@ const { createMessageAdapter } = require('@slack/interactive-messages');
 const crypto = require('crypto');
 const fs = require('fs');
 const object = require('json-templater/object');
-const Redis = require('ioredis');
 const base64url = require('base64-url');
 const helmet = require('helmet');
 const cors = require('cors');
 const axios = require('axios');
 const morgan = require('morgan');
+const { objectsNotification } = require('./object_detection');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -37,9 +37,6 @@ const slackInteractions = createMessageAdapter(
   process.env.SLACK_SIGNING_SECRET,
 );
 
-const redis = new Redis({
-  host: 'redis',
-});
 
 app.use(morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
   skip: (req, res) => ['/hls/', '/photo/'].some((element) => req.path.startsWith(element)),
@@ -96,7 +93,7 @@ app.post('/bushitsu-photo', async (req, res) => {
 
 
 // Others
-app.get('/photo/:photoId', async (req, res) => {
+app.get(['/photo/:photoId', '/detected-photo/:photoId'], async (req, res) => {
   const { key } = req.query;
   const { photoId } = req.params;
 
@@ -112,7 +109,8 @@ app.get('/photo/:photoId', async (req, res) => {
     return;
   }
 
-  const img = await axios.get(`http://media/photo/${photoId}`, {
+  const server = req.path.startsWith('/photo') ? 'media' : 'object-detection';
+  const img = await axios.get(`http://${server}/photo/${photoId}`, {
     responseType: 'arraybuffer',
     headers: {
       'Content-Type': 'image/jpg',
@@ -123,3 +121,4 @@ app.get('/photo/:photoId', async (req, res) => {
 });
 
 app.listen(80, () => console.log('Express app listening on port 80.'));
+setInterval(() => objectsNotification(web, Number(process.env.NOTIFICATION_INTERVAL)), Number(process.env.NOTIFICATION_INTERVAL) * 1000);
