@@ -47,7 +47,7 @@ def overlay_class_names(image: np.ndarray, prediction: Dict[str, np.ndarray]) ->
         image = cv2.putText(
             image, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 3
         )
-        image =  cv2.putText(
+        image = cv2.putText(
             image, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2
         )
     return image

@@ -15,7 +15,7 @@ class Model:
                  device: str = "CPU", cpu_extension: str = None) -> None:
         self.device = device
         self.ie = IECore()
-        assert self.device in self.ie.available_devices, f"Cannot find the specified device: {self.device}."
+        assert self.device in self.ie.available_devices, f"Cannot find the specified device: {self.device}. Please choose from available_devices: {self.ie.available_devices}"
 
         self.network = self.get_network(model_file, weights_file, cpu_extension)
 
@@ -56,7 +56,7 @@ class Model:
 
 class PreparedModel(Model):
     model_name: str
-    file: str
+    precisions = "FP16"
 
     def __init__(self, *args, **kwargs) -> None:
         with open("/opt/intel/openvino/deployment_tools/tools/model_downloader/list_topologies.yml") as f:
@@ -66,9 +66,9 @@ class PreparedModel(Model):
         assert self.model_name in topologies, \
             f"{self.model_name} is not found in model zoo.\nPlease specify from the following.\n{topologies.keys()}"
 
-        output = topologies[self.model_name]["output"] + self.file
-        model_file = Path("models") / f"{output}.xml"
-        weights_file = Path("models") / f"{output}.bin"
+        output = Path("models") / topologies[self.model_name]["output"] / self.precisions
+        model_file = output / f"{self.model_name}.xml"
+        weights_file = output / f"{self.model_name}.bin"
 
         if not all(file.exists() for file in [model_file, weights_file]):
             subprocess.call(["sh", "./get_model.sh", self.model_name])  # TODO check
@@ -77,11 +77,8 @@ class PreparedModel(Model):
 
 
 class FasterRCNNResnet101Coco(PreparedModel):
-    def __init__(self, *args, **kwargs) -> None:
-        self.model_name = "faster_rcnn_resnet101_coco"
-        self.file = "FP32/faster_rcnn_resnet101_coco"
-
-        super(FasterRCNNResnet101Coco, self).__init__(*args, **kwargs)
+    model_name = "faster_rcnn_resnet101_coco"
+    precisions = "FP32"
 
     def __call__(self, frame: np.ndarray) -> Dict[str, np.ndarray]:
         images = np.expand_dims(self.transform(frame), 0)
