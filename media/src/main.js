@@ -16,6 +16,11 @@ const redis = new Redis({
   keyPrefix: 'media:',
 });
 
+
+if (!fs.existsSync(hlsDir)) {
+  fs.mkdirSync(hlsDir);
+}
+
 ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
   .inputOptions('-stream_loop -1')
   .addOption('-hls_flags', '+delete_segments')
