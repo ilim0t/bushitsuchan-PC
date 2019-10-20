@@ -1,4 +1,4 @@
-const { WebClient } = require('@slack/web-api');
+const { RTMClient } = require('@slack/rtm-api');
 const axios = require('axios');
 const crypto = require('crypto');
 const object = require('json-templater/object');
@@ -11,6 +11,18 @@ const redis = new Redis({
   keyPrefix: 'slack:',
 });
 const hostname = 'slack';
+
+const rtm = new RTMClient(process.env.SLACK_BOT_ACCESS_TOKEN);
+rtm.start()
+  .then('start rtmp client')
+  .catch(console.error);
+
+rtm.on('message', (event) => {
+  if (event.subtype == undefined) {
+    redis.set('age', true);
+  }
+});
+
 
 module.exports.objectsNotification = async (web, retention) => {
   const { photoId } = await axios.post('http://media/photo').then((result) => result.data);
@@ -41,20 +53,30 @@ module.exports.objectsNotification = async (web, retention) => {
   const ts = await redis.get('previous_ts');
 
   if (ts) {
-    web.chat.update({
+    if (!await redis.get('age')) {
+      web.chat.update({
+        channel: process.env.NOTIFICATION_CHANNEL,
+        text: '[定期]部室スキャン',
+        ts,
+        icon_emoji: ':slack:',
+        blocks,
+      });
+      return;
+    }
+    web.chat.delete({
       channel: process.env.NOTIFICATION_CHANNEL,
-      text: '[定期]部室スキャン',
       ts,
-      icon_emoji: ':slack:',
-      blocks,
+    }).catch((e) => {
+      console.error(e);
+      redis.del('previous_ts');
     });
-  } else {
-    const result = await web.chat.postMessage({
-      channel: process.env.NOTIFICATION_CHANNEL,
-      text: '[定期]部室スキャン',
-      icon_emoji: ':slack:',
-      blocks,
-    });
-    redis.set('previous_ts', result.ts);
+    redis.del('age');
   }
+  const result = await web.chat.postMessage({
+    channel: process.env.NOTIFICATION_CHANNEL,
+    text: '[定期]部室スキャン',
+    icon_emoji: ':slack:',
+    blocks,
+  });
+  redis.set('previous_ts', result.ts);
 };
