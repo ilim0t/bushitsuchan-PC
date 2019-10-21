@@ -30,6 +30,31 @@ ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
   })
   .save(`${hlsDir}/output.m3u8`);
 
+app.get('/temporary', async (req, res) => {
+  const ffstream = ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
+    .addOption('-vframes', 1)
+    .on('error', (err) => {
+      console.error('ffmpeg command to convert to image failed:\n', err);
+    })
+    .format('image2')
+    .pipe();
+
+  const image = await new Promise((resolve, reject) => {
+    const buffers = [];
+    ffstream.on('data', (chunk) => {
+      buffers.push(chunk);
+    });
+    ffstream.on('end', () => {
+      resolve(Buffer.concat(buffers));
+    });
+    ffstream.on('error', (e) => {
+      reject(e);
+    });
+  });
+  res.contentType('image/jpg');
+  res.status(200).send(image);
+});
+
 app.post('/photo', (req, res) => {
   const time = Date.now();
   redis.set(`${time}-pending`, true, 'EX', 5);

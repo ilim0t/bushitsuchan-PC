@@ -30,8 +30,7 @@ def object_detection():
     threshold = request.args.get("threshold", os.getenv("THRESHOLD", 0.7))
     retention = float(request.args.get("retention", os.getenv("RETENTION_SEC", 60*60*24)))
 
-    url = f"http://media/photo/{photo_id}"
-    image = requests.get(url)
+    image = requests.get("http://media/temporary")
     image = Image.open(BytesIO(image.content)).convert('RGB')
     image = np.asarray(image)
 

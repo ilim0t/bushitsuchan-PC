@@ -25,11 +25,11 @@ rtm.on('message', (event) => {
 
 
 module.exports.objectsNotification = async (web, retention) => {
-  const { photoId } = await axios.post('http://media/photo').then((result) => result.data);
+  const photoId = Date.now();
 
   const [awsUrl, objects] = await Promise.all([
     axios.get('http://tunnel').then((result) => result.data.awsUrl),
-    axios.get('http://object-detection/faster_rcnn_resnet101_coco', { params: { photo_id: photoId, retention } }).then((result) => result.data),
+    axios.get('http://object-detection/faster_rcnn_resnet101_coco', { params: { retention } }).then((result) => result.data),
   ]);
 
   const text = objects.label_name.map((value, index) => `- \`${value}\`: ${objects.confidence[index].toFixed(3)}`).join('\n') || '何も検出されませんでした';

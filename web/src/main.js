@@ -174,8 +174,7 @@ app.get('/viewer', (req, res) => {
 });
 
 app.get('/photo-viewer', async (req, res) => {
-  const { photoId } = await axios.post('http://media/photo').then((result) => result.data);
-  res.render('photo-viewer.ejs', { photoId });
+  res.render('photo-viewer.ejs', { photoPath: `data/temporary?time=${Date.now()}` });
 });
 
 app.use('/data', proxy(url.parse('http://media/')));
