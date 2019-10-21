@@ -9,26 +9,11 @@ const morgan = require('morgan');
 const app = express();
 app.use(helmet());
 app.use(morgan('short'));
-const hlsDir = '/dev/shm/hls';
 
 const redis = new Redis({
   host: 'redis',
   keyPrefix: 'media:',
 });
-
-
-if (!fs.existsSync(hlsDir)) {
-  fs.mkdirSync(hlsDir);
-}
-
-ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
-  .inputOptions('-stream_loop -1')
-  .addOption('-hls_flags', '+delete_segments')
-  .addOption('-g', 40)
-  .on('error', (err) => {
-    console.error('ffmpeg command to convert to HLS failed or aborted:\n', err);
-  })
-  .save(`${hlsDir}/output.m3u8`);
 
 app.get('/temporary', async (req, res) => {
   const ffstream = ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
@@ -85,6 +70,5 @@ app.get('/photo/:time', async (req, res) => {
     res.sendStatus(404);
   }
 });
-app.use('/hls', express.static(hlsDir));
 
 app.listen(80, () => console.log('Express app listening on port 80.'));

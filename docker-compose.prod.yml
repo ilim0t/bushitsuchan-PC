@@ -21,13 +21,13 @@ services:
       - STREAM_NAME=bushitsuchan
     devices:
       - /dev/video0:/dev/video0
-  media:
-    build: ./media
+  image-storage:
+    build: ./image-storage
     working_dir: /app
     command: ash -c "npm ci && npm start"
     entrypoint: docker-entrypoint.sh
     volumes:
-      - ./media/src:/app
+      - ./image-storage/src:/app
       - ./photo:/photo
       - /etc/localtime:/etc/localtime:ro
     environment:
@@ -36,6 +36,20 @@ services:
     depends_on:
       - streamer
       - redis
+    restart: always
+  hls:
+    build: ./hls
+    working_dir: /app
+    command: ash -c "npm ci && npm start"
+    entrypoint: docker-entrypoint.sh
+    volumes:
+      - ./hls/src:/app
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
+      - STREAM_NAME=bushitsuchan
+    depends_on:
+      - streamer
     restart: always
 
   reverse-proxy:
