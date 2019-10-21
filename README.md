@@ -193,3 +193,7 @@ Forwarding  https://[AWS_REST_API_ID].execute-api.[AWS_REGION].amazonaws.com/pro
 
 すると，初回実行時(過去に Slack で認証をしていなければ) Slack の認証ページへリダイレクトされます。  
 Sign in すると自動的に配信再生ページへ移動します。
+
+## for Developer
+
+[developer](docs/developer.md)を参照してください。
