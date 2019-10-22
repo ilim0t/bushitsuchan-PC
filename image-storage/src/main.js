@@ -36,39 +36,47 @@ app.get('/temporary', async (req, res) => {
       reject(e);
     });
   });
-  res.contentType('image/jpg');
-  res.status(200).send(image);
+  res.type('image/jpg').send(image).end();
 });
 
-app.post('/photo', (req, res) => {
-  const time = Date.now();
-  redis.set(`${time}-pending`, true, 'EX', 5);
+app.get('/permament', async (req, res) => {
+  const { directory } = req.query;
+  if (directory === undefined) {
+    res.sendStatus(400);
+    return;
+  }
+
+  const filename = `${Date.now()}.jpg`;
+  const path = `${directory}/${filename}`;
+  await redis.set(`${path}-pending`, true, 'EX', 5);
+
+  if (!fs.existsSync(`/photo/${directory}`)) {
+    fs.mkdirSync(`/photo/${directory}`);
+  }
+
   ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
-    .addOption('-ss', 0.7)
     .addOption('-vframes', 1)
     .on('end', () => {
-      redis.del(`${time}-pending`);
+      redis.del(`${path}-pending`);
     })
     .on('error', (err) => {
-      redis.del(`${time}-pending`);
+      redis.del(`${path}-pending`);
       console.error('ffmpeg command to convert to image failed:\n', err);
     })
-    .save(`/photo/${time}.jpg`);
-  res.json({ path: `/photo/${time}`, photoId: time });
+    .save(`/photo/${path}`);
+  res.json({ filename });
 });
 
-app.get('/photo/:time', async (req, res) => {
-  const { time } = req.params;
-  const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
-  while (await redis.get(`${time}-pending`)) {
+const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
+
+app.get('/permament/:directory(\\w+)/:file', async (req, res) => {
+  const { directory, file } = req.params;
+  const path = `${directory}/${file}`;
+
+  while (await redis.get(`${path}-pending`)) {
     await wait(100);
   }
-
-  if (fs.existsSync(`/photo/${time}.jpg`)) { // 非推奨
-    res.sendFile(`/photo/${time}.jpg`);
-  } else {
-    res.sendStatus(404);
-  }
+  res.sendFile(`/photo/${path}`);
 });
 
 app.listen(80, () => console.log('Express app listening on port 80.'));

@@ -65,18 +65,18 @@ slackInteractions.action({ type: 'button' }, (payload, respond) => {
 
 // Slash command
 app.post('/bushitsu-photo', async (req, res) => {
-  const { photoId } = await axios.post('http://media/photo').then((result) => result.data);
+  const { filename } = await axios.get('http://image-storage/permament', { params: { directory: 'slack' } }).then((result) => result.data);
   res.status(200).end();
   const key = crypto
     .createHash('md5')
-    .update(`${photoId}-${process.env.SESSION_SECRET}`, 'utf8')
+    .update(`${filename}-${process.env.SESSION_SECRET}`, 'utf8')
     .digest('Base64');
 
   const { awsUrl } = await axios.get('http://tunnel').then((result) => result.data);
   const blocks = object(
     JSON.parse(fs.readFileSync('./block_template.json', 'utf8')),
     {
-      image_url: `${awsUrl}/${req.hostname}/photo/${photoId}?key=${base64url.escape(key)}`,
+      image_url: `${awsUrl}/${req.hostname}/photo/${filename}?key=${base64url.escape(key)}`,
       viewer_url: `${awsUrl}/viewer`,
       photo_viewer_url: `${awsUrl}/photo-viewer`,
       contact_channel: process.env.CONTACT_CHANNEL,
@@ -93,31 +93,28 @@ app.post('/bushitsu-photo', async (req, res) => {
 
 
 // Others
-app.get(['/photo/:photoId', '/detected-photo/:photoId'], async (req, res) => {
+app.get('/photo/:filename', async (req, res) => {
   const { key } = req.query;
-  const { photoId } = req.params;
+  const { filename } = req.params;
 
   if (!key) {
     return;
   }
   const correctKey = crypto
     .createHash('md5')
-    .update(`${photoId}-${process.env.SESSION_SECRET}`, 'utf8')
+    .update(`${filename}-${process.env.SESSION_SECRET}`, 'utf8')
     .digest('Base64');
-
   if (correctKey !== base64url.unescape(key)) {
     return;
   }
 
-  const server = req.path.startsWith('/photo') ? 'media' : 'object-detection';
-  const img = await axios.get(`http://${server}/photo/${photoId}`, {
+  const img = await axios.get(`http://image-storage/permament/slack/${filename}`, {
     responseType: 'arraybuffer',
     headers: {
       'Content-Type': 'image/jpg',
     },
   });
-  res.contentType('image/jpg');
-  res.send(img.data);
+  res.type('image/jpg').send(img.data).end();
 });
 
 app.listen(80, () => console.log('Express app listening on port 80.'));
