@@ -172,7 +172,7 @@ app.get(['/viewer', '/photo-viewer'], (req, res) => {
   res.sendFile(`./views/${req.path.slice(1)}.html`, { root: __dirname });
 });
 
-app.use('/photo', proxy(url.parse('http://media/')));
+app.use('/photo', proxy(url.parse('http://image-storage/temporary')));
 app.use('/hls', proxy(url.parse('http://hls/')));
 
 app.listen(80, () => console.log('Express app listening on port 80.'));
