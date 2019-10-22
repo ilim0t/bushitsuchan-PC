@@ -59,7 +59,6 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors());
-app.set('view engine', 'ejs');
 
 app.use(
   session({
@@ -169,12 +168,8 @@ app.use(['/viewer', '/photo-viewer', '/photo', '/hls'], (req, res, next) => {
   });
 });
 
-app.get('/viewer', (req, res) => {
+app.get(['/viewer', '/photo-viewer'], (req, res) => {
   res.sendFile(`./views/${req.path.slice(1)}.html`, { root: __dirname });
-});
-
-app.get('/photo-viewer', async (req, res) => {
-  res.render('photo-viewer.ejs', { photoPath: `photo/temporary?time=${Date.now()}` });
 });
 
 app.use('/photo', proxy(url.parse('http://media/')));
