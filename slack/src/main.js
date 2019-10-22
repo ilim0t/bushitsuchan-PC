@@ -98,6 +98,7 @@ app.get('/photo/:filename', async (req, res) => {
   const { filename } = req.params;
 
   if (!key) {
+    res.sendStatus(401);
     return;
   }
   const correctKey = crypto
@@ -105,6 +106,7 @@ app.get('/photo/:filename', async (req, res) => {
     .update(`${filename}-${process.env.SESSION_SECRET}`, 'utf8')
     .digest('Base64');
   if (correctKey !== base64url.unescape(key)) {
+    res.sendStatus(403);
     return;
   }
 
