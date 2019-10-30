@@ -4,6 +4,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const Redis = require('ioredis');
 const fs = require('fs');
 const morgan = require('morgan');
+const multer = require('multer');
 
 
 const app = express();
@@ -14,6 +15,12 @@ const redis = new Redis({
   host: 'redis',
   keyPrefix: 'media:',
 });
+
+const upload = multer();
+const imageBuffers = {};
+
+const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
+
 
 app.get('/temporary', async (req, res) => {
   const ffstream = ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
@@ -38,6 +45,34 @@ app.get('/temporary', async (req, res) => {
   });
   res.type('image/jpg').send(image).end();
 });
+
+
+app.post('/temporary', upload.single('file'), (req, res) => {
+    const retentionTime = Number(req.body.retention_time);
+    const { buffer, mimetype } = req.file;
+    if (retentionTime === undefined || buffer === undefined || !(retentionTime > 0)) {
+      res.sendStatus(400);
+      return;
+    }
+    const id = Date.now();
+    imageBuffers[id] = {
+      mimetype,
+      buffer,
+    };
+    wait(retentionTime).then(() => { delete imageBuffers[id]; });
+    res.status(201).json({ id });
+  });
+  
+  
+  app.get('/temporary/:id', (req, res) => {
+    const { id } = req.params;
+    if (!(id in imageBuffers)) {
+      res.sendStatus(404);
+      return;
+    }
+    const { mimetype, buffer } = imageBuffers[id];
+    res.contentType(mimetype).end(buffer);
+  });
 
 app.get('/permament', async (req, res) => {
   const { directory } = req.query;
@@ -66,8 +101,6 @@ app.get('/permament', async (req, res) => {
     .save(`/photo/${path}`);
   res.json({ filename });
 });
-
-const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
 
 app.get('/permament/:directory(\\w+)/:file', async (req, res) => {
   const { directory, file } = req.params;
