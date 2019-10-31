@@ -34,7 +34,7 @@ RUN cd /tmp/ && \
     make -j${NUM_THREADS} && make install && \
     rm -rf /tmp/*
 
-RUN echo '/opt/intel/openvino/bin/setupvars.sh' >> ~/.bashrc
+RUN echo 'source /opt/intel/openvino/bin/setupvars.sh' >> ~/.bashrc
 
 RUN apt-get install -yq --no-install-recommends python3.7 libpython3.7-dev python3-pip && \
     pip3 install pipenv
