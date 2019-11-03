@@ -8,6 +8,7 @@ services:
       - ./streaming-server/src:/app
     ports:
       - 1935:1935
+    restart: always
   streamer:
     build: ./streamer
     volumes:
@@ -21,6 +22,7 @@ services:
       - STREAM_NAME=bushitsuchan
     devices:
       - /dev/video0:/dev/video0
+    restart: always
   image-storage:
     build: ./image-storage
     working_dir: /app
@@ -98,6 +100,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     depends_on:
       - redis
+    restart: always
   slack:
     image: node:alpine
     working_dir: /app
@@ -112,6 +115,7 @@ services:
     volumes:
       - ./slack/src:/app
       - /etc/localtime:/etc/localtime:ro
+    restart: always
   endpoint:
     image: node:alpine
     working_dir: /app
@@ -128,6 +132,7 @@ services:
     # command: redis-server --appendonly yes --requirepass foobared
     volumes:
       - ./redis:/data
+    restart: always
 
   object-detection:
     build:
@@ -145,3 +150,4 @@ services:
     depends_on:
       - streamer
       - image-storage
+    restart: always
