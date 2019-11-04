@@ -4,7 +4,7 @@ ARG NUM_THREADS=1
 ENV LANG C.UTF-8
 
 # https://docs.openvinotoolkit.org/latest/_docs_install_guides_installing_openvino_docker_linux.html#building-for-cpu
-ARG DOWNLOAD_LINK=http://registrationcenter-download.intel.com/akdlm/irc_nas/15693/l_openvino_toolkit_p_2019.2.242_online.tgz
+ARG DOWNLOAD_LINK=http://registrationcenter-download.intel.com/akdlm/irc_nas/16057/l_openvino_toolkit_p_2019.3.376_online.tgz
 ARG INSTALL_DIR=/opt/intel/openvino
 ARG TEMP_DIR=/tmp/openvino_installer
 
@@ -26,7 +26,7 @@ RUN $INSTALL_DIR/install_dependencies/install_openvino_dependencies.sh && \
 
 # https://docs.openvinotoolkit.org/latest/_docs_install_guides_installing_openvino_docker_linux.html#run_the_docker_image_for_intel_movidius_neural_compute_stick_and_intel_neural_compute_stick_2
 RUN cd /tmp/ && \
-    apt-get install -yq --no-install-recommends unzip && \
+    apt-get install -yq --no-install-recommends unzip dh-autoreconf && \
     wget https://github.com/libusb/libusb/archive/v1.0.22.zip && \
     unzip v1.0.22.zip && cd libusb-1.0.22 && \
     ./bootstrap.sh && \
@@ -34,7 +34,7 @@ RUN cd /tmp/ && \
     make -j${NUM_THREADS} && make install && \
     rm -rf /tmp/*
 
-RUN echo '/opt/intel/openvino/bin/setupvars.sh' >> ~/.bashrc
+RUN echo 'source /opt/intel/openvino/bin/setupvars.sh' >> ~/.bashrc
 
 RUN apt-get install -yq --no-install-recommends python3.7 libpython3.7-dev python3-pip && \
     pip3 install pipenv

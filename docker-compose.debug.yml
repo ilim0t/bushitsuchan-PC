@@ -19,13 +19,13 @@ services:
     environment:
       - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
       - STREAM_NAME=bushitsuchan
-  media:
-    build: ./media
+  image-storage:
+    build: ./image-storage
     working_dir: /app
     command: npm run dev
     entrypoint: docker-entrypoint.sh
     volumes:
-      - ./media/src:/app
+      - ./image-storage/src:/app
       - ./photo:/photo
     ports:
       - 3000:80
@@ -36,6 +36,21 @@ services:
     depends_on:
       - streamer
       - redis
+  hls:
+    build: ./hls
+    working_dir: /app
+    command: npm run dev
+    entrypoint: docker-entrypoint.sh
+    volumes:
+      - ./hls/src:/app
+    ports:
+      - 3006:80
+      - 4006:9229
+    environment:
+      - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
+      - STREAM_NAME=bushitsuchan
+    depends_on:
+      - streamer
 
   reverse-proxy:
     image: nginx:alpine
@@ -141,3 +156,4 @@ services:
       - 5678:5678
     depends_on:
       - streamer
+      - image-storage

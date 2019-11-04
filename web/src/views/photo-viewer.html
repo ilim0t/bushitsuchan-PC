@@ -12,6 +12,9 @@
       </button>
       <a href="viewer">動画版</a> 
     </div>
-    <img id="image" src="data/photo/<%= photoId %>"></video>
+    <img id="image"></video>
+    <script>
+      document.getElementById("image").src = `photo?time=${Date.now()}`;
+    </script>
   </body>
 </html>

@@ -7,13 +7,21 @@ services:
     volumes:
       - ../streaming-server/src:/app
 
-  media:
-    build: ../media
+  image-storage:
+    build: ../image-storage
     working_dir: /app
     command: ash -c "npm install && npm audit fix"
     entrypoint: docker-entrypoint.sh
     volumes:
-      - ../media/src:/app
+      - ../image-storage/src:/app
+
+  hls:
+    build: ../hls
+    working_dir: /app
+    command: ash -c "npm install && npm audit fix"
+    entrypoint: docker-entrypoint.sh
+    volumes:
+      - ../hls/src:/app
 
   tunnel:
     build: ../tunnel
