@@ -18,9 +18,8 @@ requests = "~=2.22.0"
 
 # Required by /opt/intel/openvino/deployment_tools/model_optimizer
 tensorflow = ">=1.2.0,<2.0.0,!=1.15.0"
-networkx = ">=1.11"
+networkx = ">=1.11,<2.4"
 numpy = ">=1.12.0"
-test-generator = "==0.1.1"
 defusedxml = ">=0.5.0"
 
 opencv-python = "~=4.1.1.26"

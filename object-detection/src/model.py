@@ -59,14 +59,14 @@ class PreparedModel(Model):
     precisions = "FP16"
 
     def __init__(self, *args, **kwargs) -> None:
-        with open("/opt/intel/openvino/deployment_tools/tools/model_downloader/list_topologies.yml") as f:
-            topologies = yaml.load(f, Loader=yaml.SafeLoader)
-        topologies = {topologie["name"]: topologie for topologie in topologies["topologies"]}
+        model_root = Path("/opt/intel/openvino/deployment_tools/open_model_zoo/models")
+        topologies = {path.parent.name: path for path in model_root.glob("**/model.yml")}
 
         assert self.model_name in topologies, \
             f"{self.model_name} is not found in model zoo.\nPlease specify from the following.\n{topologies.keys()}"
 
-        output = Path("models") / topologies[self.model_name]["output"] / self.precisions
+        topology = topologies[self.model_name]
+        output = Path("models") / topology.parent.relative_to(model_root) / self.precisions
         model_file = output / f"{self.model_name}.xml"
         weights_file = output / f"{self.model_name}.bin"
 
@@ -78,7 +78,6 @@ class PreparedModel(Model):
 
 class FasterRCNNResnet101Coco(PreparedModel):
     model_name = "faster_rcnn_resnet101_coco"
-    precisions = "FP32"
 
     def __call__(self, frame: np.ndarray) -> Dict[str, np.ndarray]:
         images = np.expand_dims(self.transform(frame), 0)

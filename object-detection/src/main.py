@@ -27,10 +27,9 @@ def main() -> None:
 
 def convert_image_buffer(image: np.ndarray) -> bytes:
     image = Image.fromarray(image)
-    byte_io = BytesIO()
-    image.save(byte_io, format="JPEG")
-    buffer = byte_io.getvalue()
-    byte_io.close()
+    with BytesIO() as byte_io:
+        image.save(byte_io, format="JPEG")
+        buffer = byte_io.getvalue()
     return buffer
 
 
