@@ -27,9 +27,7 @@ rtm.on('message', (event) => {
 });
 
 
-const objectsNotification = async (prediction) => {
-  const { awsUrl } = await axios.get('http://tunnel').then((result) => result.data);
-
+const objectsNotification = async (prediction, awsUrl) => {
   const text = prediction.label_name.map((value, index) => `- \`${value}\`: ${prediction.confidence[index].toFixed(3)}`).join('\n') || '何も検出されませんでした';
   const key = crypto
     .createHash('md5')
@@ -86,9 +84,10 @@ module.exports = (path = '/socket.io') => {
     serveClient: false,
   });
 
-  io.on('connection', (socket) => {
+  io.on('connection', async (socket) => {
+    const { awsUrl } = await axios.get('http://tunnel').then((result) => result.data);
     socket.on('prediction', (prediction) => {
-      objectsNotification(prediction);
+      objectsNotification(prediction, awsUrl);
     });
   });
 
