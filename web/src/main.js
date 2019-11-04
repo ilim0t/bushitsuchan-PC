@@ -75,10 +75,10 @@ app.use(
 
 app.use(
   morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
-    skip: (req, res) => ['/photo/', '/hls/'].some((element) => req.path.startsWith(element)),
+    skip: (req) => ['/photo/', '/hls/'].some((element) => req.path.startsWith(element)),
   }),
 );
-morgan.token('user', (req, res) => (req.session && req.session.name) || 'anonymous');
+morgan.token('user', (req) => (req.session && req.session.name) || 'anonymous');
 
 app.get('/', (req, res) => {
   res.send('Hello Bushitsuchan!');

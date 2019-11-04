@@ -79,6 +79,7 @@ const objectsNotification = async (prediction, awsUrl) => {
 
 
 module.exports = (path = '/socket.io') => {
+  // eslint-disable-next-line global-require
   const io = require('socket.io')({
     path,
     serveClient: false,

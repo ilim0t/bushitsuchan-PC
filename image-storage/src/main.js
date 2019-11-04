@@ -106,7 +106,9 @@ app.get('/permanent/:directory(\\w+)/:file', async (req, res) => {
   const { directory, file } = req.params;
   const path = `${directory}/${file}`;
 
+  // eslint-disable-next-line no-await-in-loop
   while (await redis.get(`${path}-pending`)) {
+    // eslint-disable-next-line no-await-in-loop
     await wait(100);
   }
   res.sendFile(`/photo/${path}`);

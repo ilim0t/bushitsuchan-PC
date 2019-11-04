@@ -25,7 +25,7 @@ app.use(/^(?!\/actions).*/, express.urlencoded({ extended: true }));
 app.use(/^(?!\/actions).*/, express.json());
 app.use('/actions', express.urlencoded({
   extended: true,
-  verify: (req, res, buf, encoding) => {
+  verify: (req, res, buf) => {
     req.rawBody = buf;
   },
 }));
@@ -44,9 +44,9 @@ const slackInteractions = createMessageAdapter(
 
 
 app.use(morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
-  skip: (req, res) => ['/hls/', '/photo/', '/detected-photo/'].some((element) => req.path.startsWith(element)),
+  skip: (req) => ['/hls/', '/photo/', '/detected-photo/'].some((element) => req.path.startsWith(element)),
 }));
-morgan.token('user', (req, res) => {
+morgan.token('user', (req) => {
   if (req.body.payload !== undefined) {
     return req.body.payload.user.username;
   }
@@ -56,7 +56,7 @@ morgan.token('user', (req, res) => {
 
 // slackInteractions
 app.use('/actions', slackInteractions.expressMiddleware());
-slackInteractions.action({ type: 'button' }, (payload, respond) => {
+slackInteractions.action({ type: 'button' }, (payload) => {
   const { actions, message, channel } = payload;
   const { ts } = message;
 
