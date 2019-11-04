@@ -3,7 +3,7 @@ services:
   streaming-server:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm ci && npm start"
+    command: ash -c "npm ci --production --no-progress && npm start"
     volumes:
       - ./streaming-server/src:/app
     ports:
@@ -26,7 +26,7 @@ services:
   image-storage:
     build: ./image-storage
     working_dir: /app
-    command: ash -c "npm ci && npm start"
+    command: ash -c "npm ci --production --no-progress && npm start"
     entrypoint: docker-entrypoint.sh
     volumes:
       - ./image-storage/src:/app
@@ -42,7 +42,7 @@ services:
   hls:
     build: ./hls
     working_dir: /app
-    command: ash -c "npm ci && npm start"
+    command: ash -c "npm ci --production --no-progress && npm start"
     entrypoint: docker-entrypoint.sh
     volumes:
       - ./hls/src:/app
@@ -67,7 +67,7 @@ services:
   tunnel:
     build: ./tunnel
     working_dir: /app
-    command: ash -c "npm ci && npm start"
+    command: ash -c "npm ci --production --no-progress && npm start"
     volumes:
       - ./tunnel/src:/app
     environment:
@@ -89,7 +89,7 @@ services:
   web:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm ci && npm start"
+    command: ash -c "npm ci --production --no-progress && npm start"
     environment:
       - SESSION_SECRET=${SESSION_SECRET}
       - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
@@ -104,7 +104,7 @@ services:
   slack:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm ci && npm start"
+    command: ash -c "npm ci --production --no-progress && npm start"
     environment:
       - SLACK_BOT_ACCESS_TOKEN=${SLACK_BOT_ACCESS_TOKEN}
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
