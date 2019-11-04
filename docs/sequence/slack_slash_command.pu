@@ -1,7 +1,7 @@
 @startuml Slack_slash_command
 box docker #LightBlue
 participant "streaming-server"
-participant media
+participant "image-storage"
 participant slack
 end box
 
@@ -14,14 +14,14 @@ Slack -> slack : POST
 slack --> Slack : Response
 Slack --> Client : 転送
 
-slack -> media: 画像変換要求
-media --> slack: 画像IDをResponse
+slack -> "image-storage": 画像変換要求
+"image-storage" --> slack: 画像IDをResponse
 slack ->Slack: 投稿
 Slack --> slack: OK
 
-media -> "streaming-server": ストリーミング受信要求
-"streaming-server" --> media: Response
-media -> media: 写真保存
+"image-storage" -> "streaming-server": ストリーミング受信要求
+"streaming-server" --> "image-storage": Response
+"image-storage" -> "image-storage": 写真保存
 
 == 表示タイミング ==
 
@@ -30,8 +30,8 @@ Slack --> Client: Response
 
 == 画像表示タイミング ==
 Client -> slack: GET
-slack -> media: 画像要求
-media -> media: 画像取得
-media --> slack: Response
+slack -> "image-storage": 画像要求
+"image-storage" -> "image-storage": 画像取得
+"image-storage" --> slack: Response
 slack --> Client: Response
 @enduml
