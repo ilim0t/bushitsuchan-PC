@@ -144,3 +144,4 @@ services:
       - /dev:/dev
     depends_on:
       - streamer
+      - image-storage

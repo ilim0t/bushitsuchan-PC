@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import requests
+import socketio
 from PIL import Image
 
 from draw import LABEL_NAME, draw
@@ -13,6 +14,8 @@ from model import FasterRCNNResnet101Coco, Model
 
 def main() -> None:
     net = FasterRCNNResnet101Coco(os.getenv("DEVICE", "CPU"), os.getenv("CPU_EXTENSION"))
+    sio = socketio.Client()
+    sio.connect('http://slack/socket.io/')
 
     threshold = float(os.getenv("THRESHOLD", 0.7))
     retention_time = float(os.getenv("RETENTION_SEC", 60 * 60 * 24))
@@ -22,7 +25,11 @@ def main() -> None:
 
         res = requests.post("http://image-storage/temporary", {"retention_time": retention_time},
                             files={"file": ("prediction", convert_image_buffer(image), "image/jpeg")})
-        print(f"temporary/{res.json()['id']}")
+
+        prediction["id"] = res.json()['id']
+        prediction["iamge_path"] = f"temporary/{res.json()['id']}"
+
+        sio.emit('prediction', prediction)
 
 
 def convert_image_buffer(image: np.ndarray) -> bytes:
@@ -33,7 +40,7 @@ def convert_image_buffer(image: np.ndarray) -> bytes:
     return buffer
 
 
-def predict(net: Model, threshold: float) -> Tuple[np.ndarray, Dict[str, Union[List[int], List[float], List[str]]]]:
+def predict(net: Model, threshold: float) -> Tuple[np.ndarray, Dict[str, list]]:
     image = fetch_camera_image()
     output = net(image)
     output = select_top_prediction(output, threshold)
