@@ -48,31 +48,31 @@ app.get('/temporary', async (req, res) => {
 
 
 app.post('/temporary', upload.single('file'), (req, res) => {
-    const retentionTime = Number(req.body.retention_time);
-    const { buffer, mimetype } = req.file;
-    if (retentionTime === undefined || buffer === undefined || !(retentionTime > 0)) {
-      res.sendStatus(400);
-      return;
-    }
-    const id = Date.now();
-    imageBuffers[id] = {
-      mimetype,
-      buffer,
-    };
-    wait(retentionTime).then(() => { delete imageBuffers[id]; });
-    res.status(201).json({ id });
-  });
-  
-  
-  app.get('/temporary/:id', (req, res) => {
-    const { id } = req.params;
-    if (!(id in imageBuffers)) {
-      res.sendStatus(404);
-      return;
-    }
-    const { mimetype, buffer } = imageBuffers[id];
-    res.contentType(mimetype).end(buffer);
-  });
+  const retentionTime = Number(req.body.retention_time);
+  const { buffer, mimetype } = req.file;
+  if (retentionTime === undefined || buffer === undefined || !(retentionTime > 0)) {
+    res.sendStatus(400);
+    return;
+  }
+  const id = Date.now();
+  imageBuffers[id] = {
+    mimetype,
+    buffer,
+  };
+  wait(retentionTime).then(() => { delete imageBuffers[id]; });
+  res.status(201).json({ id });
+});
+
+
+app.get('/temporary/:id', (req, res) => {
+  const { id } = req.params;
+  if (!(id in imageBuffers)) {
+    res.sendStatus(404);
+    return;
+  }
+  const { mimetype, buffer } = imageBuffers[id];
+  res.contentType(mimetype).end(buffer);
+});
 
 app.get('/permament', async (req, res) => {
   const { directory } = req.query;
