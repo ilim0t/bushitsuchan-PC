@@ -44,7 +44,7 @@ const slackInteractions = createMessageAdapter(
 
 
 app.use(morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
-  skip: (req, res) => ['/hls/', '/photo/'].some((element) => req.path.startsWith(element)),
+  skip: (req, res) => ['/hls/', '/photo/', '/detected-photo/'].some((element) => req.path.startsWith(element)),
 }));
 morgan.token('user', (req, res) => {
   if (req.body.payload !== undefined) {
