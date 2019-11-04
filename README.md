@@ -13,7 +13,7 @@ bushitsuchan-PC は単一の Ubuntu PC 上で動作します。
 bushitsuchan-PC では[Docker](https://www.docker.com/)というソフトフェアを活用しています。  
 Docker はコンテナ技術を体現したシステムの一つで，独立したサービス単位で環境それぞれを Container という形で OS レベルに分離させることができます。必要最低な構成を独立して扱うため再利用性が高まり，また分離しているため取り回しも良くなります。
 
-各 Container の説明は[ここ](/docs/container.md)に置かれています。
+各 Container の説明は[ここ](docs/container.md)に置かれています。
 
 ### Design
 
@@ -94,7 +94,7 @@ API Gateway を利用するためには AWS アカウントと AWS へアクセ�
 Slack と連携し特定の Workspace に属する場合のみ LIVE Streaming 視聴を許可するように設定します。  
 その際，Slack App という枠組みを利用しています。新たに Slack App を作成し，それに対応するいくつかの ID やキーが必要です。
 
-また，Slash Commands やメッセージへのアクションを受け取るために追加で[slack 追加設定](/docs/slack_appendix.md)に従う必要があります。
+また，Slash Commands やメッセージへのアクションを受け取るために追加で[Slack 追加設定](/docs/slack_appendix.md)に従う必要があります。
 
 #### 設定
 
@@ -166,7 +166,7 @@ Sign in すると自動的に配信再生ページへ移動します。
 
 ## For Developer
 
-[developer](docs/developer.md)に詳細が記されています。
+[ここ](docs/developer.md)に詳細が記されています。
 
 ## Support
 
