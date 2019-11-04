@@ -9,9 +9,14 @@ const helmet = require('helmet');
 const cors = require('cors');
 const axios = require('axios');
 const morgan = require('morgan');
-const { objectsNotification } = require('./object_detection');
+const http = require('http');
+const io = require('./object_detection')();
+
 
 const app = express();
+const server = http.createServer(app);
+io.attach(server);
+
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors());
@@ -93,9 +98,8 @@ app.post('/bushitsu-photo', async (req, res) => {
 
 
 // Others
-app.get('/photo/:filename', async (req, res) => {
+app.get(['/photo/:filename', '/detected-photo/:filename'], async (req, res, next) => {
   const { key } = req.query;
-  const { filename } = req.params;
 
   if (!key) {
     res.sendStatus(401);
@@ -103,21 +107,29 @@ app.get('/photo/:filename', async (req, res) => {
   }
   const correctKey = crypto
     .createHash('md5')
-    .update(`${filename}-${process.env.SESSION_SECRET}`, 'utf8')
+    .update(`${req.params.filename}-${process.env.SESSION_SECRET}`, 'utf8')
     .digest('Base64');
   if (correctKey !== base64url.unescape(key)) {
     res.sendStatus(403);
     return;
   }
+  next();
+});
 
-  const img = await axios.get(`http://image-storage/permament/slack/${filename}`, {
+app.get('/photo/:filename', async (req, res) => {
+  const img = await axios.get(`http://image-storage/permament/slack/${req.params.filename}`, {
     responseType: 'arraybuffer',
-    headers: {
-      'Content-Type': 'image/jpg',
-    },
+    headers: { 'Content-Type': 'image/jpg' },
+  });
+  res.type('image/jpg').send(img.data).end();
+});
+app.get('/detected-photo/:filename', async (req, res) => {
+  const img = await axios.get(`http://image-storage/temporary/${req.params.filename}`, {
+    responseType: 'arraybuffer',
+    headers: { 'Content-Type': 'image/jpg' },
   });
   res.type('image/jpg').send(img.data).end();
 });
 
-app.listen(80, () => console.log('Express app listening on port 80.'));
-setInterval(() => objectsNotification(web, Number(process.env.NOTIFICATION_INTERVAL)), Number(process.env.NOTIFICATION_INTERVAL) * 1000);
+
+server.listen(80, () => console.log('Express app listening on port 80.'));
