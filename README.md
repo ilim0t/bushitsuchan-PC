@@ -34,7 +34,7 @@ bushitsuchan-PC を動作させるための設定を各部分ごとに説明し�
 最終的に`.env`ファイルに以下の様に書き保存してください。
 各変数へと何をセットすれば良いのかはこれから説明します。
 
-```text
+```text=
 AWS_REST_API_ID=j3i...  # 二回目以降に必要
 AWS_ACCESS_KEY_ID=FUB...
 AWS_SECRET_ACCESS_KEY=vKw...
