@@ -2,7 +2,8 @@
 
 box docker #LightBlue
 database redis
-participant media
+participant hls
+participant "image-storage"
 participant web
 end box
 
@@ -21,9 +22,16 @@ alt 認証情報が古い
 	Slack --> web: Response
 end
 
-web -> media: 動画, 写真の取得
-media -> media: 取得
-media --> web: Response
+alt 画像
+	web -> "image-storage": 動画, 写真の取得
+	"image-storage" -> "image-storage": 取得
+	"image-storage" --> web: Response
+else 動画
+	web -> hls: 動画の取得
+	hls -> hls: 取得
+	hls --> web: Response
+end
+
 
 web --> Client : Response
 @enduml

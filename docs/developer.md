@@ -1,4 +1,4 @@
-# bushitsuchan-PC
+# bushitsuchan-PC for developer
 
 Developer 向けの情報を書き置きます。
 
