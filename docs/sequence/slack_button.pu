@@ -1,7 +1,6 @@
 @startuml Slack_button
 box docker #LightBlue
 participant "streaming-server"
-participant media
 participant slack
 end box
 
@@ -14,29 +13,6 @@ Slack -> slack: POST
 slack --> Slack : Response
 Slack --> Client : 転送
 
-alt 画像を含むmessageを投稿する
-	slack -> media: 画像変換要求
-	note right: Clientで保存されていたtokenを利用
-
-    media --> slack: 画像IDをResponse
-
-	media -> "streaming-server": ストリーミング受信要求
-	"streaming-server" --> media: Resoibse
-    media -> media: 写真保存
-end
-
-slack -> Slack: 投稿or削除
+slack -> Slack: 削除
 Slack --> slack: OK
-
-== 表示タイミング ==
-
-Client -> Slack: 表示要求
-Slack --> Client: Response
-
-== 画像表示タイミング ==
-Client -> slack: GET
-slack -> media: 画像要求
-media -> media: 画像取得
-media --> slack: Response
-slack --> Client: Response
 @enduml

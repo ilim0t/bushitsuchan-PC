@@ -1,0 +1,64 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "NodeJS",
+      "program": "${file}"
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to web container",
+      "port": 4002,
+      "address": "localhost",
+      "localRoot": "${workspaceFolder}/web/src",
+      "remoteRoot": "/app",
+      "protocol": "inspector"
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to slack container",
+      "port": 4003,
+      "address": "localhost",
+      "localRoot": "${workspaceFolder}/slack/src",
+      "remoteRoot": "/app",
+      "protocol": "inspector"
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to image-storage container",
+      "port": 4000,
+      "address": "localhost",
+      "localRoot": "${workspaceFolder}/image-storage/src",
+      "remoteRoot": "/app",
+      "protocol": "inspector"
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to hls container",
+      "port": 4006,
+      "address": "localhost",
+      "localRoot": "${workspaceFolder}/hls/src",
+      "remoteRoot": "/app",
+      "protocol": "inspector"
+    },
+    {
+      "name": "Attach to Object detection container",
+      "type": "python",
+      "request": "attach",
+      "port": 5678,
+      "host": "localhost",
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/object-detection/src",
+          "remoteRoot": "/app"
+        }
+      ]
+    }
+  ]
+}

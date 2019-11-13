@@ -3,14 +3,14 @@ services:
   streaming-server:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm ci --no-progress"
+    command: ash -c "npm install --no-progress && npm audit fix"
     volumes:
       - ../streaming-server/src:/app
 
   image-storage:
     build: ../image-storage
     working_dir: /app
-    command: ash -c "npm ci --no-progress"
+    command: ash -c "npm install --no-progress && npm audit fix"
     entrypoint: docker-entrypoint.sh
     volumes:
       - ../image-storage/src:/app
@@ -18,7 +18,7 @@ services:
   hls:
     build: ../hls
     working_dir: /app
-    command: ash -c "npm ci --no-progress"
+    command: ash -c "npm install --no-progress && npm audit fix"
     entrypoint: docker-entrypoint.sh
     volumes:
       - ../hls/src:/app
@@ -26,34 +26,34 @@ services:
   tunnel:
     build: ../tunnel
     working_dir: /app
-    command: ash -c "npm ci --no-progress"
+    command: ash -c "npm install --no-progress && npm audit fix"
     volumes:
       - ../tunnel/src:/app
 
   web:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm ci --no-progress"
+    command: ash -c "npm install --no-progress && npm audit fix"
     volumes:
       - ../web/src:/app
 
   slack:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm ci --no-progress"
+    command: ash -c "npm install --no-progress && npm audit fix"
     volumes:
       - ../slack/src:/app
 
   endpoint:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm ci --no-progress"
+    command: ash -c "npm install --no-progress && npm audit fix"
     volumes:
       - ../endpoint/src:/app
 
   object-detection:
     build: ../object-detection
     working_dir: /app
-    command: bash -c "pipenv sync --dev"
+    command: bash -c "pipenv install --dev && pipenv update"
     volumes:
       - ../object-detection/src:/app

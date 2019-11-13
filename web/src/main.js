@@ -59,7 +59,6 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors());
-app.set('view engine', 'ejs');
 
 app.use(
   session({
@@ -76,7 +75,7 @@ app.use(
 
 app.use(
   morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
-    skip: (req, res) => req.path.startsWith('/data/'),
+    skip: (req, res) => ['/photo/', '/hls/'].some((element) => req.path.startsWith(element)),
   }),
 );
 morgan.token('user', (req, res) => (req.session && req.session.name) || 'anonymous');
@@ -112,14 +111,16 @@ app.get('/oauth-redirect', (req, res) => {
     .then((token) => {
       req.session.token = token;
       req.session.lastAuthedTime = Date.now();
-      authorize(token, process.env.WORKSTATION_ID).then((name) => {
-        req.session.isAuth = true;
-        req.session.name = name;
-        res.redirect(state || 'viewer');
-      }).catch((err) => {
-        console.error('Certification failed:\n', err);
-        res.sendStatus(403);
-      });
+      authorize(token, process.env.WORKSTATION_ID)
+        .then((name) => {
+          req.session.isAuth = true;
+          req.session.name = name;
+          res.redirect(state || 'viewer');
+        })
+        .catch((err) => {
+          console.error('Certification failed:\n', err);
+          res.sendStatus(403);
+        });
     })
     .catch((err) => {
       console.error('Failed to fetch token:\n', err);
@@ -136,14 +137,14 @@ app.get('/logout', (req, res) => {
   res.send('You have successfully logged out');
 });
 
-app.use(['/viewer', '/photo-viewer', '/data'], (req, res, next) => {
+app.use(['/viewer', '/photo-viewer', '/photo', '/hls'], (req, res, next) => {
   if (req.session.lastAuthedTime < Date.now() - 1000 * 60 * 60 * 24) {
     req.session.isAuth = false;
   }
   next();
 });
 
-app.use(['/viewer', '/photo-viewer', '/data'], (req, res, next) => {
+app.use(['/viewer', '/photo-viewer', '/photo', '/hls'], (req, res, next) => {
   const { token } = req.session;
   if (token === undefined) {
     res.redirect(`/prod/login?redirect_path=${req.path.slice(1)}`);
@@ -158,26 +159,24 @@ app.use(['/viewer', '/photo-viewer', '/data'], (req, res, next) => {
     return;
   }
   req.session.lastAuthedTime = Date.now();
-  authorize(token, process.env.WORKSTATION_ID).then((name) => {
-    req.session.isAuth = true;
-    req.session.name = name;
-    req.session.authPendding = false;
-    next();
-  }).catch((err) => {
-    console.error('Certification failed:\n', err);
-    res.sendStatus(403);
-  });
+  authorize(token, process.env.WORKSTATION_ID)
+    .then((name) => {
+      req.session.isAuth = true;
+      req.session.name = name;
+      req.session.authPendding = false;
+      next();
+    })
+    .catch((err) => {
+      console.error('Certification failed:\n', err);
+      res.sendStatus(403);
+    });
 });
 
-app.get('/viewer', (req, res) => {
+app.get(['/viewer', '/photo-viewer'], (req, res) => {
   res.sendFile(`./views/${req.path.slice(1)}.html`, { root: __dirname });
 });
 
-app.get('/photo-viewer', async (req, res) => {
-  const { photoId } = await axios.post('http://media/photo').then((result) => result.data);
-  res.render('photo-viewer.ejs', { photoId });
-});
-
-app.use('/data', proxy(url.parse('http://media/')));
+app.use('/photo', proxy(url.parse('http://image-storage/temporary')));
+app.use('/hls', proxy(url.parse('http://hls/')));
 
 app.listen(80, () => console.log('Express app listening on port 80.'));

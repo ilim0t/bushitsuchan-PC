@@ -4,14 +4,19 @@ const { createMessageAdapter } = require('@slack/interactive-messages');
 const crypto = require('crypto');
 const fs = require('fs');
 const object = require('json-templater/object');
-const Redis = require('ioredis');
 const base64url = require('base64-url');
 const helmet = require('helmet');
 const cors = require('cors');
 const axios = require('axios');
 const morgan = require('morgan');
+const http = require('http');
+const io = require('./object_detection')();
+
 
 const app = express();
+const server = http.createServer(app);
+io.attach(server);
+
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors());
@@ -37,12 +42,9 @@ const slackInteractions = createMessageAdapter(
   process.env.SLACK_SIGNING_SECRET,
 );
 
-const redis = new Redis({
-  host: 'redis',
-});
 
 app.use(morgan('<@:user> [:date[clf]] :method :url :status :res[content-length] - :response-time ms', {
-  skip: (req, res) => ['/hls/', '/photo/'].some((element) => req.path.startsWith(element)),
+  skip: (req, res) => ['/hls/', '/photo/', '/detected-photo/'].some((element) => req.path.startsWith(element)),
 }));
 morgan.token('user', (req, res) => {
   if (req.body.payload !== undefined) {
@@ -68,18 +70,23 @@ slackInteractions.action({ type: 'button' }, (payload, respond) => {
 
 // Slash command
 app.post('/bushitsu-photo', async (req, res) => {
-  const { photoId } = await axios.post('http://media/photo').then((result) => result.data);
+  const { filename } = await axios.get('http://image-storage/permanent', { params: { directory: 'slack' } })
+    .then((result) => result.data)
+    .catch((err) => console.error('Failed to permanent image acquisition request for image-storage.:\n', err));
   res.status(200).end();
   const key = crypto
     .createHash('md5')
-    .update(`${photoId}-${process.env.SESSION_SECRET}`, 'utf8')
+    .update(`${filename}-${process.env.SESSION_SECRET}`, 'utf8')
     .digest('Base64');
 
-  const { awsUrl } = await axios.get('http://tunnel').then((result) => result.data);
+  const { awsUrl } = await axios.get('http://tunnel')
+    .then((result) => result.data)
+    .catch((err) => console.error('Failed to fetch AWS URL from tunnel.:\n', err));
+
   const blocks = object(
     JSON.parse(fs.readFileSync('./block_template.json', 'utf8')),
     {
-      image_url: `${awsUrl}/${req.hostname}/photo/${photoId}?key=${base64url.escape(key)}`,
+      image_url: `${awsUrl}/${req.hostname}/photo/${filename}?key=${base64url.escape(key)}`,
       viewer_url: `${awsUrl}/viewer`,
       photo_viewer_url: `${awsUrl}/photo-viewer`,
       contact_channel: process.env.CONTACT_CHANNEL,
@@ -96,30 +103,43 @@ app.post('/bushitsu-photo', async (req, res) => {
 
 
 // Others
-app.get('/photo/:photoId', async (req, res) => {
+app.get(['/photo/:filename', '/detected-photo/:filename'], async (req, res, next) => {
   const { key } = req.query;
-  const { photoId } = req.params;
 
   if (!key) {
+    res.sendStatus(401);
     return;
   }
   const correctKey = crypto
     .createHash('md5')
-    .update(`${photoId}-${process.env.SESSION_SECRET}`, 'utf8')
+    .update(`${req.params.filename}-${process.env.SESSION_SECRET}`, 'utf8')
     .digest('Base64');
-
   if (correctKey !== base64url.unescape(key)) {
+    res.sendStatus(403);
     return;
   }
-
-  const img = await axios.get(`http://media/photo/${photoId}`, {
-    responseType: 'arraybuffer',
-    headers: {
-      'Content-Type': 'image/jpg',
-    },
-  });
-  res.contentType('image/jpg');
-  res.send(img.data);
+  next();
 });
 
-app.listen(80, () => console.log('Express app listening on port 80.'));
+app.get('/photo/:filename', async (req, res) => {
+  const image = await axios.get(`http://image-storage/permanent/slack/${req.params.filename}`, {
+    responseType: 'arraybuffer',
+    headers: { 'Content-Type': 'image/jpg' },
+  })
+    .then((result) => result.data)
+    .catch((err) => console.error('Failed to get permanent image from image-storage.:\n', err));
+
+  res.type('image/jpg').send(image).end();
+});
+app.get('/detected-photo/:filename', async (req, res) => {
+  const image = await axios.get(`http://image-storage/temporary/${req.params.filename}`, {
+    responseType: 'arraybuffer',
+    headers: { 'Content-Type': 'image/jpg' },
+  })
+    .then((result) => result.data)
+    .catch((err) => console.error('Failed to get temporary image from image-storage.:\n', err));
+  res.type('image/jpg').send(image).end();
+});
+
+
+server.listen(80, () => console.log('Express app listening on port 80.'));

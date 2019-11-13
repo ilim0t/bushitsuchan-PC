@@ -1,0 +1,38 @@
+@startuml Slack_button
+box docker #LightBlue
+participant "streaming-server"
+participant "object-detection"
+participant "image-storage"
+participant slack
+end box
+
+participant Slack
+participant Client
+
+loop
+    "object-detection" -> "image-storage" : 画像を要求
+    "image-storage" -> "streaming-server" : ストリーミング配信要求
+    "streaming-server" --> "image-storage" : ストリーミング配信
+    "image-storage" --> "object-detection" : 画像に変換しResponse
+    "object-detection" -> "object-detection" : 物体検出
+    "object-detection" -> "image-storage": 結果画像のPOST
+    "image-storage" --> "object-detection": OK
+    "object-detection" -> slack : Socket.ioでメッセージ送信
+    slack --> "object-detection" : OK
+    slack -> Slack : メッセージ投稿
+    Slack --> slack : OK
+
+end
+
+== 表示タイミング ==
+
+Client -> Slack: 表示要求
+Slack --> Client: Response
+
+== 画像表示タイミング ==
+Client -> slack: GET
+slack -> "image-storage": 画像要求
+"image-storage" -> "image-storage": 画像取得
+"image-storage" --> slack: Response
+slack --> Client: Response
+@enduml

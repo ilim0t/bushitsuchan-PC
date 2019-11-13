@@ -3,11 +3,12 @@ services:
   streaming-server:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm install && npm start"
+    command: ash -c "npm ci --production --no-progress && npm start"
     volumes:
       - ./streaming-server/src:/app
     ports:
       - 1935:1935
+    restart: always
   streamer:
     build: ./streamer
     volumes:
@@ -21,13 +22,14 @@ services:
       - STREAM_NAME=bushitsuchan
     devices:
       - /dev/video0:/dev/video0
-  media:
-    build: ./media
+    restart: always
+  image-storage:
+    build: ./image-storage
     working_dir: /app
-    command: ash -c "npm install && npm start"
+    command: ash -c "npm ci --production --no-progress && npm start"
     entrypoint: docker-entrypoint.sh
     volumes:
-      - ./media/src:/app
+      - ./image-storage/src:/app
       - ./photo:/photo
       - /etc/localtime:/etc/localtime:ro
     environment:
@@ -36,6 +38,20 @@ services:
     depends_on:
       - streamer
       - redis
+    restart: always
+  hls:
+    build: ./hls
+    working_dir: /app
+    command: ash -c "npm ci --production --no-progress && npm start"
+    entrypoint: docker-entrypoint.sh
+    volumes:
+      - ./hls/src:/app
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
+      - STREAM_NAME=bushitsuchan
+    depends_on:
+      - streamer
     restart: always
 
   reverse-proxy:
@@ -51,7 +67,7 @@ services:
   tunnel:
     build: ./tunnel
     working_dir: /app
-    command: ash -c "npm install && npm start"
+    command: ash -c "npm ci --production --no-progress && npm start"
     volumes:
       - ./tunnel/src:/app
     environment:
@@ -73,7 +89,7 @@ services:
   web:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm install && npm start"
+    command: ash -c "npm ci --production --no-progress && npm start"
     environment:
       - SESSION_SECRET=${SESSION_SECRET}
       - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
@@ -84,18 +100,21 @@ services:
       - /etc/localtime:/etc/localtime:ro
     depends_on:
       - redis
+    restart: always
   slack:
     image: node:alpine
     working_dir: /app
-    command: ash -c "npm install && npm start"
+    command: ash -c "npm ci --production --no-progress && npm start"
     environment:
       - SLACK_BOT_ACCESS_TOKEN=${SLACK_BOT_ACCESS_TOKEN}
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
       - CONTACT_CHANNEL=${CONTACT_CHANNEL}
       - SESSION_SECRET=${SESSION_SECRET}
+      - NOTIFICATION_CHANNEL=${NOTIFICATION_CHANNEL}
     volumes:
       - ./slack/src:/app
       - /etc/localtime:/etc/localtime:ro
+    restart: always
   endpoint:
     image: node:alpine
     working_dir: /app
@@ -112,4 +131,22 @@ services:
     # command: redis-server --appendonly yes --requirepass foobared
     volumes:
       - ./redis:/data
-  # python:
+    restart: always
+
+  object-detection:
+    build:
+      context: ./object-detection
+    working_dir: /app
+    command: bash -c "pipenv sync && pipenv run start"
+    environment:
+      - RTMP_SERVER_URL=rtmp://streaming-server:1935/live
+      - STREAM_NAME=bushitsuchan
+      - DEVICE=MYRIAD
+    privileged: true
+    volumes:
+      - ./object-detection/src:/app
+      - /dev:/dev
+    depends_on:
+      - streamer
+      - image-storage
+    restart: always

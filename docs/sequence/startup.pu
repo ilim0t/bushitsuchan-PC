@@ -1,19 +1,21 @@
 @startuml Startup
 box docker #LightBlue
-participant media
+participant hls
 participant "streaming-server"
 participant streamer
+participant slack
+participant "object-detection"
 participant tunnel
 end box
 
 loop
-	streamer -> "streaming-server": ストリーミング配信
+	streamer -> "streaming-server": 配信
 end
 
 loop
-	media -> "streaming-server" : ストリーミング受信要求
-	"streaming-server" --> media : Respose
-	media -> media : ファイル生成
+	hls -> "streaming-server" : ストリーミング配信要求
+	"streaming-server" --> hls : ストリーミング配信
+	hls -> hls : ファイル生成
 end
 
 tunnel -> ngrok : 設定
@@ -21,4 +23,8 @@ ngrok --> tunnel : OK
 
 tunnel -> AWS : 設定
 AWS --> tunnel : OK
+
+
+ref over "object-detection", slack: 物体検出のSlack投稿
+
 @enduml

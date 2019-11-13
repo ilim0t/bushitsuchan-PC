@@ -1,208 +1,73 @@
 #!/usr/bin/env python3
-import cv2
-import torchvision
+import os
+from io import BytesIO
+from typing import Dict, List, Tuple, Union
+
 import numpy as np
+import requests
+import socketio
+from PIL import Image
 
-import torch
-from typing import Dict, Union
-from matplotlib import cm
-from tqdm import tqdm
-
-COCO_INSTANCE_CATEGORY_NAMES = [
-    "__background__",
-    "person",
-    "bicycle",
-    "car",
-    "motorcycle",
-    "airplane",
-    "bus",
-    "train",
-    "truck",
-    "boat",
-    "traffic light",
-    "fire hydrant",
-    "N/A",
-    "stop sign",
-    "parking meter",
-    "bench",
-    "bird",
-    "cat",
-    "dog",
-    "horse",
-    "sheep",
-    "cow",
-    "elephant",
-    "bear",
-    "zebra",
-    "giraffe",
-    "N/A",
-    "backpack",
-    "umbrella",
-    "N/A",
-    "N/A",
-    "handbag",
-    "tie",
-    "suitcase",
-    "frisbee",
-    "skis",
-    "snowboard",
-    "sports ball",
-    "kite",
-    "baseball bat",
-    "baseball glove",
-    "skateboard",
-    "surfboard",
-    "tennis racket",
-    "bottle",
-    "N/A",
-    "wine glass",
-    "cup",
-    "fork",
-    "knife",
-    "spoon",
-    "bowl",
-    "banana",
-    "apple",
-    "sandwich",
-    "orange",
-    "broccoli",
-    "carrot",
-    "hot dog",
-    "pizza",
-    "donut",
-    "cake",
-    "chair",
-    "couch",
-    "potted plant",
-    "bed",
-    "N/A",
-    "dining table",
-    "N/A",
-    "N/A",
-    "toilet",
-    "N/A",
-    "tv",
-    "laptop",
-    "mouse",
-    "remote",
-    "keyboard",
-    "cell phone",
-    "microwave",
-    "oven",
-    "toaster",
-    "sink",
-    "refrigerator",
-    "N/A",
-    "book",
-    "clock",
-    "vase",
-    "scissors",
-    "teddy bear",
-    "hair drier",
-    "toothbrush",
-]
+from draw import LABEL_NAME, draw
+from model import FasterRCNNResnet101Coco, Model
 
 
-class ObjectDetector:
-    def __init__(self) -> None:
-        self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn(
-            pretrained=True
-        )
-        self.model.eval()
+def main() -> None:
+    net = FasterRCNNResnet101Coco(os.getenv("DEVICE", "CPU"), os.getenv("CPU_EXTENSION"))
+    sio = socketio.Client()
+    sio.connect('http://slack/socket.io/')
 
-        self.color = cm.hsv(
-            np.linspace(0, 1, len(COCO_INSTANCE_CATEGORY_NAMES) - 1)
-        ).tolist()
+    threshold = float(os.getenv("THRESHOLD", 0.7))
+    retention_time = float(os.getenv("RETENTION_SEC", 60 * 60 * 24))
 
-    def __call__(self, img: np.ndarray) -> Dict[str, torch.Tensor]:
-        prediction, = self.model(
-            [torch.from_numpy(img).permute((2, 0, 1)).float() / 255]
-        )
-        prediction = self.select_top_prediction(prediction)
-        return prediction
+    while True:
+        image, prediction = predict(net, threshold)
 
-    def draw(self, img: np.ndarray, prediction: Dict[str, torch.Tensor]) -> np.ndarray:
-        img = self.overlay_boxes(img, prediction)
-        img = self.overlay_class_names(img, prediction)
+        res = requests.post("http://image-storage/temporary", {"retention_time": retention_time},
+                            files={"file": ("prediction", convert_image_buffer(image), "image/jpeg")})
 
-        if isinstance(img, cv2.UMat):
-            img = img.get()
-        return img
+        prediction["id"] = res.json()['id']
+        prediction["iamge_path"] = f"temporary/{res.json()['id']}"
 
-    # https://github.com/facebookresearch/maskrcnn-benchmark/blob/master/demo/predictor.py
-    def select_top_prediction(
-        self, prediction: Dict[str, torch.Tensor], threshold: float = 0.8
-    ) -> Dict[str, torch.Tensor]:
-        scores = prediction["scores"]
-        keep = torch.nonzero(scores > threshold).squeeze(1)
-        prediction = prediction.copy()
-
-        for key, value in prediction.items():
-            prediction[key] = value[keep]
-
-        # scores.sort(0, descending=True)
-        return prediction
-
-    def overlay_boxes(
-        self, image: Union[np.ndarray, cv2.UMat], prediction: Dict[str, torch.Tensor]
-    ) -> Union[np.ndarray, cv2.UMat]:
-        labels = prediction["labels"]
-        boxes = prediction["boxes"]
-
-        colors = [self.color[i - 1] for i in labels]
-
-        for box, color in zip(boxes, colors):
-            box = box.long()
-            top_left, bottom_right = box[:2].tolist(), box[2:].tolist()
-            image = cv2.rectangle(
-                image, tuple(top_left), tuple(bottom_right), tuple(color), 1
-            )
-        return image
-
-    def overlay_class_names(
-        self, image: Union[np.ndarray, cv2.UMat], prediction: Dict[str, torch.Tensor]
-    ) -> Union[np.ndarray, cv2.UMat]:
-        scores = prediction["scores"]
-        labels = prediction["labels"]
-        boxes = prediction["boxes"]
-
-        labels = [COCO_INSTANCE_CATEGORY_NAMES[i] for i in labels]
-
-        for box, score, label in zip(boxes, scores, labels):
-            x, y = box[:2]
-            text = f"{label}: {score :.2f}"
-            cv2.putText(
-                image, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1
-            )
-        return image
+        sio.emit('prediction', prediction)
 
 
-def main():
-    cap = cv2.VideoCapture("rtmp://localhost:1935/live/bushitsuchan")
-    cv2.namedWindow("img", cv2.WINDOW_NORMAL)
-    cv2.setWindowProperty("img", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+def convert_image_buffer(image: np.ndarray) -> bytes:
+    image = Image.fromarray(image)
+    with BytesIO() as byte_io:
+        image.save(byte_io, format="JPEG")
+        buffer = byte_io.getvalue()
+    return buffer
 
-    detector = ObjectDetector()
 
-    with tqdm() as pbar:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+def predict(net: Model, threshold: float) -> Tuple[np.ndarray, Dict[str, list]]:
+    image = fetch_camera_image()
+    output = net(image)
+    output = select_top_prediction(output, threshold)
 
-            frame = np.asarray(frame)
-            prediction = detector(frame)
-            frame = detector.draw(frame, prediction)
+    image = draw(image, output)
 
-            cv2.imshow("img", frame)
+    output["bbox"] = output["bbox"] * np.tile(np.array(image.shape[-2::-1]), 2)
+    return image, {
+        "bbox": output["bbox"].astype(int).tolist(),
+        "confidence": output["conf"].tolist(),
+        "label_id": output["label"].astype(int).tolist(),
+        "label_name": [LABEL_NAME[label] for label in output["label"].astype(int)]
+    }
 
-            key = cv2.waitKey(1)
-            if key == 27:
-                break
-            pbar.update(1)
 
-        cap.release()
-        cv2.destroyAllWindows()
+def fetch_camera_image() -> np.ndarray:
+    image = requests.get("http://image-storage/temporary")
+    image = Image.open(BytesIO(image.content)).convert('RGB')
+    image = np.asarray(image)
+    return image
+
+
+def select_top_prediction(prediction: Dict[str, np.ndarray], threshold: float) -> Dict[str, np.ndarray]:
+    assert 0 <= threshold <= 1, "Specify 0 to 1 for threshold."
+    keep = np.argsort(-prediction["conf"])[:(prediction["conf"] >= threshold).sum()]
+    prediction = {key: value[keep] for key, value in prediction.items()}
+    return prediction
 
 
 if __name__ == "__main__":
