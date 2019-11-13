@@ -72,7 +72,7 @@ slackInteractions.action({ type: 'button' }, (payload, respond) => {
 app.post('/bushitsu-photo', async (req, res) => {
   const { filename } = await axios.get('http://image-storage/permanent', { params: { directory: 'slack' } })
     .then((result) => result.data)
-    .catch((err) => console.error('Failed to permanent image acquisition request for image-storage.:\n', err));
+    .catch((err) => console.error('Failed to permanent image acquisition request for image-storage:\n', err));
   res.status(200).end();
   const key = crypto
     .createHash('md5')
@@ -81,7 +81,7 @@ app.post('/bushitsu-photo', async (req, res) => {
 
   const { awsUrl } = await axios.get('http://tunnel')
     .then((result) => result.data)
-    .catch((err) => console.error('Failed to fetch AWS URL from tunnel.:\n', err));
+    .catch((err) => console.error('Failed to fetch AWS URL from tunnel:\n', err));
 
   const blocks = object(
     JSON.parse(fs.readFileSync('./block_template.json', 'utf8')),
@@ -127,7 +127,7 @@ app.get('/photo/:filename', async (req, res) => {
     headers: { 'Content-Type': 'image/jpg' },
   })
     .then((result) => result.data)
-    .catch((err) => console.error('Failed to get permanent image from image-storage.:\n', err));
+    .catch((err) => console.error('Failed to get permanent image from image-storage:\n', err));
 
   res.type('image/jpg').send(image).end();
 });
@@ -137,7 +137,7 @@ app.get('/detected-photo/:filename', async (req, res) => {
     headers: { 'Content-Type': 'image/jpg' },
   })
     .then((result) => result.data)
-    .catch((err) => console.error('Failed to get temporary image from image-storage.:\n', err));
+    .catch((err) => console.error('Failed to get temporary image from image-storage:\n', err));
   res.type('image/jpg').send(image).end();
 });
 
