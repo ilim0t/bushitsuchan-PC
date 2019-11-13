@@ -112,4 +112,18 @@ app.get('/permanent/:directory(\\w+)/:file', async (req, res) => {
   res.sendFile(`/photo/${path}`);
 });
 
+app.post('/permament/:directory(\\w+)', upload.single('file'), (req, res) => {
+  const { directory } = req.params;
+  const { buffer, mimetype } = req.file;
+  if (buffer === undefined) {
+    res.sendStatus(400);
+    return;
+  }
+  const id = Date.now();
+
+  const path = `/photo/${directory}/${id}`;
+  res.status(201).json({ id });
+});
+
+
 app.listen(80, () => console.log('Express app listening on port 80.'));
