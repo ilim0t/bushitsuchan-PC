@@ -70,7 +70,7 @@ slackInteractions.action({ type: 'button' }, (payload, respond) => {
 
 // Slash command
 app.post('/bushitsu-photo', async (req, res) => {
-  const { filename } = await axios.get('http://image-storage/permament', { params: { directory: 'slack' } }).then((result) => result.data);
+  const { filename } = await axios.get('http://image-storage/permanent', { params: { directory: 'slack' } }).then((result) => result.data);
   res.status(200).end();
   const key = crypto
     .createHash('md5')
@@ -117,7 +117,7 @@ app.get(['/photo/:filename', '/detected-photo/:filename'], async (req, res, next
 });
 
 app.get('/photo/:filename', async (req, res) => {
-  const img = await axios.get(`http://image-storage/permament/slack/${req.params.filename}`, {
+  const img = await axios.get(`http://image-storage/permanent/slack/${req.params.filename}`, {
     responseType: 'arraybuffer',
     headers: { 'Content-Type': 'image/jpg' },
   });

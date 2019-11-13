@@ -74,7 +74,7 @@ app.get('/temporary/:id', (req, res) => {
   res.contentType(mimetype).end(buffer);
 });
 
-app.get('/permament', async (req, res) => {
+app.get('/permanent', async (req, res) => {
   const { directory } = req.query;
   if (directory === undefined) {
     res.sendStatus(400);
@@ -102,7 +102,7 @@ app.get('/permament', async (req, res) => {
   res.json({ filename });
 });
 
-app.get('/permament/:directory(\\w+)/:file', async (req, res) => {
+app.get('/permanent/:directory(\\w+)/:file', async (req, res) => {
   const { directory, file } = req.params;
   const path = `${directory}/${file}`;
 
