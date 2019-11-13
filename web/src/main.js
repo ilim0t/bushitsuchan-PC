@@ -111,14 +111,16 @@ app.get('/oauth-redirect', (req, res) => {
     .then((token) => {
       req.session.token = token;
       req.session.lastAuthedTime = Date.now();
-      authorize(token, process.env.WORKSTATION_ID).then((name) => {
-        req.session.isAuth = true;
-        req.session.name = name;
-        res.redirect(state || 'viewer');
-      }).catch((err) => {
-        console.error('Certification failed:\n', err);
-        res.sendStatus(403);
-      });
+      authorize(token, process.env.WORKSTATION_ID)
+        .then((name) => {
+          req.session.isAuth = true;
+          req.session.name = name;
+          res.redirect(state || 'viewer');
+        })
+        .catch((err) => {
+          console.error('Certification failed:\n', err);
+          res.sendStatus(403);
+        });
     })
     .catch((err) => {
       console.error('Failed to fetch token:\n', err);
@@ -157,15 +159,17 @@ app.use(['/viewer', '/photo-viewer', '/photo', '/hls'], (req, res, next) => {
     return;
   }
   req.session.lastAuthedTime = Date.now();
-  authorize(token, process.env.WORKSTATION_ID).then((name) => {
-    req.session.isAuth = true;
-    req.session.name = name;
-    req.session.authPendding = false;
-    next();
-  }).catch((err) => {
-    console.error('Certification failed:\n', err);
-    res.sendStatus(403);
-  });
+  authorize(token, process.env.WORKSTATION_ID)
+    .then((name) => {
+      req.session.isAuth = true;
+      req.session.name = name;
+      req.session.authPendding = false;
+      next();
+    })
+    .catch((err) => {
+      console.error('Certification failed:\n', err);
+      res.sendStatus(403);
+    });
 });
 
 app.get(['/viewer', '/photo-viewer'], (req, res) => {
