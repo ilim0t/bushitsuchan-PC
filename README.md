@@ -173,7 +173,7 @@ Sign in すると自動的に配信再生ページへ移動します。
 以下の OS をサポートします。
 
 - Ubuntu 18.04
-- macOS 10.14 (Debug mode のみ)
+- macOS 10.14~10.15 (Debug mode のみ)
 
 Debug mode 下では挙動に以下の差異があります。
 
