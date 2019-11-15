@@ -22,7 +22,7 @@ const getToken = async (code, clientId, clientSecret) => {
       code,
     })}`,
   ).catch((err) => {
-    console.error('Failed to send post requesting token:\n', err);
+    console.error('Failed to send post requesting token:\n', err.stack);
   });
   const { data } = tokenResponse;
   assert(data !== undefined);
@@ -39,7 +39,7 @@ const authorize = async (token, workstationId) => {
 
   const response = await axios.get(
     `https://slack.com/api/users.identity?${querystring.stringify({ token })}`,
-  ).catch((err) => console.err('Failed to send request to fetch user identity:\n', err));
+  ).catch((err) => console.err('Failed to send request to fetch user identity:\n', err.stack));
 
   const { data } = response;
   assert(data !== undefined);
