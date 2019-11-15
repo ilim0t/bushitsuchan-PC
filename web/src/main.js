@@ -118,12 +118,12 @@ app.get('/oauth-redirect', (req, res) => {
           res.redirect(state || 'viewer');
         })
         .catch((err) => {
-          console.error('Certification failed:\n', err);
+          console.error('Certification failed:\n', err.stack);
           res.sendStatus(403);
         });
     })
     .catch((err) => {
-      console.error('Failed to fetch token:\n', err);
+      console.error('Failed to fetch token:\n', err.stack);
       res.sendStatus(400);
     });
 });
@@ -167,7 +167,7 @@ app.use(['/viewer', '/photo-viewer', '/photo', '/hls'], (req, res, next) => {
       next();
     })
     .catch((err) => {
-      console.error('Certification failed:\n', err);
+      console.error('Certification failed:\n', err.stack);
       res.sendStatus(403);
     });
 });

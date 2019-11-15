@@ -63,7 +63,7 @@ slackInteractions.action({ type: 'button' }, (payload, respond) => {
   if (actions[0].value === 'delete') {
     web.chat
       .delete({ channel: channel.id, ts })
-      .catch((err) => console.error('Failed to delete message:\n', err));
+      .catch((err) => console.error('Failed to delete message:\n', err.stack));
   }
 });
 
