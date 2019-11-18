@@ -20,7 +20,8 @@ ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
   .addOption('-hls_flags', '+delete_segments')
   .addOption('-g', 40)
   .on('error', (err) => {
-    console.error('ffmpeg command to convert to HLS failed or aborted:\n', err);
+    console.error('ffmpeg command to convert to HLS failed or aborted:\n', err.stack);
+    process.exit(1);
   })
   .save(`${hlsDir}/output.m3u8`);
 

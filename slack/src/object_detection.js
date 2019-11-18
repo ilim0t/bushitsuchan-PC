@@ -18,7 +18,10 @@ const web = new WebClient(process.env.SLACK_BOT_ACCESS_TOKEN);
 const rtm = new RTMClient(process.env.SLACK_BOT_ACCESS_TOKEN);
 rtm.start()
   .then('start rtmp client')
-  .catch((err) => console.error('Failed to start RTMP client.:\n', err));
+  .catch((err) => {
+    console.error('Failed to start RTMP client:\n', err.stack);
+    process.exit(1);
+  });
 
 rtm.on('message', (event) => {
   if (event.subtype === undefined) {
@@ -87,7 +90,7 @@ module.exports = (path = '/socket.io') => {
   io.on('connection', async (socket) => {
     const { awsUrl } = await axios.get('http://tunnel')
       .then((result) => result.data)
-      .catch((err) => console.error('Failed to fetch AWS URL from tunnel.:\n', err));
+      .catch((err) => console.error('Failed to fetch AWS URL from tunnel:\n', err.stack));
 
     socket.on('prediction', (prediction) => {
       objectsNotification(prediction, awsUrl);

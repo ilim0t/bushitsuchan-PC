@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 from io import BytesIO
 from typing import Dict, List, Tuple, Union
 
@@ -20,16 +21,23 @@ def main() -> None:
     threshold = float(os.getenv("THRESHOLD", 0.7))
     retention_time = float(os.getenv("RETENTION_SEC", 60 * 60 * 24))
 
-    while True:
-        image, prediction = predict(net, threshold)
+    try:
+        while True:
+            image, prediction = predict(net, threshold)
 
-        res = requests.post("http://image-storage/temporary", {"retention_time": retention_time},
-                            files={"file": ("prediction", convert_image_buffer(image), "image/jpeg")})
+            res = requests.post("http://image-storage/temporary", {"retention_time": retention_time},
+                                files={"file": ("prediction", convert_image_buffer(image), "image/jpeg")})
 
-        prediction["id"] = res.json()['id']
-        prediction["iamge_path"] = f"temporary/{res.json()['id']}"
+            prediction["id"] = res.json()['id']
+            prediction["iamge_path"] = f"temporary/{res.json()['id']}"
 
-        sio.emit('prediction', prediction)
+            sio.emit('prediction', prediction)
+    except RuntimeError as e:
+        print("fatal error", e)
+    except:
+        print('Error')
+    finally:
+        sys.exit(1)
 
 
 def convert_image_buffer(image: np.ndarray) -> bytes:

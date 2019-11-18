@@ -26,7 +26,7 @@ app.get('/temporary', async (req, res) => {
   const ffstream = ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
     .addOption('-vframes', 1)
     .on('error', (err) => {
-      console.error('ffmpeg command to convert to image failed:\n', err);
+      console.error('ffmpeg command to convert to image failed:\n', err.stack);
     })
     .format('image2')
     .pipe();
@@ -96,7 +96,7 @@ app.get('/permanent', async (req, res) => {
     })
     .on('error', (err) => {
       redis.del(`${path}-pending`);
-      console.error('ffmpeg command to convert to image failed:\n', err);
+      console.error('ffmpeg command to convert to image failed:\n', err.stack);
     })
     .save(`/photo/${path}`);
   res.json({ filename });
