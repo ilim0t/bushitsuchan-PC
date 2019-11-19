@@ -161,3 +161,5 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - .:/bushitsuchan-PC
       - ./auto-deploy/src:/app
+    environment:
+      - DEPLOY_SECRET=${DEPLOY_SECRET}

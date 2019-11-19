@@ -167,3 +167,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - .:/bushitsuchan-PC
       - ./deploy/src:/app
+    ports:
+      - 4005:9229
+    environment:
+      - DEPLOY_SECRET=${DEPLOY_SECRET}
