@@ -61,6 +61,7 @@ services:
     depends_on:
       - web
       - slack
+      - deploy
   tunnel:
     build: ./tunnel
     working_dir: /app
@@ -156,3 +157,13 @@ services:
     depends_on:
       - streamer
       - image-storage
+  
+  deploy:
+    build:
+      context: ./deploy
+    working_dir: /app
+    command: npm run dev
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/bushitsuchan-PC
+      - ./deploy/src:/app

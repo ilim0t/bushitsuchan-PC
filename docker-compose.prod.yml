@@ -63,6 +63,7 @@ services:
     depends_on:
       - web
       - slack
+      - deploy
     restart: always
   tunnel:
     build: ./tunnel
@@ -150,3 +151,13 @@ services:
       - streamer
       - image-storage
     restart: always
+
+  deploy:
+    build:
+      context: ./deploy
+    working_dir: /app
+    command: ash -c "npm install && npm start"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/bushitsuchan-PC
+      - ./auto-deploy/src:/app

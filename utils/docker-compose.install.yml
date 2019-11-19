@@ -57,3 +57,10 @@ services:
     command: bash -c "pipenv sync --dev"
     volumes:
       - ../object-detection/src:/app
+
+  deploy:
+    build: ../deploy
+    working_dir: /app
+    command: ash -c "npm ci --no-progress"
+    volumes:
+      - ../deploy/src:/app

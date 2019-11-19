@@ -57,3 +57,10 @@ services:
     command: bash -c "pipenv install --dev && pipenv update"
     volumes:
       - ../object-detection/src:/app
+
+  deploy:
+    build: ../deploy
+    working_dir: /app
+    command: ash -c "npm install --no-progress && npm audit fix"
+    volumes:
+      - ../deploy/src:/app
