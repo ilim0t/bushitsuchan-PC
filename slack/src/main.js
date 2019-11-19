@@ -98,7 +98,7 @@ app.post('/bushitsu-photo', async (req, res) => {
     text: '部室の様子',
     icon_emoji: ':slack:',
     blocks,
-  });
+  }).catch((err) => console.error('Failed to post Message to slack:\n', err.stack));
 });
 
 
@@ -121,24 +121,41 @@ app.get(['/photo/:filename', '/detected-photo/:filename'], async (req, res, next
   next();
 });
 
-app.get('/photo/:filename', async (req, res) => {
-  const image = await axios.get(`http://image-storage/permanent/slack/${req.params.filename}`, {
+app.get('/photo/:filename', (req, res) => {
+  axios.get(`http://image-storage/permanent/slack/${req.params.filename}`, {
     responseType: 'arraybuffer',
     headers: { 'Content-Type': 'image/jpg' },
   })
-    .then((result) => result.data)
-    .catch((err) => console.error('Failed to get permanent image from image-storage:\n', err.stack));
-
-  res.type('image/jpg').send(image).end();
+    .then((result) => {
+      const image = result.data;
+      res.type('image/jpg').send(image).end();
+    })
+    .catch((err) => {
+      if (err.response.status === 404) {
+        res.sendStatus(404);
+        return;
+      }
+      console.error('Failed to get permanent image from image-storage:\n', err.stack);
+      res.sendStatus(500);
+    });
 });
-app.get('/detected-photo/:filename', async (req, res) => {
-  const image = await axios.get(`http://image-storage/temporary/${req.params.filename}`, {
+app.get('/detected-photo/:filename', (req, res) => {
+  axios.get(`http://image-storage/temporary/${req.params.filename}`, {
     responseType: 'arraybuffer',
     headers: { 'Content-Type': 'image/jpg' },
   })
-    .then((result) => result.data)
-    .catch((err) => console.error('Failed to get temporary image from image-storage:\n', err.stack));
-  res.type('image/jpg').send(image).end();
+    .then((result) => {
+      const image = result.data;
+      res.type('image/jpg').send(image).end();
+    })
+    .catch((err) => {
+      if (err.response.status === 404) {
+        res.sendStatus(404);
+        return;
+      }
+      console.error('Failed to get temporary image from image-storage:\n', err.stack);
+      res.sendStatus(500);
+    });
 });
 
 
