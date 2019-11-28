@@ -25,6 +25,7 @@ const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
 app.get('/temporary', async (req, res) => {
   const ffstream = ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
     .addOption('-vframes', 1)
+    .addOption('-ss', 0.2)
     .on('error', (err) => {
       console.error('ffmpeg command to convert to image failed:\n', err.stack);
     })
@@ -91,6 +92,7 @@ app.get('/permanent', async (req, res) => {
 
   ffmpeg(`${process.env.RTMP_SERVER_URL}/${process.env.STREAM_NAME}`)
     .addOption('-vframes', 1)
+    .addOption('-ss', 0.2)
     .on('end', () => {
       redis.del(`${path}-pending`);
     })
