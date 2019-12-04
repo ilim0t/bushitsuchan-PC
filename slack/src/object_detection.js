@@ -59,14 +59,14 @@ const objectsNotification = async (prediction, awsUrl) => {
         ts,
         icon_emoji: ':slack:',
         blocks,
-      });
+      }).catch((err) => console.error('Failed to update Message in slack:\n', err.stack));
       return;
     }
     web.chat.delete({
       channel: process.env.NOTIFICATION_CHANNEL,
       ts,
-    }).catch((e) => {
-      console.error(e);
+    }).catch((err) => {
+      console.error('Failed to delete Message in slack:\n', err.stack);
       redis.del('previous_ts');
     });
     redis.del('age');
@@ -76,7 +76,7 @@ const objectsNotification = async (prediction, awsUrl) => {
     text: '[定期]部室スキャン',
     icon_emoji: ':slack:',
     blocks,
-  });
+  }).catch((err) => console.error('Failed to post Message to slack:\n', err.stack));
   redis.set('previous_ts', result.ts);
 };
 
