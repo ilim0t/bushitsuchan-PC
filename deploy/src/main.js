@@ -42,9 +42,4 @@ app.post('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/', (req, res) => {
-  execFile('docker-compose', ['-f', 'utils/docker-compose.deploy.yml', 'up', '-d', '--force-recreate', DEPLOYMENT_ENV], { cwd: '/bushitsuchan-PC' });
-  res.sendStatus(200);
-});
-
 app.listen(80, () => console.log('Example app listening on port 80.'));
