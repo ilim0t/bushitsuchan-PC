@@ -61,7 +61,7 @@ services:
     depends_on:
       - web
       - slack
-      # - deploy-hook
+      - deploy-hook
   tunnel:
     build: ./tunnel
     working_dir: /app

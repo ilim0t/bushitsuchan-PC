@@ -63,7 +63,7 @@ services:
     depends_on:
       - web
       - slack
-      # - deploy-hook
+      - deploy-hook
     restart: always
   tunnel:
     build: ./tunnel
