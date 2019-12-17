@@ -51,6 +51,10 @@ SLACK_BOT_ACCESS_TOKEN=xoxb-3814...
 SLACK_SIGNING_SECRET=fb36...
 CONTACT_CHANNEL=BN3...
 NOTIFICATION_CHANNEL=O6C...
+
+DEPLOY_SECRET=presetprivatekey  # GitHubで登録した暗号キー
+HOOK_BRANCH=develop  # auto-deploy対象のbranch名
+BUSHITSUCHAN_ROOT_DIR=/path/to/bushitsuchan-PC  # root directory
 ```
 
 > ファイルを作成せずに [direnv](https://direnv.net/)などで環境変数にセットしても動作します
@@ -126,6 +130,25 @@ bushitsuchan-PC では slack で特定のワークスペースに属する場合
 URL が`https://app.slack.com/client/VYS39C27C/UC7CHE35J`のようになっているはずです。  
 この URL の`VYS39C27C`部分が必要な ID です。
 これを前述したように環境変数`WORKSTATION_ID`にセットしてください。
+
+### GitHub
+
+#### 説明
+
+bushitsuchan-PC では Github に commit すると自動的に deploy する機能が存在します。GitHub に push された際，webhook が来る仕組みを利用しているので設定が必要です。
+
+#### 設定
+
+まず，GitHub 上の bushitsuchan-PC のリポジトリページを開きます。
+Settings > Webhooks > Add webhook の順に開き以下のように設定してください。
+
+- Payload URL: `https://[RESOURCE_ID].execute-api.[REGION].amazonaws.com/prod/deploy`
+- Content type: `application/json`
+- Secret: 頑強な任意の文字列
+
+その他の項目はデフォルトのままです。  
+ここで設定した Secret を，前述したように環境変数`DEPLOY_SECRET`にセットしてください。  
+また，環境変数`HOOK_BRANCH`に監視対象の branch 名を，`BUSHITSUCHAN_ROOT_DIR`に bushitsuchan-PC の root directory のパスをセットしてください。
 
 ## Requirement
 
