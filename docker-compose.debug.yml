@@ -23,7 +23,6 @@ services:
     build: ./image-storage
     working_dir: /app
     command: npm run dev
-    entrypoint: docker-entrypoint.sh
     volumes:
       - ./image-storage/src:/app
       - ./photo:/photo
@@ -40,7 +39,6 @@ services:
     build: ./hls
     working_dir: /app
     command: npm run dev
-    entrypoint: docker-entrypoint.sh
     volumes:
       - ./hls/src:/app
     ports:

@@ -27,7 +27,6 @@ services:
     build: ./image-storage
     working_dir: /app
     command: ash -c "npm ci --production --no-progress && npm start"
-    entrypoint: docker-entrypoint.sh
     volumes:
       - ./image-storage/src:/app
       - ./photo:/photo
@@ -43,7 +42,6 @@ services:
     build: ./hls
     working_dir: /app
     command: ash -c "npm ci --production --no-progress && npm start"
-    entrypoint: docker-entrypoint.sh
     volumes:
       - ./hls/src:/app
       - /etc/localtime:/etc/localtime:ro
@@ -160,7 +158,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - .:/bushitsuchan-PC
-      - ./auto-deploy/src:/app
+      - ./deploy/src:/app
     environment:
       - DEPLOY_SECRET=${DEPLOY_SECRET}
       - HOOK_BRANCH=${HOOK_BRANCH}
