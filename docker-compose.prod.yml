@@ -63,7 +63,7 @@ services:
     depends_on:
       - web
       - slack
-      - deploy
+      # - deploy-hook
     restart: always
   tunnel:
     build: ./tunnel
@@ -152,7 +152,7 @@ services:
       - image-storage
     restart: always
 
-  deploy:
+  deploy-hook:
     build:
       context: ./deploy
     working_dir: /app
@@ -163,3 +163,5 @@ services:
       - ./auto-deploy/src:/app
     environment:
       - DEPLOY_SECRET=${DEPLOY_SECRET}
+      - HOOK_BRANCH=${HOOK_BRANCH}
+      - DEPLOYMENT_ENV=production    

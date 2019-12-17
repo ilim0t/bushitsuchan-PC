@@ -61,7 +61,7 @@ services:
     depends_on:
       - web
       - slack
-      - deploy
+      # - deploy-hook
   tunnel:
     build: ./tunnel
     working_dir: /app
@@ -146,7 +146,6 @@ services:
       - STREAM_NAME=bushitsuchan
       - DEVICE=CPU
       - CPU_EXTENSION=/opt/intel/openvino/inference_engine/lib/intel64/libcpu_extension_avx2.so
-      - FLASK_ENV=development
     privileged: true
     volumes:
       - ./object-detection/src:/app
@@ -157,8 +156,8 @@ services:
     depends_on:
       - streamer
       - image-storage
-  
-  deploy:
+
+  deploy-hook:
     build:
       context: ./deploy
     working_dir: /app
@@ -168,6 +167,9 @@ services:
       - .:/bushitsuchan-PC
       - ./deploy/src:/app
     ports:
-      - 4005:9229
+      - 4007:9229
+      - 3007:80
     environment:
       - DEPLOY_SECRET=${DEPLOY_SECRET}
+      - HOOK_BRANCH=${HOOK_BRANCH}     
+      - DEPLOYMENT_ENV=debug    
