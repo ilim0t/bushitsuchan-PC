@@ -1,4 +1,3 @@
-FROM node:alpine AS node
-
 FROM jrottenberg/ffmpeg:alpine
-COPY --from=node /usr/local /usr/local
+RUN apk add --no-cache nodejs npm
+ENTRYPOINT []

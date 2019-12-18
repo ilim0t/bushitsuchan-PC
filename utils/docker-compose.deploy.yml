@@ -1,0 +1,25 @@
+version: "3.7"
+services:
+  production:
+    build: ../deploy
+    env_file:
+      - ../.env
+    working_dir: ${BUSHITSUCHAN_ROOT_DIR}
+    command: sh ./deploy/deploy.sh
+    environment:
+      - DOCKER_COMPOSE_FILE=docker-compose.prod.yml
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${BUSHITSUCHAN_ROOT_DIR}:${BUSHITSUCHAN_ROOT_DIR}
+
+  debug:
+    build: ../deploy
+    env_file:
+      - ../.env
+    working_dir: ${BUSHITSUCHAN_ROOT_DIR}
+    command: sh ./deploy/deploy.sh
+    environment:
+      - DOCKER_COMPOSE_FILE=docker-compose.debug.yml
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${BUSHITSUCHAN_ROOT_DIR}:${BUSHITSUCHAN_ROOT_DIR}

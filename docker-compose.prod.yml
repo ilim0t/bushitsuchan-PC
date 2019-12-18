@@ -27,7 +27,6 @@ services:
     build: ./image-storage
     working_dir: /app
     command: ash -c "npm ci --production --no-progress && npm start"
-    entrypoint: docker-entrypoint.sh
     volumes:
       - ./image-storage/src:/app
       - ./photo:/photo
@@ -43,7 +42,6 @@ services:
     build: ./hls
     working_dir: /app
     command: ash -c "npm ci --production --no-progress && npm start"
-    entrypoint: docker-entrypoint.sh
     volumes:
       - ./hls/src:/app
       - /etc/localtime:/etc/localtime:ro
@@ -63,6 +61,7 @@ services:
     depends_on:
       - web
       - slack
+      - deploy-hook
     restart: always
   tunnel:
     build: ./tunnel
@@ -150,3 +149,17 @@ services:
       - streamer
       - image-storage
     restart: always
+
+  deploy-hook:
+    build:
+      context: ./deploy
+    working_dir: /app
+    command: ash -c "npm install && npm start"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/bushitsuchan-PC
+      - ./deploy/src:/app
+    environment:
+      - DEPLOY_SECRET=${DEPLOY_SECRET}
+      - HOOK_BRANCH=${HOOK_BRANCH}
+      - DEPLOYMENT_ENV=production    
