@@ -37,7 +37,7 @@ RUN cd /tmp/ && \
 
 RUN echo 'source /opt/intel/openvino/bin/setupvars.sh' >> ~/.bashrc
 
-RUN apt-get install -yq --no-install-recommends python3.7 libpython3.7-dev python3-pip && \
+RUN apt-get install -yq --no-install-recommends python3.7 libpython3.7-dev python3-pip python3-setuptools && \
     pip3 install pipenv
 
 ENV PIPENV_VENV_IN_PROJECT true
