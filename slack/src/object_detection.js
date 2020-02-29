@@ -59,7 +59,10 @@ const objectsNotification = async (prediction, awsUrl) => {
         ts,
         icon_emoji: ':slack:',
         blocks,
-      }).catch((err) => console.error('Failed to update Message in slack:\n', err.stack));
+      }).catch((err) => {
+        console.error('Failed to update Message in slack:\n', err.stack);
+        redis.del('previous_ts');
+      });
       return;
     }
     web.chat.delete({
